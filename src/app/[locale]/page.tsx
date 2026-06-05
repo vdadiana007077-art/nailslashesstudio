@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
+import { Link } from '@/i18n/routing';
 import { Language } from '@prisma/client';
 
 export default async function HomePage({ params }: { params: { locale: string } }) {
@@ -47,9 +48,9 @@ export default async function HomePage({ params }: { params: { locale: string } 
           </p>
           
           <div className="flex gap-4 justify-center">
-            <button className="px-8 py-3 bg-[var(--color-rose-500)] text-white font-semibold rounded-full hover:bg-[var(--color-rose-600)] transition-all shadow-[0_0_15px_rgba(184,123,127,0.4)] hover:shadow-[0_0_25px_rgba(184,123,127,0.6)] cursor-pointer">
+            <Link href="/booking" className="px-8 py-3 bg-[var(--color-rose-500)] text-white font-semibold rounded-full hover:bg-[var(--color-rose-600)] transition-all shadow-[0_0_15px_rgba(184,123,127,0.4)] hover:shadow-[0_0_25px_rgba(184,123,127,0.6)] cursor-pointer">
               {t('bookNow')}
-            </button>
+            </Link>
             <a href="#services" className="px-8 py-3 glass text-gray-700 font-medium rounded-full hover:bg-white/40 transition-all cursor-pointer">
               {t('services')}
             </a>

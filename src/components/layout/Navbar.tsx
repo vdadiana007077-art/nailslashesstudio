@@ -59,9 +59,9 @@ export default function Navbar() {
             </div>
           </div>
           
-          <button className="px-6 py-2.5 bg-[var(--color-rose-500)] text-white text-sm font-semibold rounded-full hover:bg-[var(--color-rose-600)] transition-all shadow-[0_0_15px_rgba(184,123,127,0.3)] hover:shadow-[0_0_20px_rgba(184,123,127,0.6)] cursor-pointer">
+          <Link href="/booking" className="px-6 py-2.5 bg-[var(--color-rose-500)] text-white text-sm font-semibold rounded-full hover:bg-[var(--color-rose-600)] transition-all shadow-[0_0_15px_rgba(184,123,127,0.3)] hover:shadow-[0_0_20px_rgba(184,123,127,0.6)] cursor-pointer">
             {t('bookNow')}
-          </button>
+          </Link>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -88,9 +88,9 @@ export default function Navbar() {
             <Link href={pathname} locale="de" className="text-gray-800 font-medium hover:text-[var(--color-rose-500)]">DE</Link>
             <Link href={pathname} locale="ru" className="text-gray-800 font-medium hover:text-[var(--color-rose-500)]">RU</Link>
           </div>
-          <button className="mt-4 w-full py-3 bg-[var(--color-rose-500)] text-white font-semibold rounded-full">
+          <Link href="/booking" className="mt-4 w-full text-center py-3 bg-[var(--color-rose-500)] text-white font-semibold rounded-full block">
             {t('bookNow')}
-          </button>
+          </Link>
         </div>
       )}
     </nav>
