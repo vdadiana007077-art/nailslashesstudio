@@ -1,6 +1,6 @@
-import { PrismaClient, Language } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import "dotenv/config";
+import { Language } from '@prisma/client';
+import { prisma } from '../src/lib/prisma';
 
 async function main() {
   console.log('Veritabanı başlangıç verileri (Seed) yükleniyor...');
