@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
 import BookingForm from '@/components/booking/BookingForm';
 
-export default async function BookingPage({ params }: { params: { locale: string } }) {
+export default async function BookingPage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
 

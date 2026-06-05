@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { Link } from '@/i18n/routing';
 import { Language } from '@prisma/client';
 
-export default async function HomePage({ params }: { params: { locale: string } }) {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   // `params` objesini beklemek gerekiyor Next.js 16'da
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
