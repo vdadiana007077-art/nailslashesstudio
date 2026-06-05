@@ -1,0 +1,290 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum LoginType {
+  GOOGLE
+  APPLE
+  MANUAL
+}
+
+enum ApptStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum TransType {
+  INCOME
+  EXPENSE
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+}
+
+enum Language {
+  TR
+  EN
+  RU
+  DE
+}
+
+enum StaffPreference {
+  ANY
+  SELECTED
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum ApptSource {
+  WEBSITE
+  ADMIN
+  WHATSAPP
+  PHONE
+}
+
+model User {
+  id           String        @id @default(uuid())
+  role         Role          @default(CUSTOMER)
+  name         String
+  email        String?       @unique
+  phone        String?
+  password     String?
+  loginType    LoginType
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model ServiceCategory {
+  id           String                       @id @default(uuid())
+  isActive     Boolean                      @default(true)
+  order        Int                          @default(0)
+  services     Service[]
+  translations ServiceCategoryTranslation[]
+}
+
+model ServiceCategoryTranslation {
+  id         String          @id @default(uuid())
+  categoryId String
+  category   ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  language   Language
+  slug       String?
+  name       String
+
+  @@unique([categoryId, language])
+}
+
+model Service {
+  id           String               @id @default(uuid())
+  categoryId   String
+  category     ServiceCategory      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  duration     Int
+  price        Decimal              @db.Decimal(10, 2)
+  image        String?
+  isActive     Boolean              @default(true)
+  translations ServiceTranslation[]
+  staff        StaffService[]
+  appointments Appointment[]
+}
+
+model ServiceTranslation {
+  id          String   @id @default(uuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  language    Language
+  slug        String
+  name        String
+  description String   @db.Text
+  seoTitle    String?
+  seoDesc     String?
+
+  @@unique([serviceId, language])
+}
+
+model Staff {
+  id           String         @id @default(uuid())
+  name         String
+  image        String?
+  isActive     Boolean        @default(true)
+  services     StaffService[]
+  leaves       StaffLeave[]
+  appointments Appointment[]
+  transactions Transaction[]
+}
+
+model StaffService {
+  staffId   String
+  serviceId String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, serviceId])
+}
+
+model WorkingHours {
+  id         String  @id @default(uuid())
+  dayOfWeek  Int
+  openTime   String
+  closeTime  String
+  isClosed   Boolean @default(false)
+  breakStart String?
+  breakEnd   String?
+}
+
+model Holiday {
+  id          String   @id @default(uuid())
+  date        DateTime @db.Date
+  description String?
+}
+
+model StaffLeave {
+  id        String   @id @default(uuid())
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  isFullDay Boolean  @default(true)
+  startTime String?
+  endTime   String?
+}
+
+model Appointment {
+  id                String                     @id @default(uuid())
+  customerId        String?
+  customer          User?                      @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  serviceId         String
+  service           Service                    @relation(fields: [serviceId], references: [id])
+  staffId           String?
+  staff             Staff?                     @relation(fields: [staffId], references: [id])
+  staffPreference   StaffPreference
+  source            ApptSource
+  date              DateTime                   @db.Date
+  startTime         String
+  endTime           String
+  status            ApptStatus                 @default(PENDING)
+  cancelReason      String?
+  notes             String?                    @db.Text
+  customerName      String
+  customerEmail     String
+  customerPhone     String?
+  priceAtBooking    Decimal                    @db.Decimal(10, 2)
+  durationAtBooking Int
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  statusHistory     AppointmentStatusHistory[]
+  transaction       Transaction?
+}
+
+model AppointmentStatusHistory {
+  id            String      @id @default(uuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  status        ApptStatus
+  notes         String?
+  createdAt     DateTime    @default(now())
+}
+
+model Page {
+  id           String            @id @default(uuid())
+  isActive     Boolean           @default(true)
+  translations PageTranslation[]
+}
+
+model PageTranslation {
+  id       String   @id @default(uuid())
+  pageId   String
+  page     Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  language Language
+  slug     String
+  title    String
+  content  String   @db.Text
+  seoTitle String?
+  seoDesc  String?
+
+  @@unique([pageId, language])
+}
+
+model GalleryImage {
+  id        String   @id @default(uuid())
+  url       String
+  altText   String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model GoogleReview {
+  id             String   @id @default(uuid())
+  googleReviewId String?  @unique
+  rating         Float
+  authorName     String
+  text           String   @db.Text
+  language       String?
+  isVisible      Boolean  @default(true)
+  reviewDate     DateTime
+}
+
+model Setting {
+  id       String    @id @default(uuid())
+  key      String
+  value    String    @db.Text
+  language Language?
+
+  @@unique([key, language])
+}
+
+model EmailLog {
+  id           String      @id @default(uuid())
+  recipient    String
+  subject      String
+  status       EmailStatus @default(PENDING)
+  errorMessage String?
+  sentAt       DateTime?
+  createdAt    DateTime    @default(now())
+}
+
+model TransactionCategory {
+  id           String        @id @default(uuid())
+  name         String
+  type         TransType
+  isActive     Boolean       @default(true)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String              @id @default(uuid())
+  categoryId    String
+  category      TransactionCategory @relation(fields: [categoryId], references: [id])
+  type          TransType
+  amount        Decimal             @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  date          DateTime            @db.Date
+  description   String?
+  appointmentId String?             @unique
+  appointment   Appointment?        @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  staffId       String?
+  staff         Staff?              @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
