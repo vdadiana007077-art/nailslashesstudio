@@ -15,13 +15,27 @@ export default async function AdminBlogPage({ params }: { params: Promise<{ loca
     redirect(`/${locale}/admin/login`);
   }
 
-  // Veritabanından silinmemiş blog yazılarını translations ile birlikte çek
   const posts = await prisma.blogPost.findMany({
     where: { isDeleted: false },
     include: {
       translations: true,
+      categories: true,
+      tags: true,
     },
     orderBy: { createdAt: 'desc' },
+  });
+
+  // Blog kategorilerini çek
+  const blogCategories = await prisma.blogCategory.findMany({
+    where: { isActive: true },
+    include: { translations: { where: { language: 'TR' } } },
+    orderBy: { order: 'asc' },
+  });
+
+  // Blog etiketlerini çek
+  const blogTags = await prisma.blogTag.findMany({
+    where: { isActive: true },
+    include: { translations: { where: { language: 'TR' } } },
   });
 
   const formattedPosts = posts.map(p => ({
@@ -48,6 +62,18 @@ export default async function AdminBlogPage({ params }: { params: Promise<{ loca
       index: t.index,
       sitemap: t.sitemap,
     })),
+    categoryIds: p.categories.map(c => c.categoryId),
+    tagIds: p.tags.map(t => t.tagId),
+  }));
+
+  const formattedCategories = blogCategories.map(c => ({
+    id: c.id,
+    name: c.translations[0]?.name || 'İsimsiz Kategori',
+  }));
+
+  const formattedTags = blogTags.map(t => ({
+    id: t.id,
+    name: t.translations[0]?.name || 'İsimsiz Etiket',
   }));
 
   return (
@@ -73,7 +99,7 @@ export default async function AdminBlogPage({ params }: { params: Promise<{ loca
               <p className="text-sm text-gray-500 mt-1">Sitenizin SEO gücünü artıracak makaleler oluşturun, yayın tarihini ayarlayın, çok dilli içeriklerini ve SEO meta etiketlerini yönetin.</p>
             </div>
             
-            <BlogClient initialPosts={formattedPosts} currentLocale={locale} />
+            <BlogClient initialPosts={formattedPosts} currentLocale={locale} categories={formattedCategories} tags={formattedTags} />
           </div>
         </main>
       </div>

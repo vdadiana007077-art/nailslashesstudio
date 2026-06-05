@@ -42,9 +42,10 @@ export async function updateService(
     const index = formData.get('index') !== 'false';
     const sitemap = formData.get('sitemap') !== 'false';
 
-    // İlişkili bloglar ve SSS'ler
+    // İlişkili bloglar, SSS'ler ve personeller
     const selectedFaqs = formData.get('faqIds') ? JSON.parse(formData.get('faqIds') as string) : [];
     const selectedBlogs = formData.get('blogIds') ? JSON.parse(formData.get('blogIds') as string) : [];
+    const selectedStaff = formData.get('staffIds') ? JSON.parse(formData.get('staffIds') as string) : [];
 
     if (!name || !slug || !language) {
       return { success: false, error: 'Hizmet adı, slug ve dil zorunludur!' };
@@ -139,6 +140,21 @@ export async function updateService(
       }));
       await prisma.blogPostService.createMany({
         data: blogRelations
+      });
+    }
+
+    // Personel ilişkilerini güncelle (StaffService)
+    await prisma.staffService.deleteMany({
+      where: { serviceId: id }
+    });
+
+    if (selectedStaff.length > 0) {
+      const staffRelations = selectedStaff.map((staffId: string) => ({
+        staffId,
+        serviceId: id
+      }));
+      await prisma.staffService.createMany({
+        data: staffRelations
       });
     }
 

@@ -28,6 +28,10 @@ export async function createBlogPost(formData: FormData) {
   const publishedAtStr = formData.get('publishedAt') as string;
   const publishedAt = publishedAtStr ? new Date(publishedAtStr) : (isActive ? new Date() : null);
 
+  // Kategori ve Etiket ilişkileri
+  const categoryIds: string[] = formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds') as string) : [];
+  const tagIds: string[] = formData.get('tagIds') ? JSON.parse(formData.get('tagIds') as string) : [];
+
   if (!title || !slug || !language) {
     return { success: false, error: 'Başlık, slug ve dil alanları zorunludur!' };
   }
@@ -71,6 +75,27 @@ export async function createBlogPost(formData: FormData) {
 
     revalidatePath('/[locale]/admin/blog', 'page');
     revalidatePath('/[locale]/blog', 'page');
+
+    // Kategori ilişkilerini kaydet
+    if (categoryIds.length > 0 && newPost) {
+      await prisma.blogPostCategory.createMany({
+        data: categoryIds.map((catId: string) => ({
+          blogPostId: newPost.id,
+          categoryId: catId
+        }))
+      });
+    }
+
+    // Etiket ilişkilerini kaydet
+    if (tagIds.length > 0 && newPost) {
+      await prisma.blogPostTag.createMany({
+        data: tagIds.map((tagId: string) => ({
+          blogPostId: newPost.id,
+          tagId
+        }))
+      });
+    }
+
     return { success: true, data: newPost };
   } catch (error: any) {
     console.error('Blog yazısı oluşturma hatası:', error);
@@ -105,6 +130,10 @@ export async function updateBlogPost(
 
   const publishedAtStr = formData.get('publishedAt') as string;
   const publishedAt = publishedAtStr ? new Date(publishedAtStr) : (isActive ? new Date() : null);
+
+  // Kategori ve Etiket ilişkileri
+  const categoryIds: string[] = formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds') as string) : [];
+  const tagIds: string[] = formData.get('tagIds') ? JSON.parse(formData.get('tagIds') as string) : [];
 
   if (!title || !slug || !language) {
     return { success: false, error: 'Başlık, slug ve dil alanları zorunludur!' };
@@ -173,6 +202,28 @@ export async function updateBlogPost(
           index,
           sitemap,
         },
+      });
+    }
+
+    // Kategori ilişkilerini güncelle
+    await prisma.blogPostCategory.deleteMany({ where: { blogPostId: id } });
+    if (categoryIds.length > 0) {
+      await prisma.blogPostCategory.createMany({
+        data: categoryIds.map((catId: string) => ({
+          blogPostId: id,
+          categoryId: catId
+        }))
+      });
+    }
+
+    // Etiket ilişkilerini güncelle
+    await prisma.blogPostTag.deleteMany({ where: { blogPostId: id } });
+    if (tagIds.length > 0) {
+      await prisma.blogPostTag.createMany({
+        data: tagIds.map((tagId: string) => ({
+          blogPostId: id,
+          tagId
+        }))
       });
     }
 

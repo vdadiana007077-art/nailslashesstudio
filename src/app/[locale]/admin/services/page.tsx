@@ -27,7 +27,8 @@ export default async function AdminServicesPage({ params }: { params: Promise<{ 
         include: {
           translations: true,
           faqs: true,
-          blogPosts: true
+          blogPosts: true,
+          staff: true
         }
       }
     }
@@ -46,6 +47,12 @@ export default async function AdminServicesPage({ params }: { params: Promise<{ 
     }
   });
 
+  // Personel listesini çek
+  const staffMembers = await prisma.staff.findMany({
+    where: { isActive: true },
+    orderBy: { name: 'asc' }
+  });
+
   // Client formatı
   const formattedCategories = categories.map(cat => ({
     id: cat.id,
@@ -58,6 +65,7 @@ export default async function AdminServicesPage({ params }: { params: Promise<{ 
       isActive: s.isActive,
       faqIds: s.faqs.map(f => f.id),
       blogIds: s.blogPosts.map(bp => bp.blogPostId),
+      staffIds: (s as any).staff.map((ss: any) => ss.staffId),
       translations: s.translations.map(t => ({
         id: t.id,
         language: t.language,
@@ -85,6 +93,11 @@ export default async function AdminServicesPage({ params }: { params: Promise<{ 
   const formattedBlogs = blogPosts.map(b => ({
     id: b.id,
     title: b.translations[0]?.title || 'Başlıksız Blog'
+  }));
+
+  const formattedStaff = staffMembers.map(s => ({
+    id: s.id,
+    name: s.name
   }));
 
   return (
@@ -115,7 +128,8 @@ export default async function AdminServicesPage({ params }: { params: Promise<{ 
           <ServiceList 
             categories={formattedCategories} 
             faqs={formattedFaqs} 
-            blogPosts={formattedBlogs} 
+            blogPosts={formattedBlogs}
+            staffList={formattedStaff}
           />
         </main>
       </div>

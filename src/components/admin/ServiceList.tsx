@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { updateService } from '@/app/actions/admin';
-import { Check, X, Globe, Sparkles } from 'lucide-react';
+import { Check, X, Globe, Sparkles, Image as ImageIcon } from 'lucide-react';
+import MediaPickerModal from './MediaPickerModal';
 
 type ServiceTranslation = {
   id: string;
@@ -29,6 +30,7 @@ type Service = {
   isActive: boolean;
   faqIds: string[];
   blogIds: string[];
+  staffIds: string[];
   translations: ServiceTranslation[];
 };
 
@@ -48,13 +50,19 @@ type BlogItem = {
   title: string;
 };
 
+type StaffItem = {
+  id: string;
+  name: string;
+};
+
 interface ServiceListProps {
   categories: Category[];
   faqs: FaqItem[];
   blogPosts: BlogItem[];
+  staffList: StaffItem[];
 }
 
-export default function ServiceList({ categories, faqs, blogPosts }: ServiceListProps) {
+export default function ServiceList({ categories, faqs, blogPosts, staffList }: ServiceListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [activeLang, setActiveLang] = useState<'TR' | 'EN' | 'DE' | 'RU'>('TR');
@@ -79,9 +87,14 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
   const [index, setIndex] = useState(true);
   const [sitemap, setSitemap] = useState(true);
 
-  // SSS ve Blog Seçimleri State'leri
+  // SSS, Blog ve Personel Seçimleri State'leri
   const [selectedFaqIds, setSelectedFaqIds] = useState<string[]>([]);
   const [selectedBlogIds, setSelectedBlogIds] = useState<string[]>([]);
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+
+  // Medya Seçici Modal
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<'image' | 'ogImage'>('image');
 
   const openEditModal = (service: Service) => {
     setSelectedService(service);
@@ -106,6 +119,7 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
 
     setSelectedFaqIds(service.faqIds);
     setSelectedBlogIds(service.blogIds);
+    setSelectedStaffIds(service.staffIds);
 
     setIsModalOpen(true);
   };
@@ -160,6 +174,27 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
     }
   };
 
+  const handleStaffToggle = (staffId: string) => {
+    if (selectedStaffIds.includes(staffId)) {
+      setSelectedStaffIds(selectedStaffIds.filter(id => id !== staffId));
+    } else {
+      setSelectedStaffIds([...selectedStaffIds, staffId]);
+    }
+  };
+
+  const openMediaPicker = (target: 'image' | 'ogImage') => {
+    setMediaPickerTarget(target);
+    setIsMediaPickerOpen(true);
+  };
+
+  const handleMediaSelect = (url: string) => {
+    if (mediaPickerTarget === 'image') {
+      setImage(url);
+    } else {
+      setOgImage(url);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService) return;
@@ -187,6 +222,7 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
 
     formData.append('faqIds', JSON.stringify(selectedFaqIds));
     formData.append('blogIds', JSON.stringify(selectedBlogIds));
+    formData.append('staffIds', JSON.stringify(selectedStaffIds));
 
     const trans = selectedService.translations.find((t) => t.language === activeLang);
     const res = await updateService(selectedService.id, trans?.id || null, formData);
@@ -220,6 +256,7 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
                     <th className="p-4 font-medium">Hizmet Adı (TR)</th>
                     <th className="p-4 font-medium w-32">Fiyat (₺)</th>
                     <th className="p-4 font-medium w-32">Süre (dk)</th>
+                    <th className="p-4 font-medium w-24">Personel</th>
                     <th className="p-4 font-medium text-right pr-6">İşlem</th>
                   </tr>
                 </thead>
@@ -248,6 +285,15 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
                         </td>
                         <td className="p-4 font-semibold text-gray-500">
                           {service.duration} dk
+                        </td>
+                        <td className="p-4 text-xs text-gray-500">
+                          {service.staffIds.length > 0 ? (
+                            <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-semibold border border-blue-100">
+                              {service.staffIds.length} kişi
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
                         </td>
                         <td className="p-4 text-right pr-6">
                           <button
@@ -334,13 +380,23 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Görsel URL</label>
-                  <input
-                    type="text"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="/uploads/hizmet.png"
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none"
-                  />
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      value={image}
+                      onChange={(e) => setImage(e.target.value)}
+                      placeholder="/uploads/hizmet.png"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openMediaPicker('image')}
+                      className="shrink-0 p-2 border border-gray-200 rounded-xl hover:bg-[var(--color-rose-50)] hover:border-[var(--color-rose-200)] text-gray-500 hover:text-[var(--color-rose-600)] transition-all"
+                      title="Medya Kütüphanesinden Seç"
+                    >
+                      <ImageIcon size={14} />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 select-none pt-6">
                   <input
@@ -401,6 +457,28 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-[var(--color-primary-500)] text-xs"
                   />
                 </div>
+              </div>
+
+              {/* PERSONEL ATAMA */}
+              <div className="pt-4 border-t border-gray-150">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Bu Hizmeti Veren Personeller</h4>
+                {staffList.length === 0 ? (
+                  <p className="text-[10px] text-gray-400">Kayıtlı personel bulunmuyor.</p>
+                ) : (
+                  <div className="space-y-2 max-h-36 overflow-y-auto border border-gray-100 p-3 rounded-xl bg-gray-50/50">
+                    {staffList.map((staff) => (
+                      <label key={staff.id} className="flex items-center gap-2 text-xs text-gray-600 select-none cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedStaffIds.includes(staff.id)}
+                          onChange={() => handleStaffToggle(staff.id)}
+                          className="rounded border-gray-300 text-[var(--color-primary-500)]"
+                        />
+                        <span className="font-medium">{staff.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* SSS (FAQ) VE BLOG İLİŞKİLERİ */}
@@ -500,13 +578,23 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Paylaşım Görseli (OG Image)</label>
-                    <input
-                      type="text"
-                      value={ogImage}
-                      onChange={(e) => setOgImage(e.target.value)}
-                      placeholder="/images/og-hizmet.png"
-                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none"
-                    />
+                    <div className="flex gap-1">
+                      <input
+                        type="text"
+                        value={ogImage}
+                        onChange={(e) => setOgImage(e.target.value)}
+                        placeholder="/images/og-hizmet.png"
+                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => openMediaPicker('ogImage')}
+                        className="shrink-0 p-2 border border-gray-200 rounded-xl hover:bg-[var(--color-rose-50)] hover:border-[var(--color-rose-200)] text-gray-500 hover:text-[var(--color-rose-600)] transition-all"
+                        title="Medya Kütüphanesinden Seç"
+                      >
+                        <ImageIcon size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -560,6 +648,14 @@ export default function ServiceList({ categories, faqs, blogPosts }: ServiceList
           </div>
         </div>
       )}
+
+      {/* Medya Seçici Modal */}
+      <MediaPickerModal
+        isOpen={isMediaPickerOpen}
+        onClose={() => setIsMediaPickerOpen(false)}
+        onSelect={handleMediaSelect}
+        currentValue={mediaPickerTarget === 'image' ? image : ogImage}
+      />
     </>
   );
 }

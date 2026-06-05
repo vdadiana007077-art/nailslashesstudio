@@ -48,14 +48,28 @@ interface BlogPostItem {
   publishedAt: string | null;
   createdAt: string;
   translations: PostTranslation[];
+  categoryIds: string[];
+  tagIds: string[];
+}
+
+interface BlogCategoryOption {
+  id: string;
+  name: string;
+}
+
+interface BlogTagOption {
+  id: string;
+  name: string;
 }
 
 interface BlogClientProps {
   initialPosts: BlogPostItem[];
   currentLocale: string;
+  categories: BlogCategoryOption[];
+  tags: BlogTagOption[];
 }
 
-export default function BlogClient({ initialPosts, currentLocale }: BlogClientProps) {
+export default function BlogClient({ initialPosts, currentLocale, categories, tags }: BlogClientProps) {
   const [posts, setPosts] = useState<BlogPostItem[]>(initialPosts);
   const [searchTerm, setSearchTerm] = useState<string>('');
   
@@ -85,6 +99,10 @@ export default function BlogClient({ initialPosts, currentLocale }: BlogClientPr
   const [index, setIndex] = useState<boolean>(true);
   const [sitemap, setSitemap] = useState<boolean>(true);
 
+  // Kategori ve Etiket seçimleri
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
   // Tab yönetimi (Genel vs SEO alanları)
   const [formTab, setFormTab] = useState<'content' | 'seo'>('content');
 
@@ -112,6 +130,8 @@ export default function BlogClient({ initialPosts, currentLocale }: BlogClientPr
     setPublishedAt(today);
     resetSeoFields();
     setFormTab('content');
+    setSelectedCategoryIds([]);
+    setSelectedTagIds([]);
     setIsModalOpen(true);
   };
 
@@ -150,6 +170,8 @@ export default function BlogClient({ initialPosts, currentLocale }: BlogClientPr
     setAuthorName(post.authorName || 'N&L Studio');
     setPublishedAt(post.publishedAt || '');
     setFormTab('content');
+    setSelectedCategoryIds(post.categoryIds || []);
+    setSelectedTagIds(post.tagIds || []);
     setIsModalOpen(true);
   };
 
@@ -218,6 +240,8 @@ export default function BlogClient({ initialPosts, currentLocale }: BlogClientPr
     formData.append('ogImage', ogImage);
     formData.append('index', index.toString());
     formData.append('sitemap', sitemap.toString());
+    formData.append('categoryIds', JSON.stringify(selectedCategoryIds));
+    formData.append('tagIds', JSON.stringify(selectedTagIds));
 
     let result;
     if (editingPost) {
@@ -552,6 +576,61 @@ export default function BlogClient({ initialPosts, currentLocale }: BlogClientPr
                       className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[var(--color-rose-500)] focus:bg-white min-h-[180px] font-mono"
                     />
                   </div>
+
+                  {/* Kategori Seçimi */}
+                  {categories.length > 0 && (
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Kategoriler</label>
+                      <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 p-3 rounded-xl bg-gray-50/50">
+                        {categories.map((cat) => (
+                          <label key={cat.id} className="flex items-center gap-2 text-xs text-gray-600 select-none cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedCategoryIds.includes(cat.id)}
+                              onChange={() => {
+                                if (selectedCategoryIds.includes(cat.id)) {
+                                  setSelectedCategoryIds(selectedCategoryIds.filter(id => id !== cat.id));
+                                } else {
+                                  setSelectedCategoryIds([...selectedCategoryIds, cat.id]);
+                                }
+                              }}
+                              className="w-4 h-4 text-[var(--color-rose-600)] border-gray-300 rounded focus:ring-[var(--color-rose-500)]"
+                            />
+                            <span className="font-medium">{cat.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Etiket Seçimi */}
+                  {tags.length > 0 && (
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Etiketler</label>
+                      <div className="flex flex-wrap gap-2 border border-gray-200 p-3 rounded-xl bg-gray-50/50 max-h-32 overflow-y-auto">
+                        {tags.map((tag) => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => {
+                              if (selectedTagIds.includes(tag.id)) {
+                                setSelectedTagIds(selectedTagIds.filter(id => id !== tag.id));
+                              } else {
+                                setSelectedTagIds([...selectedTagIds, tag.id]);
+                              }
+                            }}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                              selectedTagIds.includes(tag.id)
+                                ? 'bg-[var(--color-rose-600)] text-white border-[var(--color-rose-600)]'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-[var(--color-rose-300)] hover:bg-[var(--color-rose-50)]'
+                            }`}
+                          >
+                            {tag.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Durum & Öne Çıkar */}
                   <div className="flex gap-6 pt-2">
