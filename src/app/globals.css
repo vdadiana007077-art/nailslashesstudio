@@ -1,29 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-gold-400: #F3E5AB;
-  --color-gold-500: #D4AF37;
-  --color-gold-600: #AA882E;
+  /* Gül Kurusu (Dusty Rose) Palette */
+  --color-rose-300: #E6C5C7;
+  --color-rose-400: #D09B9D;
+  --color-rose-500: #B87B7F;
+  --color-rose-600: #9B5E62;
   
-  --color-dark-900: #050505;
-  --color-dark-800: #121212;
-  --color-dark-700: #1A1A1A;
+  /* Soft Backgrounds */
+  --color-light-100: #FFFFFF;
+  --color-light-200: #FCF8F9;
+  --color-light-300: #F4EBEB;
   
-  --color-glass: rgba(255, 255, 255, 0.03);
-  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass: rgba(255, 255, 255, 0.6);
+  --color-glass-border: rgba(255, 255, 255, 0.4);
 
   --animate-glow: glow 3s ease-in-out infinite alternate;
 }
 
 /* Custom Keyframes for Tailwind v4 */
 @keyframes glow {
-  0% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-  100% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.6); }
+  0% { box-shadow: 0 0 10px rgba(184, 123, 127, 0.15); }
+  100% { box-shadow: 0 0 25px rgba(184, 123, 127, 0.35); }
 }
 
 :root {
-  --background: var(--color-dark-900);
-  --foreground: #F5F5F5;
+  --background: var(--color-light-200);
+  --foreground: #2D2D2D;
 }
 
 body {
@@ -34,7 +37,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   /* Soft background gradient for depth */
-  background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 60%);
+  background-image: radial-gradient(circle at 50% 0%, #FFFFFF 0%, #FCF8F9 60%);
   background-attachment: fixed;
 }
 
@@ -47,11 +50,11 @@ body {
 }
 
 @utility glass-panel {
-  background: rgba(18, 18, 18, 0.6);
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px 0 rgba(184, 123, 127, 0.08);
 }
 
 /* Custom Scrollbar */
@@ -60,20 +63,20 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-dark-900);
+  background: var(--color-light-200);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-dark-700);
+  background: var(--color-rose-300);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gold-600);
+  background: var(--color-rose-500);
 }
 
 /* Selection */
 ::selection {
-  background: var(--color-gold-500);
-  color: var(--color-dark-900);
+  background: var(--color-rose-400);
+  color: #FFFFFF;
 }
