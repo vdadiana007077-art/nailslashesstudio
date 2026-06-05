@@ -68,8 +68,40 @@ export default async function CategoryDetailPage({ params }: Props) {
   const { name, description } = categoryTranslation;
   const services = categoryTranslation.category.services;
 
+  // Structured Data: Breadcrumb Schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Ana Sayfa",
+        "item": `https://nailslashesstudio.com/${locale}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Hizmetler",
+        "item": `https://nailslashesstudio.com/${locale}/services`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": name,
+        "item": `https://nailslashesstudio.com/${locale}/services/${categorySlug}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#faf8f7] pt-32 pb-24 relative overflow-hidden">
+      {/* Structured Data Script Embed */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
       {/* Decorative Background */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-rose-400)]/5 rounded-full blur-3xl -z-10 animate-glow"></div>
 
@@ -114,13 +146,13 @@ export default async function CategoryDetailPage({ params }: Props) {
 
                   <div className="grid grid-cols-2 gap-2">
                     <Link
-                      href={`/services/${categorySlug}/${service.translations[0]?.slug}`}
+                      href={`/${locale}/services/${categorySlug}/${service.translations[0]?.slug}`}
                       className="py-2 rounded-xl text-center text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       Detaylar
                     </Link>
                     <Link
-                      href={`/booking?serviceId=${service.id}`}
+                      href={`/${locale}/booking?serviceId=${service.id}`}
                       className="py-2 rounded-xl text-center text-xs font-bold bg-gray-900 text-white hover:bg-black transition-colors flex items-center justify-center gap-1"
                     >
                       <Calendar size={12} /> Randevu

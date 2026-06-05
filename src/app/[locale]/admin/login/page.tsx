@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
     const result = await loginAdmin(formData);
 
     if (result.success) {
-      router.push('/admin');
+      router.push('/admin' as any);
     } else {
       setError(result.error || 'Giriş başarısız.');
       setIsSubmitting(false);

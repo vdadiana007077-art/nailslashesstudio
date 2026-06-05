@@ -6,11 +6,21 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
+import CookieConsentBanner from '@/components/layout/CookieConsentBanner';
 import "../globals.css";
 
 export const metadata = {
   title: 'Nails & Lashes Beauty Studio',
   description: 'Premium Beauty & Spa Services',
+  manifest: '/manifest.json',
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'N&L Studio',
+  },
 };
 
 export default async function LocaleLayout({
@@ -66,6 +76,11 @@ export default async function LocaleLayout({
     href: m.url
   }));
 
+  const legalMenus = menuItems.filter(m => m.menuType === 'LEGAL_FOOTER').map(m => ({
+    name: m.title,
+    href: m.url
+  }));
+
   // Güvenli Fallback Menü Linkleri (İlk Kurulum Güvenliği)
   const fallbackHeader = [
     { name: 'Ana Sayfa', href: '/' },
@@ -83,8 +98,14 @@ export default async function LocaleLayout({
     { name: 'İletişim', href: '/iletisim' },
   ];
 
+  const fallbackLegal = [
+    { name: 'Gizlilik Politikası', href: '/gizlilik' },
+    { name: 'KVKK Aydınlatma Metni', href: '/kvkk' },
+  ];
+
   const finalHeader = headerMenus.length > 0 ? headerMenus : fallbackHeader;
   const finalFooter = footerMenus.length > 0 ? footerMenus : fallbackFooter;
+  const finalLegal = legalMenus.length > 0 ? legalMenus : fallbackLegal;
 
   const getSetting = (key: string, def: string = '') => {
     return settings.find(s => s.key === key)?.value || def;
@@ -106,7 +127,8 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <Navbar menus={finalHeader} />
           {children}
-          <Footer menus={finalFooter} contact={footerContact} />
+          <Footer menus={finalFooter} legalMenus={finalLegal} contact={footerContact} />
+          <CookieConsentBanner />
         </NextIntlClientProvider>
       </body>
     </html>

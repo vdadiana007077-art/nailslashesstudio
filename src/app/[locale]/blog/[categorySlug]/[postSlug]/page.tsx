@@ -194,12 +194,48 @@ export default async function BlogPostDetailPage({ params }: Props) {
     }))
   } : null;
 
+  // 3. Structured Data: Breadcrumb Schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": locale === 'tr' ? 'Ana Sayfa' : 'Home',
+        "item": `https://nailslashesstudio.com/${locale}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": 'Blog',
+        "item": `https://nailslashesstudio.com/${locale}/blog`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": categoryName,
+        "item": `https://nailslashesstudio.com/${locale}/blog/${categorySlug}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": translation.title,
+        "item": `https://nailslashesstudio.com/${locale}/blog/${categorySlug}/${postSlug}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#faf8f7] pt-32 pb-24 relative overflow-hidden">
       {/* Structured Data Script Embed */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       {faqSchema && (
         <script
@@ -283,7 +319,7 @@ export default async function BlogPostDetailPage({ params }: Props) {
                       </p>
                     </div>
                     <Link
-                      href={`/booking?serviceId=${service.id}`}
+                      href={`/${locale}/booking?serviceId=${service.id}`}
                       className="px-4 py-2 bg-[var(--color-rose-50)] text-[var(--color-rose-700)] hover:bg-[var(--color-rose-100)] transition-colors rounded-xl text-xs font-bold"
                     >
                       Randevu
@@ -327,7 +363,7 @@ export default async function BlogPostDetailPage({ params }: Props) {
                 return (
                   <Link 
                     key={rel.id}
-                    href={`/blog/${catSlug}/${trans?.slug}`}
+                    href={`/${locale}/blog/${catSlug}/${trans?.slug}`}
                     className="bg-white border border-[var(--color-rose-100)] rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-[var(--color-rose-200)] transition-all flex flex-col group"
                   >
                     {rel.image && (

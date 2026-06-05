@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 import { Calendar, User, Search, ChevronRight } from 'lucide-react';
 
 type Post = {
@@ -139,7 +139,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
                 </span>
               </div>
               <Link
-                href={`/blog/${featuredPost.categorySlug}/${featuredPost.slug}`}
+                href={`/${locale}/blog/${featuredPost.categorySlug}/${featuredPost.slug}`}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-950 hover:text-[var(--color-rose-700)] group/link transition-colors"
               >
                 Devamını Oku <ChevronRight size={14} className="group-hover/link:translate-x-0.5 transition-transform" />
@@ -191,8 +191,8 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
                     </span>
                   </div>
                   <Link
-                    href={`/blog/${post.categorySlug}/${post.slug}`}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-950 hover:text-[var(--color-rose-700)] group/link transition-colors"
+                    href={`/${locale}/blog/${post.categorySlug}/${post.slug}`}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-950 hover:text-[var(--color-rose-700)] group/link transition-colors"
                   >
                     Devamını Oku <ChevronRight size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
                   </Link>

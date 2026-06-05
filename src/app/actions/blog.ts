@@ -205,3 +205,138 @@ export async function deleteBlogPost(id: string) {
     return { success: false, error: 'Blog yazısı silinirken bir hata oluştu.' };
   }
 }
+
+export async function createBlogCategory(formData: FormData) {
+  const language = formData.get('language') as Language;
+  const name = formData.get('name') as string;
+  const slug = (formData.get('slug') as string || '').toLowerCase().trim();
+  const description = formData.get('description') as string || null;
+  const order = parseInt(formData.get('order') as string || '0');
+  const isActive = formData.get('isActive') === 'true';
+
+  const seoTitle = formData.get('seoTitle') as string || null;
+  const seoDesc = formData.get('seoDesc') as string || null;
+
+  if (!name || !slug || !language) {
+    return { success: false, error: 'Kategori adı, slug ve dil zorunludur!' };
+  }
+
+  try {
+    const existingSlug = await prisma.blogCategoryTranslation.findFirst({
+      where: { slug, language }
+    });
+
+    if (existingSlug) {
+      return { success: false, error: 'Bu dilde bu slug zaten kullanılıyor!' };
+    }
+
+    const newCategory = await prisma.blogCategory.create({
+      data: {
+        order,
+        isActive,
+        translations: {
+          create: {
+            language,
+            name,
+            slug,
+            description,
+            seoTitle,
+            seoDesc
+          }
+        }
+      }
+    });
+
+    revalidatePath('/[locale]/admin/blog/categories', 'page');
+    revalidatePath('/[locale]/blog', 'page');
+    return { success: true, data: newCategory };
+  } catch (error: any) {
+    console.error('Blog kategori oluşturma hatası:', error);
+    return { success: false, error: 'Kategori oluşturulurken bir hata oluştu.' };
+  }
+}
+
+export async function updateBlogCategory(
+  id: string,
+  translationId: string | null,
+  formData: FormData
+) {
+  const language = formData.get('language') as Language;
+  const name = formData.get('name') as string;
+  const slug = (formData.get('slug') as string || '').toLowerCase().trim();
+  const description = formData.get('description') as string || null;
+  const order = parseInt(formData.get('order') as string || '0');
+  const isActive = formData.get('isActive') === 'true';
+
+  const seoTitle = formData.get('seoTitle') as string || null;
+  const seoDesc = formData.get('seoDesc') as string || null;
+
+  if (!name || !slug || !language) {
+    return { success: false, error: 'Kategori adı, slug ve dil zorunludur!' };
+  }
+
+  try {
+    const existingSlug = await prisma.blogCategoryTranslation.findFirst({
+      where: {
+        slug,
+        language,
+        NOT: translationId ? { id: translationId } : undefined
+      }
+    });
+
+    if (existingSlug) {
+      return { success: false, error: 'Bu dilde bu slug başka bir kategoride kullanılıyor!' };
+    }
+
+    // Ana kaydı güncelle
+    await prisma.blogCategory.update({
+      where: { id },
+      data: { order, isActive }
+    });
+
+    // Çeviri kaydını oluştur veya güncelle
+    if (translationId) {
+      await prisma.blogCategoryTranslation.update({
+        where: { id: translationId },
+        data: { name, slug, description, seoTitle, seoDesc }
+      });
+    } else {
+      await prisma.blogCategoryTranslation.create({
+        data: {
+          categoryId: id,
+          language,
+          name,
+          slug,
+          description,
+          seoTitle,
+          seoDesc
+        }
+      });
+    }
+
+    revalidatePath('/[locale]/admin/blog/categories', 'page');
+    revalidatePath('/[locale]/blog', 'page');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Blog kategori güncelleme hatası:', error);
+    return { success: false, error: 'Kategori güncellenirken bir hata oluştu.' };
+  }
+}
+
+export async function deleteBlogCategory(id: string) {
+  try {
+    // Soft delete
+    await prisma.blogCategory.update({
+      where: { id },
+      data: { isActive: false }
+    });
+
+    revalidatePath('/[locale]/admin/blog/categories', 'page');
+    revalidatePath('/[locale]/blog', 'page');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Blog kategori silme hatası:', error);
+    return { success: false, error: 'Kategori silinirken bir hata oluştu.' };
+  }
+}
+

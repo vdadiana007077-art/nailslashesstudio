@@ -11,6 +11,8 @@ export async function createMenuItem(formData: FormData) {
   const url = formData.get('url') as string;
   const order = parseInt(formData.get('order') as string || '0');
   const isActive = formData.get('isActive') === 'true';
+  const target = formData.get('target') as string || '_self';
+  const isExternal = formData.get('isExternal') === 'true';
 
   if (!menuType || !language || !title || !url) {
     return { success: false, error: 'Menü tipi, dil, başlık ve yönlendirme linki zorunludur!' };
@@ -25,6 +27,8 @@ export async function createMenuItem(formData: FormData) {
         url,
         order,
         isActive,
+        target,
+        isExternal,
       },
     });
 
@@ -44,6 +48,8 @@ export async function updateMenuItem(id: string, formData: FormData) {
   const url = formData.get('url') as string;
   const order = parseInt(formData.get('order') as string || '0');
   const isActive = formData.get('isActive') === 'true';
+  const target = formData.get('target') as string || '_self';
+  const isExternal = formData.get('isExternal') === 'true';
 
   if (!menuType || !language || !title || !url) {
     return { success: false, error: 'Menü tipi, dil, başlık ve yönlendirme linki zorunludur!' };
@@ -59,6 +65,8 @@ export async function updateMenuItem(id: string, formData: FormData) {
         url,
         order,
         isActive,
+        target,
+        isExternal,
       },
     });
 
@@ -87,3 +95,4 @@ export async function deleteMenuItem(id: string) {
     return { success: false, error: 'Menü elemanı silinirken bir hata oluştu.' };
   }
 }
+

@@ -18,12 +18,9 @@ export default function AddServiceForm({ categories }: { categories: Category[] 
     setLoading(true);
     
     const formData = new FormData(e.currentTarget);
-    const result = await createService({
-      categoryId: formData.get('categoryId') as string,
-      name: formData.get('name') as string,
-      price: formData.get('price') as string,
-      duration: parseInt(formData.get('duration') as string),
-    });
+    formData.append('language', 'TR');
+    formData.append('isActive', 'true');
+    const result = await createService(formData);
 
     if (result.success) {
       setIsOpen(false);

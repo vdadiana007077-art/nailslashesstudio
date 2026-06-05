@@ -15,20 +15,24 @@ export default async function AdminMenusPage({ params }: { params: Promise<{ loc
     redirect(`/${locale}/admin/login`);
   }
 
-  // Veritabanından tüm menü öğelerini çek
+  // Tüm menü elemanlarını getir
   const menuItems = await prisma.menuItem.findMany({
-    orderBy: { order: 'asc' },
+    orderBy: [
+      { menuType: 'asc' },
+      { order: 'asc' }
+    ]
   });
 
-  const formattedMenuItems = menuItems.map(m => ({
-    id: m.id,
-    menuType: m.menuType,
-    language: m.language,
-    title: m.title,
-    url: m.url,
-    order: m.order,
-    isActive: m.isActive,
-    createdAt: m.createdAt.toISOString(),
+  const formattedMenuItems = menuItems.map(item => ({
+    id: item.id,
+    menuType: item.menuType,
+    language: item.language,
+    title: item.title,
+    url: item.url,
+    order: item.order,
+    isActive: item.isActive,
+    target: item.target || '_self',
+    isExternal: item.isExternal
   }));
 
   return (
@@ -40,8 +44,8 @@ export default async function AdminMenusPage({ params }: { params: Promise<{ loc
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-serif font-bold text-gray-900 tracking-wide">Menü Yönetimi</h1>
-          <div className="w-10 h-10 rounded-full bg-[var(--color-rose-100)] text-[var(--color-rose-700)] flex items-center justify-center font-bold">
+          <h1 className="text-2xl font-bold text-gray-800">Menü Yönetimi</h1>
+          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
             A
           </div>
         </header>
@@ -50,11 +54,11 @@ export default async function AdminMenusPage({ params }: { params: Promise<{ loc
         <main className="flex-1 overflow-y-auto p-8">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-800">Header ve Footer Menü Linkleri</h2>
-              <p className="text-sm text-gray-500 mt-1">Sitenin üst (Header) ve alt (Footer) kısmında yer alan yönlendirme menülerini diller bazında yönetin, sıralamasını güncelleyin.</p>
+              <h2 className="text-xl font-bold text-gray-800">Header, Footer & Yasal Menüleri</h2>
+              <p className="text-sm text-gray-500 mt-1">Sitenin üst (Header), alt (Footer) ve yasal altbilgi (Legal Footer) menülerini dillere göre düzenleyin.</p>
             </div>
             
-            <MenusClient initialItems={formattedMenuItems} />
+            <MenusClient initialItems={formattedMenuItems} locale={locale} />
           </div>
         </main>
       </div>

@@ -67,6 +67,7 @@ enum ApptSource {
 enum MenuType {
   HEADER
   FOOTER
+  LEGAL_FOOTER
 }
 
 enum LeadStatus {
@@ -125,35 +126,62 @@ enum MessageStatus {
 
 // 🏢 ŞUBE / LOKASYON MODELİ
 model Location {
-  id           String         @id @default(uuid())
-  name         String
-  address      String
-  phone        String?
-  email        String?
-  isActive     Boolean        @default(true)
-  isDeleted    Boolean        @default(false)
-  deletedAt    DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  staff        Staff[]
-  appointments Appointment[]
-  workingHours WorkingHours[]
-  holidays     Holiday[]
-  timeBlocks   TimeBlock[]
-  waitlist     Waitlist[]
+  id             String         @id @default(uuid())
+  name           String
+  branchName     String?
+  address        String
+  city           String?
+  country        String?
+  latitude       Float?
+  longitude      Float?
+  googlePlaceId  String?
+  googleMapsUrl  String?
+  phone          String?
+  email          String?
+  isActive       Boolean        @default(true)
+  isDeleted      Boolean        @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  
+  // SEO Alanları
+  seoTitle       String?
+  seoDesc        String?
+  canonical      String?
+  ogTitle        String?
+  ogDesc         String?
+  ogImage        String?
+
+  staff          Staff[]
+  appointments   Appointment[]
+  workingHours   WorkingHours[]
+  holidays       Holiday[]
+  timeBlocks     TimeBlock[]
+  waitlist       Waitlist[]
+  transactions   Transaction[]
+  leads          Lead[]
+  appointmentSlots AppointmentSlot[]
 }
 
 model User {
-  id           String        @id @default(uuid())
-  role         Role          @default(CUSTOMER)
-  name         String
-  email        String?       @unique
-  phone        String?
-  password     String?
-  loginType    LoginType
-  appointments Appointment[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id               String         @id @default(uuid())
+  role             Role           @default(CUSTOMER)
+  name             String
+  email            String?        @unique
+  phone            String?
+  password         String?
+  loginType        LoginType
+  emailVerified    DateTime?
+  image            String?
+  marketingConsent Boolean        @default(false)
+  authUserId       String?        @unique
+  provider         String?
+  providerAccountId String?
+  appointments     Appointment[]
+  cookieConsent    CookieConsent?
+  subscriber       Subscriber?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model ServiceCategory {
@@ -210,13 +238,14 @@ model Service {
 }
 
 model ServiceTranslation {
-  id          String   @id @default(uuid())
-  serviceId   String
-  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  language    Language
-  slug        String
-  name        String
-  description String   @db.Text
+  id              String   @id @default(uuid())
+  serviceId       String
+  service         Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  language        Language
+  slug            String
+  name            String
+  description     String   @db.Text
+  longDescription String?  @db.Text
   
   // SEO Alanları
   seoTitle      String?
@@ -255,6 +284,7 @@ model Staff {
   appointments Appointment[]
   transactions Transaction[]
   commissions  StaffCommission[]
+  appointmentSlots AppointmentSlot[]
 }
 
 model StaffService {
@@ -410,6 +440,8 @@ model MenuItem {
   url           String
   order         Int             @default(0)
   isActive      Boolean         @default(true)
+  target        String?         @default("_self")
+  isExternal    Boolean         @default(false)
   createdAt     DateTime        @default(now())
 }
 
@@ -473,6 +505,8 @@ model Transaction {
   appointment   Appointment?        @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   staffId       String?
   staff         Staff?              @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  locationId    String?
+  location      Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 }
@@ -632,16 +666,22 @@ model Lead {
   message   String?    @db.Text
   status    LeadStatus @default(PENDING)
   notes     String?    @db.Text
+  locationId String?
+  location   Location?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
   createdAt DateTime   @default(now())
 }
 
 // 📧 E-BÜLTEN ABONELİK (NEWSLETTER SUBSCRIBERS) MODELİ
 model Subscriber {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  language  Language
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id               String    @id @default(uuid())
+  email            String    @unique
+  language         Language
+  isActive         Boolean   @default(true)
+  marketingConsent Boolean   @default(false)
+  userId           String?   @unique
+  user             User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  unsubscribedAt   DateTime?
 }
 
 // 🏷️ KAMPANYA VE KUPON MODELİ (COUPONS)
@@ -866,4 +906,35 @@ model LandingPageTranslation {
 
   @@unique([landingPageId, language])
   @@unique([slug, language])
+}
+
+model AppointmentSlot {
+  id            String    @id @default(uuid())
+  locationId    String
+  location      Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  staffId       String?
+  staff         Staff?    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date          DateTime  @db.Date
+  time          String
+  capacity      Int       @default(1)
+  bookedCount   Int       @default(0)
+  isBlocked     Boolean   @default(false)
+  blockReason   String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([locationId, staffId, date, time])
+}
+
+model CookieConsent {
+  id            String    @id @default(uuid())
+  userId        String?   @unique
+  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consentId     String    @unique
+  necessary     Boolean   @default(true)
+  analytics     Boolean   @default(false)
+  marketing     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }

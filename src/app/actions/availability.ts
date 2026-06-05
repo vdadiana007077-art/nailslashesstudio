@@ -108,6 +108,15 @@ export async function getAvailableTimeSlots(
       return { success: true, slots: [] }; // O gün o şubede bu hizmeti verebilecek kimse yok
     }
 
+    // O gün için tanımlanmış kapasite / bloke slotları veritabanından çekelim (SaaS kapasite yönetimi)
+    const customSlots = await prisma.appointmentSlot.findMany({
+      where: {
+        locationId,
+        date: dateObj,
+        isActive: true,
+      },
+    });
+
     // Ortak müsait slotları toplayacağımız küme (Unique list)
     const allAvailableSlots = new Set<string>();
 
@@ -188,14 +197,33 @@ export async function getAvailableTimeSlots(
       for (let current = openMin; current + duration <= closeMin; current += stepMinutes) {
         const slotStart = current;
         const slotEnd = current + duration;
+        const slotTime = minutesToTime(slotStart);
 
         // Herhangi bir bloke süreyle çakışma var mı?
-        const isBlocked = blocks.some((b) => {
+        let isBlocked = blocks.some((b) => {
           return slotStart < b.end && slotEnd > b.start;
         });
 
+        // 5.1. Akıllı Slot Kapasitesi / Bloke Kontrolü
         if (!isBlocked) {
-          allAvailableSlots.add(minutesToTime(slotStart));
+          // Çalışana özel slot kuralı var mı?
+          const staffSlot = customSlots.find(s => s.staffId === staff.id && s.time === slotTime);
+          // Yoksa şube genelinde slot kuralı var mı?
+          const generalSlot = customSlots.find(s => s.staffId === null && s.time === slotTime);
+
+          const activeSlotRule = staffSlot || generalSlot;
+
+          if (activeSlotRule) {
+            if (activeSlotRule.isBlocked) {
+              isBlocked = true; // El ile bloke edilmiş slot
+            } else if (activeSlotRule.bookedCount >= activeSlotRule.capacity) {
+              isBlocked = true; // Kapasitesi dolmuş slot
+            }
+          }
+        }
+
+        if (!isBlocked) {
+          allAvailableSlots.add(slotTime);
         }
       }
     }
@@ -211,3 +239,137 @@ export async function getAvailableTimeSlots(
     return { success: false, error: 'Müsaitlik saatleri hesaplanırken bir hata oluştu.' };
   }
 }
+
+/**
+ * Belirli bir şube ve tarihteki tüm AppointmentSlot kayıtlarını getirir.
+ */
+export async function getSlots(locationId: string, dateStr: string) {
+  try {
+    if (!locationId || !dateStr) {
+      return { success: false, error: 'Şube ve tarih bilgisi zorunludur.' };
+    }
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    const slots = await prisma.appointmentSlot.findMany({
+      where: {
+        locationId,
+        date: dateObj,
+        isActive: true
+      },
+      include: {
+        staff: true
+      }
+    });
+    return { success: true, slots };
+  } catch (error: any) {
+    console.error('Slotlar getirilirken hata oluştu:', error);
+    return { success: false, error: 'Slotlar getirilemedi.' };
+  }
+}
+
+/**
+ * Belirli bir slotu bloke eder veya blokesini kaldırır.
+ */
+export async function blockSlot(
+  locationId: string,
+  staffId: string | null,
+  dateStr: string,
+  time: string,
+  isBlocked: boolean,
+  reason?: string
+) {
+  try {
+    if (!locationId || !dateStr || !time) {
+      return { success: false, error: 'Şube, tarih ve saat bilgileri zorunludur.' };
+    }
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    
+    const existingSlot = await prisma.appointmentSlot.findFirst({
+      where: {
+        locationId,
+        staffId: staffId || null,
+        date: dateObj,
+        time
+      }
+    });
+
+    let slot;
+    if (existingSlot) {
+      slot = await prisma.appointmentSlot.update({
+        where: { id: existingSlot.id },
+        data: {
+          isBlocked,
+          blockReason: reason || null
+        }
+      });
+    } else {
+      slot = await prisma.appointmentSlot.create({
+        data: {
+          locationId,
+          staffId: staffId || null,
+          date: dateObj,
+          time,
+          isBlocked,
+          blockReason: reason || null,
+          capacity: 1
+        }
+      });
+    }
+    return { success: true, slot };
+  } catch (error: any) {
+    console.error('Slot bloke etme hatası:', error);
+    return { success: false, error: 'Slot güncellenirken hata oluştu.' };
+  }
+}
+
+/**
+ * Belirli bir slotun kapasitesini günceller.
+ */
+export async function updateSlotCapacity(
+  locationId: string,
+  staffId: string | null,
+  dateStr: string,
+  time: string,
+  capacity: number
+) {
+  try {
+    if (!locationId || !dateStr || !time || capacity < 1) {
+      return { success: false, error: 'Geçersiz parametreler.' };
+    }
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    
+    const existingSlot = await prisma.appointmentSlot.findFirst({
+      where: {
+        locationId,
+        staffId: staffId || null,
+        date: dateObj,
+        time
+      }
+    });
+
+    let slot;
+    if (existingSlot) {
+      slot = await prisma.appointmentSlot.update({
+        where: { id: existingSlot.id },
+        data: {
+          capacity
+        }
+      });
+    } else {
+      slot = await prisma.appointmentSlot.create({
+        data: {
+          locationId,
+          staffId: staffId || null,
+          date: dateObj,
+          time,
+          capacity,
+          isBlocked: false
+        }
+      });
+    }
+    return { success: true, slot };
+  } catch (error: any) {
+    console.error('Slot kapasitesi güncelleme hatası:', error);
+    return { success: false, error: 'Slot kapasitesi güncellenirken hata oluştu.' };
+  }
+}
+

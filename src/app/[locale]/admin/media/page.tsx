@@ -1,11 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import { LogOut, Image, Calendar, Settings, Tags, MapPin, Users } from 'lucide-react';
-import { logoutAdmin } from '@/app/actions/auth';
-import Link from 'next/link';
-import MediaClient from './MediaClient';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import MediaClient from './MediaClient';
 
 export default async function AdminMediaPage({ params }: { params: Promise<{ locale: string }> }) {
   const cookieStore = await cookies();
@@ -17,23 +13,6 @@ export default async function AdminMediaPage({ params }: { params: Promise<{ loc
   if (!token || token.value !== 'authenticated') {
     redirect(`/${locale}/admin/login`);
   }
-
-  // Veritabanındaki tüm medyaları çek
-  const media = await prisma.mediaItem.findMany({
-    orderBy: { createdAt: 'desc' },
-  });
-
-  const formattedMedia = media.map(m => ({
-    id: m.id,
-    url: m.url,
-    title: m.title,
-    altText: m.altText,
-    caption: m.caption,
-    fileName: m.fileName,
-    fileSize: m.fileSize,
-    mimeType: m.mimeType,
-    createdAt: m.createdAt,
-  }));
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -52,13 +31,13 @@ export default async function AdminMediaPage({ params }: { params: Promise<{ loc
 
         {/* Content Area */}
         <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-800">Merkezi Medya Yönetimi</h2>
-              <p className="text-sm text-gray-500 mt-1">Medya dosyalarınızı tek bir yerden yükleyin, silin ve arama motorları için Görsel SEO alt textlerini yapılandırın.</p>
+              <h2 className="text-xl font-bold text-gray-800">Görsel & Medya Yönetimi</h2>
+              <p className="text-sm text-gray-500 mt-1">Hizmetler, kategoriler ve blog yazıları için kullanacağınız görselleri buradan yükleyebilir ve kopyalayabilirsiniz.</p>
             </div>
             
-            <MediaClient initialMedia={formattedMedia} locale={locale} />
+            <MediaClient locale={locale} />
           </div>
         </main>
       </div>

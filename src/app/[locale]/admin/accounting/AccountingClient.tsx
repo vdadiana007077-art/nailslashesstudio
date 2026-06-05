@@ -15,7 +15,8 @@ import {
   Landmark,
   X,
   Sparkles,
-  Users
+  Users,
+  MapPin
 } from 'lucide-react';
 
 type TransactionItem = {
@@ -25,6 +26,8 @@ type TransactionItem = {
   paymentMethod: 'CASH' | 'CARD' | 'TRANSFER';
   date: string;
   description: string | null;
+  locationId: string | null;
+  locationName: string;
   category: {
     name: string;
   };
@@ -46,24 +49,36 @@ type StaffPayout = {
   commissionEarned: number;
 };
 
+type LocationItem = {
+  id: string;
+  name: string;
+};
+
 type Props = {
   transactions: TransactionItem[];
   staffList: StaffItem[];
   staffPayouts: StaffPayout[];
+  locations: LocationItem[];
   locale: string;
 };
 
-export default function AccountingClient({ transactions, staffList, staffPayouts, locale }: Props) {
+export default function AccountingClient({ transactions, staffList, staffPayouts, locations, locale }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('ALL');
 
-  // Gelir & Gider Hesaplamaları
-  const totalIncome = transactions
+  // Filtrelenmiş İşlemler
+  const filteredTransactions = transactions.filter((t) => 
+    selectedLocationId === 'ALL' || t.locationId === selectedLocationId
+  );
+
+  // Gelir & Gider Hesaplamaları (Filtrelenmiş verilere göre)
+  const totalIncome = filteredTransactions
     .filter(t => t.type === 'INCOME')
     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
-  const totalExpense = transactions
+  const totalExpense = filteredTransactions
     .filter(t => t.type === 'EXPENSE')
     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
@@ -81,11 +96,18 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
     const paymentMethod = formData.get('paymentMethod') as 'CASH' | 'CARD' | 'TRANSFER';
     const description = formData.get('description') as string;
     const staffId = formData.get('staffId') as string;
+    const locationId = formData.get('locationId') as string;
 
     const amount = parseFloat(amountStr);
 
     if (isNaN(amount) || amount <= 0) {
       setError('Geçerli bir tutar giriniz.');
+      setLoading(false);
+      return;
+    }
+
+    if (!locationId) {
+      setError('Lütfen bir şube seçiniz.');
       setLoading(false);
       return;
     }
@@ -97,7 +119,8 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
         amount,
         paymentMethod,
         description,
-        staffId: staffId || undefined
+        staffId: staffId || undefined,
+        locationId: locationId || undefined
       });
 
       if (res.success) {
@@ -120,6 +143,39 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
 
   return (
     <div className="space-y-8">
+      {/* Şube Filtreleme (Premium Tab Tasarımı) */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <MapPin className="text-[var(--color-primary-500)]" size={18} />
+          <span className="text-sm font-bold text-gray-700">Şube Filtresi:</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedLocationId('ALL')}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              selectedLocationId === 'ALL'
+                ? 'bg-gray-950 text-white shadow-sm'
+                : 'bg-gray-50 hover:bg-gray-100 text-gray-600'
+            }`}
+          >
+            Tüm Şubeler
+          </button>
+          {locations.map((loc) => (
+            <button
+              key={loc.id}
+              onClick={() => setSelectedLocationId(loc.id)}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                selectedLocationId === loc.id
+                  ? 'bg-gray-950 text-white shadow-sm'
+                  : 'bg-gray-50 hover:bg-gray-100 text-gray-600'
+              }`}
+            >
+              {loc.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Toplam Gelir */}
@@ -130,7 +186,7 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
               <TrendingUp size={24} />
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Toplam Gelir</p>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Gelir</p>
               <p className="text-2xl font-bold text-gray-800 mt-1">₺{totalIncome.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
@@ -145,7 +201,7 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
               <TrendingDown size={24} />
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Toplam Gider</p>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Gider</p>
               <p className="text-2xl font-bold text-gray-800 mt-1">₺{totalExpense.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
@@ -186,9 +242,9 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
             </button>
           </div>
 
-          {transactions.length === 0 ? (
+          {filteredTransactions.length === 0 ? (
             <div className="p-16 text-center text-gray-500">
-              Henüz bir muhasebe hareketi kaydedilmemiş.
+              Bu şubeye ait bir muhasebe hareketi kaydedilmemiş.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -196,7 +252,7 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
                 <thead>
                   <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
                     <th className="p-4 pl-6">Tür</th>
-                    <th className="p-4">Kategori</th>
+                    <th className="p-4">Kategori & Şube</th>
                     <th className="p-4">Açıklama</th>
                     <th className="p-4">Ödeme Yöntemi</th>
                     <th className="p-4">Tutar</th>
@@ -204,7 +260,7 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((t) => (
+                  {filteredTransactions.map((t) => (
                     <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50/20 transition-colors text-sm">
                       <td className="p-4 pl-6">
                         <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-xl border ${
@@ -215,12 +271,15 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
                           {t.type === 'INCOME' ? 'Gelir' : 'Gider'}
                         </span>
                       </td>
-                      <td className="p-4 font-semibold text-gray-800">
-                        {t.category.name}
+                      <td className="p-4">
+                        <div className="font-semibold text-gray-800">{t.category.name}</div>
+                        <div className="text-[10px] text-gray-400 font-medium flex items-center gap-0.5 mt-0.5">
+                          <MapPin size={10} className="text-gray-400" /> {t.locationName}
+                        </div>
                         {t.staff && (
-                          <span className="block text-[10px] text-gray-400 font-light flex items-center gap-0.5 mt-0.5">
+                          <div className="text-[10px] text-gray-400 font-light flex items-center gap-0.5 mt-0.5">
                             <User size={10} /> {t.staff.name}
-                          </span>
+                          </div>
                         )}
                       </td>
                       <td className="p-4 text-xs text-gray-500 max-w-[200px] truncate" title={t.description || ''}>
@@ -331,6 +390,22 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
                     <TrendingDown size={16} /> Gider
                   </label>
                 </div>
+              </div>
+
+              {/* Location Select (Required) */}
+              <div>
+                <label htmlFor="locationId" className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">İlişkili Şube *</label>
+                <select
+                  id="locationId"
+                  name="locationId"
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200/80 rounded-2xl focus:outline-none focus:border-[var(--color-primary-500)] focus:bg-white transition-all text-xs"
+                >
+                  <option value="">Şube Seçiniz</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Category */}

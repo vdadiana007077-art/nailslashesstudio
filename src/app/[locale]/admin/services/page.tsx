@@ -1,16 +1,13 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { LogOut, Calendar, Settings, Users, Scissors, Tags, MapPin, Image } from 'lucide-react';
-import { logoutAdmin } from '@/app/actions/auth';
+import AdminSidebar from '@/components/admin/AdminSidebar';
 import ServiceList from '@/components/admin/ServiceList';
 import AddServiceForm from '@/components/admin/AddServiceForm';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export default async function AdminServicesPage({ params }: { params: Promise<{ locale: string }> }) {
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_token');
-
   const resolvedParams = await params;
   const locale = resolvedParams.locale;
 
@@ -19,30 +16,75 @@ export default async function AdminServicesPage({ params }: { params: Promise<{ 
     redirect(`/${locale}/admin/login`);
   }
 
-  // Kategorileri ve hizmetleri çek
+  // Kategorileri, hizmetleri ve ilişkili verileri çek
   const categories = await prisma.serviceCategory.findMany({
+    where: { isDeleted: false },
     orderBy: { order: 'asc' },
     include: {
       translations: { where: { language: 'TR' } },
       services: {
+        where: { isDeleted: false },
         include: {
-          translations: { where: { language: 'TR' } }
+          translations: true,
+          faqs: true,
+          blogPosts: true
         }
       }
     }
   });
 
-  // Client'a passlanacak format
+  // İlişkilendirilecek tüm SSS ve Blogları çek
+  const faqs = await prisma.faq.findMany({
+    where: { isActive: true },
+    orderBy: { order: 'asc' }
+  });
+
+  const blogPosts = await prisma.blogPost.findMany({
+    where: { isDeleted: false, isActive: true },
+    include: {
+      translations: { where: { language: 'TR' } }
+    }
+  });
+
+  // Client formatı
   const formattedCategories = categories.map(cat => ({
     id: cat.id,
     name: cat.translations[0]?.name || 'İsimsiz Kategori',
     services: cat.services.map(s => ({
       id: s.id,
-      name: s.translations[0]?.name || 'İsimsiz Hizmet',
       price: s.price.toString(),
       duration: s.duration,
-      isActive: s.isActive
+      image: s.image,
+      isActive: s.isActive,
+      faqIds: s.faqs.map(f => f.id),
+      blogIds: s.blogPosts.map(bp => bp.blogPostId),
+      translations: s.translations.map(t => ({
+        id: t.id,
+        language: t.language,
+        name: t.name,
+        slug: t.slug,
+        description: t.description || '',
+        longDescription: t.longDescription || '',
+        seoTitle: t.seoTitle || '',
+        seoDesc: t.seoDesc || '',
+        canonical: t.canonical || '',
+        ogTitle: t.ogTitle || '',
+        ogDesc: t.ogDesc || '',
+        ogImage: t.ogImage || '',
+        index: t.index,
+        sitemap: t.sitemap
+      }))
     }))
+  }));
+
+  const formattedFaqs = faqs.map(f => ({
+    id: f.id,
+    question: f.question
+  }));
+
+  const formattedBlogs = blogPosts.map(b => ({
+    id: b.id,
+    title: b.translations[0]?.title || 'Başlıksız Blog'
   }));
 
   return (
@@ -65,13 +107,16 @@ export default async function AdminServicesPage({ params }: { params: Promise<{ 
           <div className="mb-6 flex justify-between items-end">
             <div>
               <h2 className="text-lg font-bold text-gray-800">Tüm Hizmetler</h2>
-              <p className="text-sm text-gray-500">Fiyatları ve süreleri güncelleyebilir, hizmetleri aktif/pasif yapabilirsiniz.</p>
+              <p className="text-sm text-gray-500">Tüm dillerdeki detayları, görselleri, SSS ve Blog ilişkilerini yönetebilirsiniz.</p>
             </div>
             <AddServiceForm categories={formattedCategories} />
           </div>
 
-          <ServiceList categories={formattedCategories} />
-          
+          <ServiceList 
+            categories={formattedCategories} 
+            faqs={formattedFaqs} 
+            blogPosts={formattedBlogs} 
+          />
         </main>
       </div>
     </div>

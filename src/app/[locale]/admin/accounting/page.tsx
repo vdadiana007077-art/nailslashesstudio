@@ -20,12 +20,14 @@ export default async function AccountingPage({ params }: { params: Promise<{ loc
   let transactions: any[] = [];
   let staffList: any[] = [];
   let completedAppointments: any[] = [];
+  let locations: any[] = [];
 
   try {
     transactions = await prisma.transaction.findMany({
       include: {
         category: true,
-        staff: true
+        staff: true,
+        location: true
       },
       orderBy: {
         date: 'desc'
@@ -35,6 +37,12 @@ export default async function AccountingPage({ params }: { params: Promise<{ loc
     // 2. Aktif personelleri çek
     staffList = await prisma.staff.findMany({
       where: { isDeleted: false },
+      orderBy: { name: 'asc' }
+    });
+
+    // 2.1. Aktif şubeleri çek
+    locations = await prisma.location.findMany({
+      where: { isDeleted: false, isActive: true },
       orderBy: { name: 'asc' }
     });
 
@@ -59,6 +67,8 @@ export default async function AccountingPage({ params }: { params: Promise<{ loc
     paymentMethod: t.paymentMethod,
     date: t.date.toISOString(),
     description: t.description,
+    locationId: t.locationId,
+    locationName: t.location ? (t.location.branchName || t.location.name) : 'Şube Belirtilmemiş',
     category: {
       name: t.category.name,
     },
@@ -68,6 +78,11 @@ export default async function AccountingPage({ params }: { params: Promise<{ loc
   const formattedStaffList = staffList.map((st) => ({
     id: st.id,
     name: st.name
+  }));
+
+  const formattedLocations = locations.map((l) => ({
+    id: l.id,
+    name: l.branchName || l.name
   }));
 
   // Personel hakediş ciro/komisyon hesaplaması
@@ -142,6 +157,7 @@ export default async function AccountingPage({ params }: { params: Promise<{ loc
             transactions={formattedTransactions} 
             staffList={formattedStaffList} 
             staffPayouts={staffPayouts} 
+            locations={formattedLocations}
             locale={locale} 
           />
         </main>

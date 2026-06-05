@@ -12,6 +12,7 @@ export async function createTransaction(data: {
   paymentMethod: PaymentMethod;
   description?: string;
   staffId?: string;
+  locationId?: string;
 }) {
   if (!data.categoryName || !data.amount) {
     return { success: false, error: 'Kategori adı ve tutar zorunludur!' };
@@ -42,7 +43,8 @@ export async function createTransaction(data: {
         paymentMethod: data.paymentMethod,
         date: new Date(),
         description: data.description || null,
-        staffId: data.staffId || null
+        staffId: data.staffId || null,
+        locationId: data.locationId || null
       }
     });
 

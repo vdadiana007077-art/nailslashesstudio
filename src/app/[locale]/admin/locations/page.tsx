@@ -21,16 +21,39 @@ export default async function AdminLocationsPage({ params }: { params: Promise<{
   // Veritabanından silinmemiş şubeleri çek
   const locations = await prisma.location.findMany({
     where: { isDeleted: false },
+    include: { workingHours: true },
     orderBy: { createdAt: 'desc' },
   });
 
   const formattedLocations = locations.map(l => ({
     id: l.id,
     name: l.name,
+    branchName: l.branchName,
     address: l.address,
+    city: l.city,
+    country: l.country,
+    latitude: l.latitude,
+    longitude: l.longitude,
+    googlePlaceId: l.googlePlaceId,
+    googleMapsUrl: l.googleMapsUrl,
     phone: l.phone,
     email: l.email,
     isActive: l.isActive,
+    seoTitle: l.seoTitle,
+    seoDesc: l.seoDesc,
+    canonical: l.canonical,
+    ogTitle: l.ogTitle,
+    ogDesc: l.ogDesc,
+    ogImage: l.ogImage,
+    workingHours: l.workingHours.map(wh => ({
+      id: wh.id,
+      dayOfWeek: wh.dayOfWeek,
+      openTime: wh.openTime,
+      closeTime: wh.closeTime,
+      isClosed: wh.isClosed,
+      breakStart: wh.breakStart,
+      breakEnd: wh.breakEnd,
+    })),
   }));
 
   return (

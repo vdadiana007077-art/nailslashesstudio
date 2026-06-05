@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link, usePathname } from '@/i18n/routing';
 
 type MenuItemProp = {
   name: string;
@@ -18,8 +18,13 @@ type ContactProp = {
   youtube: string;
 };
 
-export default function Footer({ menus, contact }: { menus: MenuItemProp[], contact: ContactProp }) {
+export default function Footer({ menus, legalMenus, contact }: { menus: MenuItemProp[], legalMenus: MenuItemProp[], contact: ContactProp }) {
   const t = useTranslations('Index');
+  const pathname = usePathname();
+
+  if (pathname.includes('/admin')) {
+    return null;
+  }
 
   return (
     <footer className="w-full mt-24 border-t border-[var(--color-primary-300)]/30 relative z-10 bg-white/40">
@@ -89,8 +94,11 @@ export default function Footer({ menus, contact }: { menus: MenuItemProp[], cont
         <div className="mt-16 pt-8 border-t border-[var(--color-primary-300)]/30 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--color-text-muted)]">
           <p>© {new Date().getFullYear()} Nails & Lashes Studio. Tüm hakları saklıdır.</p>
           <div className="flex gap-4">
-            <Link href="/gizlilik" className="hover:text-[var(--color-text-main)] transition-colors">Gizlilik Politikası</Link>
-            <Link href="/kvkk" className="hover:text-[var(--color-text-main)] transition-colors">KVKK Aydınlatma Metni</Link>
+            {legalMenus.map((menu, idx) => (
+              <Link key={idx} href={menu.href as any} className="hover:text-[var(--color-text-main)] transition-colors">
+                {menu.name}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

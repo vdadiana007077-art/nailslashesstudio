@@ -149,12 +149,48 @@ export default async function ServiceDetailPage({ params }: Props) {
     }))
   } : null;
 
+  // 3. Structured Data: Breadcrumb Schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Ana Sayfa",
+        "item": `https://nailslashesstudio.com/${locale}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Hizmetler",
+        "item": `https://nailslashesstudio.com/${locale}/services`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": categoryName,
+        "item": `https://nailslashesstudio.com/${locale}/services/${categorySlug}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": translation.name,
+        "item": `https://nailslashesstudio.com/${locale}/services/${categorySlug}/${serviceSlug}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#faf8f7] pt-32 pb-24 relative overflow-hidden">
       {/* Structured Data Script Embed */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       {faqSchema && (
         <script
@@ -213,7 +249,9 @@ export default async function ServiceDetailPage({ params }: Props) {
 
           {/* Description */}
           <div className="prose max-w-none text-gray-700 leading-relaxed text-sm md:text-base mb-10">
-            <p className="whitespace-pre-line">{translation.description}</p>
+            <p className="whitespace-pre-line">
+              {translation.longDescription || translation.description}
+            </p>
           </div>
 
           {/* CTA Booking Button */}

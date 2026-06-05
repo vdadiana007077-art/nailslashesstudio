@@ -19,12 +19,12 @@ export default async function AdminCategoriesPage({ params }: { params: Promise<
     redirect(`/${locale}/admin/login`);
   }
 
-  // Kategorileri veritabanından çek (TR dilini baz alıyoruz yönetim için)
+  // Kategorileri veritabanından çek (Tüm diller dahil)
   const categories = await prisma.serviceCategory.findMany({
     where: { isDeleted: false },
     orderBy: { order: 'asc' },
     include: {
-      translations: { where: { language: 'TR' } }
+      translations: true
     }
   });
 
@@ -32,11 +32,22 @@ export default async function AdminCategoriesPage({ params }: { params: Promise<
     id: c.id,
     isActive: c.isActive,
     image: c.image,
-    name: c.translations[0]?.name || 'İsimsiz Kategori',
-    slug: c.translations[0]?.slug || '',
-    description: c.translations[0]?.description || '',
-    seoTitle: c.translations[0]?.seoTitle || '',
-    seoDesc: c.translations[0]?.seoDesc || '',
+    order: c.order,
+    translations: c.translations.map(t => ({
+      id: t.id,
+      language: t.language,
+      name: t.name,
+      slug: t.slug,
+      description: t.description || '',
+      seoTitle: t.seoTitle || '',
+      seoDesc: t.seoDesc || '',
+      canonical: t.canonical || '',
+      ogTitle: t.ogTitle || '',
+      ogDesc: t.ogDesc || '',
+      ogImage: t.ogImage || '',
+      index: t.index,
+      sitemap: t.sitemap
+    }))
   }));
 
   return (

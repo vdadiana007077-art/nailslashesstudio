@@ -13,6 +13,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const locale = resolvedParams.locale;
 
+  // İlk aktif şubenin SEO verilerini çekmeyi dene
+  let dbLocation = null;
+  try {
+    dbLocation = await prisma.location.findFirst({
+      where: { isActive: true, isDeleted: false }
+    });
+  } catch (error) {
+    console.error("SEO Metadata şube çekilemedi:", error);
+  }
+
   const titles: Record<string, string> = {
     tr: 'İletişim & Şubelerimiz | Nails & Lashes Studio',
     en: 'Contact & Branches | Nails & Lashes Studio',
@@ -22,19 +32,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const descriptions: Record<string, string> = {
     tr: 'Nails & Lashes Studio Antalya şubelerimizin adres, telefon, harita bilgileri ve çalışma saatleri. Bizimle iletişime geçin veya randevunuzu oluşturun.',
-    en: 'Address, phone, map information and working hours of Nails & Lashes Studio Antalya branches. Get in touch or book an appointment.',
-    de: 'Adresse, Telefonnummer, Karteninformationen und Öffnungszeiten der Filialen von Nails & Lashes Studio Antalya. Kontaktieren Sie uns oder buchen Sie.',
-    ru: 'Адрес, телефон, информация на карте и часы работы филиалов Nails & Lashes Studio Antalya. Свяжитесь с нами или запишитесь.'
+    en: 'Nails & Lashes Studio Antalya branches contact details. Address, phone, map and working hours.',
+    de: 'Kontaktinformationen der Filialen von Nails & Lashes Studio Antalya.',
+    ru: 'Контакты филиалов студии Nails & Lashes Studio в Анталии.'
   };
 
-  const title = titles[locale] || titles.en;
-  const desc = descriptions[locale] || descriptions.en;
+  // Eğer veritabanındaki şubede özel SEO alanları tanımlıysa onları kullan
+  const title = dbLocation?.seoTitle || titles[locale] || titles.en;
+  const desc = dbLocation?.seoDesc || descriptions[locale] || descriptions.en;
+  const canonical = dbLocation?.canonical || `https://nailslashesstudio.com/${locale}/iletisim`;
+  const ogTitle = dbLocation?.ogTitle || title;
+  const ogDesc = dbLocation?.ogDesc || desc;
+  const ogImage = dbLocation?.ogImage || 'https://nailslashesstudio.com/images/luxury_salon_hero.png';
 
   return {
     title,
     description: desc,
     alternates: {
-      canonical: `https://nailslashesstudio.com/${locale}/iletisim`,
+      canonical,
       languages: {
         'tr': `https://nailslashesstudio.com/tr/iletisim`,
         'en': `https://nailslashesstudio.com/en/iletisim`,
@@ -43,14 +58,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       }
     },
     openGraph: {
-      title,
-      description: desc,
-      images: [{ url: 'https://nailslashesstudio.com/images/luxury_salon_hero.png' }],
+      title: ogTitle,
+      description: ogDesc,
+      images: [{ url: ogImage }],
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description: desc,
+      title: ogTitle,
+      description: ogDesc,
     }
   };
 }
@@ -61,24 +76,7 @@ export default async function ContactPage({ params }: Props) {
   const languageEnum = locale.toUpperCase() as Language;
 
   // 1. Şubeleri çalışma saatleriyle birlikte çek
-  let locations: Array<{
-    id: string;
-    name: string;
-    address: string;
-    phone: string | null;
-    email: string | null;
-    isActive: boolean;
-    isDeleted: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    workingHours: Array<{
-      id: string;
-      dayOfWeek: number;
-      openTime: string;
-      closeTime: string;
-      isClosed: boolean;
-    }>;
-  }> = [];
+  let locations: any[] = [];
   try {
     locations = await prisma.location.findMany({
       where: { isActive: true, isDeleted: false },
@@ -106,18 +104,24 @@ export default async function ContactPage({ params }: Props) {
   const businessSchemas = locations.map(loc => ({
     "@context": "https://schema.org",
     "@type": "BeautySalon",
-    "name": `Nails & Lashes Studio - ${loc.name}`,
+    "name": loc.branchName || `Nails & Lashes Studio - ${loc.name}`,
     "image": "https://nailslashesstudio.com/images/luxury_salon_hero.png",
     "priceRange": "₺₺",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": loc.address,
-      "addressLocality": "Antalya",
+      "addressLocality": loc.city || "Antalya",
       "addressCountry": "TR"
     },
     "telephone": loc.phone || "+90 242 000 0000",
     "email": loc.email || "info@nailslashesstudio.com",
-    "url": `https://nailslashesstudio.com/${locale}/iletisim`
+    "url": loc.canonical || `https://nailslashesstudio.com/${locale}/iletisim`,
+    "geo": loc.latitude && loc.longitude ? {
+      "@type": "GeoCoordinates",
+      "latitude": loc.latitude,
+      "longitude": loc.longitude
+    } : undefined,
+    "hasMap": loc.googleMapsUrl || undefined
   }));
 
   // Structured Data: BreadcrumbList Schema
@@ -186,8 +190,9 @@ export default async function ContactPage({ params }: Props) {
             ) : (
               locations.map((loc) => {
                 // Dinamik Google Harita URL'i
-                const mapQuery = encodeURIComponent(`${loc.name} ${loc.address}`);
-                const mapUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+                const mapUrl = loc.latitude && loc.longitude 
+                  ? `https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=15&output=embed`
+                  : `https://maps.google.com/maps?q=${encodeURIComponent(`${loc.name} ${loc.address}`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
 
                 return (
                   <div key={loc.id} className="bg-white border border-[var(--color-rose-100)] rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
@@ -195,7 +200,7 @@ export default async function ContactPage({ params }: Props) {
                     
                     <h2 className="text-2xl font-serif font-bold text-gray-950 mb-6 flex items-center gap-2 pl-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-rose-500)]"></span>
-                      {loc.name}
+                      {loc.branchName || loc.name}
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pl-2">
@@ -240,7 +245,7 @@ export default async function ContactPage({ params }: Props) {
                           <p className="text-xs text-gray-400 italic">{locale === 'tr' ? 'Saat belirtilmemiş.' : 'Hours not specified.'}</p>
                         ) : (
                           <ul className="text-xs text-gray-600 space-y-1.5 border-l border-gray-100 pl-4">
-                            {loc.workingHours.map((wh) => (
+                            {loc.workingHours.map((wh: any) => (
                               <li key={wh.id} className="flex justify-between gap-4">
                                 <span className="font-medium text-gray-400">{currentDayNames[wh.dayOfWeek]}</span>
                                 <span className="font-bold text-gray-700">

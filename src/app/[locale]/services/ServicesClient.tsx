@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 import { Clock, Tag, MapPin, ChevronRight, Calendar } from 'lucide-react';
 
 type Location = {
@@ -153,7 +153,7 @@ export default function ServicesClient({ locations, categories, staff, locale }:
 
                         <div className="grid grid-cols-2 gap-3 pt-2">
                           <Link
-                            href={isAvailable ? `/services/${service.categorySlug}/${service.slug}` : '#'}
+                            href={isAvailable ? `/${locale}/services/${service.categorySlug}/${service.slug}` : '#'}
                             className={`py-2.5 rounded-xl text-center text-xs font-bold border transition-colors ${
                               isAvailable
                                 ? 'border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
@@ -164,7 +164,7 @@ export default function ServicesClient({ locations, categories, staff, locale }:
                           </Link>
                           
                           <Link
-                            href={isAvailable ? `/booking?serviceId=${service.id}${selectedLocationId !== 'ALL' ? `&locationId=${selectedLocationId}` : ''}` : '#'}
+                            href={isAvailable ? `/${locale}/booking?serviceId=${service.id}${selectedLocationId !== 'ALL' ? `&locationId=${selectedLocationId}` : ''}` : '#'}
                             className={`py-2.5 rounded-xl text-center text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                               isAvailable
                                 ? 'bg-gray-900 text-white hover:bg-black shadow-sm'

@@ -55,7 +55,7 @@ export default async function AdminStaffPage({ params }: { params: Promise<{ loc
   });
 
   // JSON serialization için Decimal vs. stringe çevirme işlemleri
-  const formattedLocations = locations.map(l => ({ id: l.id, name: l.name }));
+  const formattedLocations = locations.map(l => ({ id: l.id, name: l.branchName || l.name }));
   const formattedServices = services.map(s => ({
     id: s.id,
     name: s.translations[0]?.name || 'İsimsiz Hizmet',
@@ -70,7 +70,7 @@ export default async function AdminStaffPage({ params }: { params: Promise<{ loc
     specialty: st.specialty,
     isActive: st.isActive,
     locationId: st.locationId,
-    locationName: st.location?.name || 'Şube Atanmamış',
+    locationName: st.location?.branchName || st.location?.name || 'Şube Atanmamış',
     commissionRate: st.commissionRate ? Number(st.commissionRate) : 0,
     serviceIds: st.services.map(s => s.serviceId),
     workingHours: st.workingHours.map(w => ({

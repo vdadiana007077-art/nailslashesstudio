@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link } from "@/i18n/routing";
+import Link from "next/link";
 import { Clock, ArrowRight, Sparkles } from "lucide-react";
 
 interface Translation {
@@ -78,7 +78,7 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
             </p>
             {activeCategory.translations[0]?.slug && (
               <Link
-                href={`/services/${activeCategory.translations[0].slug}`}
+                href={`/${locale}/services/${activeCategory.translations[0].slug}`}
                 className="inline-flex items-center gap-2 text-[var(--color-primary-600)] font-bold text-sm hover:text-[var(--color-text-main)] transition-colors group tracking-wide mt-2"
               >
                 Tüm Detayları Gör{" "}
@@ -127,7 +127,7 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
                       </div>
 
                       <Link
-                        href={`/booking?serviceId=${service.id}`}
+                        href={`/${locale}/booking?serviceId=${service.id}`}
                         className="w-full py-3.5 bg-[var(--color-primary-300)]/30 hover:bg-[var(--color-primary-500)] text-[var(--color-primary-600)] hover:text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300 text-center cursor-pointer shadow-sm hover:shadow-md"
                       >
                         Randevu Al
