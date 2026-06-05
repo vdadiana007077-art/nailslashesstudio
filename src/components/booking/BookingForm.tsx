@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, User, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, CheckCircle2, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { createBooking } from '@/app/actions/booking';
 
 type Service = {
   id: string;
@@ -28,6 +29,7 @@ export default function BookingForm({ services }: BookingFormProps) {
     email: '',
     notes: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 4));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -48,9 +50,27 @@ export default function BookingForm({ services }: BookingFormProps) {
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Burada Server Action veya API'ye istek atılacak
-    console.log("Randevu Kaydı: ", { selectedService, selectedDate, selectedTime, formData });
-    setStep(4); // Success step
+    if (!selectedService || !selectedDate || !selectedTime) return;
+
+    setIsSubmitting(true);
+    
+    const result = await createBooking({
+      serviceId: selectedService.id,
+      date: selectedDate,
+      startTime: selectedTime,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      notes: formData.notes
+    });
+
+    setIsSubmitting(false);
+
+    if (result.success) {
+      setStep(4); // Success step
+    } else {
+      alert(result.error || 'Bir hata oluştu, lütfen tekrar deneyin.');
+    }
   };
 
   return (
@@ -274,9 +294,14 @@ export default function BookingForm({ services }: BookingFormProps) {
             </button>
             <button 
               type="submit"
-              className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-black shadow-[0_0_15px_rgba(0,0,0,0.3)] transition-all flex items-center gap-2"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-black shadow-[0_0_15px_rgba(0,0,0,0.3)] transition-all flex items-center gap-2 disabled:opacity-70"
             >
-              Randevuyu Onayla <CheckCircle2 size={20} />
+              {isSubmitting ? (
+                <>İşleniyor <Loader2 size={20} className="animate-spin" /></>
+              ) : (
+                <>Randevuyu Onayla <CheckCircle2 size={20} /></>
+              )}
             </button>
           </div>
         </form>
