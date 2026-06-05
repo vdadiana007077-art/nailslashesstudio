@@ -64,6 +64,85 @@ enum ApptSource {
   PHONE
 }
 
+enum MenuType {
+  HEADER
+  FOOTER
+}
+
+enum LeadStatus {
+  PENDING
+  IN_PROGRESS
+  CONTACTED
+  CONVERTED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum GiftCardStatus {
+  ACTIVE
+  USED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum WaitlistStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  WHATSAPP
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum MessageType {
+  SMS
+  WHATSAPP
+}
+
+enum MessageStatus {
+  SENT
+  FAILED
+}
+
+// 🏢 ŞUBE / LOKASYON MODELİ
+model Location {
+  id           String         @id @default(uuid())
+  name         String
+  address      String
+  phone        String?
+  email        String?
+  isActive     Boolean        @default(true)
+  isDeleted    Boolean        @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  staff        Staff[]
+  appointments Appointment[]
+  workingHours WorkingHours[]
+  holidays     Holiday[]
+  timeBlocks   TimeBlock[]
+  waitlist     Waitlist[]
+}
+
 model User {
   id           String        @id @default(uuid())
   role         Role          @default(CUSTOMER)
@@ -81,19 +160,34 @@ model ServiceCategory {
   id           String                       @id @default(uuid())
   isActive     Boolean                      @default(true)
   order        Int                          @default(0)
+  image        String?                      
+  isDeleted    Boolean                      @default(false)
+  deletedAt    DateTime?
   services     Service[]
   translations ServiceCategoryTranslation[]
 }
 
 model ServiceCategoryTranslation {
-  id         String          @id @default(uuid())
+  id          String          @id @default(uuid())
   categoryId String
   category   ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  language   Language
-  slug       String?
-  name       String
+  language    Language
+  slug        String
+  name        String
+  description String?         @db.Text      
+  
+  // SEO Alanları
+  seoTitle      String?
+  seoDesc       String?
+  canonical     String?
+  ogTitle       String?
+  ogDesc        String?
+  ogImage       String?
+  index         Boolean         @default(true)
+  sitemap       Boolean         @default(true)
 
   @@unique([categoryId, language])
+  @@unique([slug, language])
 }
 
 model Service {
@@ -104,9 +198,15 @@ model Service {
   price        Decimal              @db.Decimal(10, 2)
   image        String?
   isActive     Boolean              @default(true)
+  isDeleted    Boolean              @default(false)
+  deletedAt    DateTime?
   translations ServiceTranslation[]
   staff        StaffService[]
   appointments Appointment[]
+  faqs         Faq[]
+  blogPosts    BlogPostService[]
+  waitlist     Waitlist[]
+  packages     PackageService[]
 }
 
 model ServiceTranslation {
@@ -117,21 +217,44 @@ model ServiceTranslation {
   slug        String
   name        String
   description String   @db.Text
-  seoTitle    String?
-  seoDesc     String?
+  
+  // SEO Alanları
+  seoTitle      String?
+  seoDesc       String?
+  canonical     String?
+  ogTitle       String?
+  ogDesc        String?
+  ogImage       String?
+  index         Boolean         @default(true)
+  sitemap       Boolean         @default(true)
 
   @@unique([serviceId, language])
+  @@unique([slug, language])
 }
 
 model Staff {
-  id           String         @id @default(uuid())
+  id           String              @id @default(uuid())
   name         String
   image        String?
-  isActive     Boolean        @default(true)
+  specialty    String?             
+  isActive     Boolean             @default(true)
+  isDeleted    Boolean             @default(false)
+  deletedAt    DateTime?
+  
+  // Şube Bağlantısı
+  locationId   String?
+  location     Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  
+  // Komisyon Oranı
+  commissionRate Decimal?          @db.Decimal(5, 2)
+
   services     StaffService[]
   leaves       StaffLeave[]
+  workingHours StaffWorkingHours[]
+  timeBlocks   TimeBlock[]
   appointments Appointment[]
   transactions Transaction[]
+  commissions  StaffCommission[]
 }
 
 model StaffService {
@@ -143,20 +266,38 @@ model StaffService {
   @@id([staffId, serviceId])
 }
 
-model WorkingHours {
+model StaffWorkingHours {
   id         String  @id @default(uuid())
-  dayOfWeek  Int
+  staffId    String
+  staff      Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  dayOfWeek  Int     
+  openTime   String  
+  closeTime  String  
+  isClosed   Boolean @default(false)
+  breakStart String? 
+  breakEnd   String? 
+}
+
+model WorkingHours {
+  id         String    @id @default(uuid())
+  dayOfWeek  Int     
   openTime   String
   closeTime  String
-  isClosed   Boolean @default(false)
+  isClosed   Boolean   @default(false)
   breakStart String?
   breakEnd   String?
+  
+  locationId String?
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 }
 
 model Holiday {
-  id          String   @id @default(uuid())
-  date        DateTime @db.Date
+  id          String    @id @default(uuid())
+  date        DateTime  @db.Date
   description String?
+  
+  locationId  String?
+  location    Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 }
 
 model StaffLeave {
@@ -167,6 +308,20 @@ model StaffLeave {
   isFullDay Boolean  @default(true)
   startTime String?
   endTime   String?
+}
+
+model TimeBlock {
+  id          String    @id @default(uuid())
+  staffId     String?  
+  staff       Staff?    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date        DateTime  @db.Date
+  startTime   String
+  endTime     String
+  reason      String    
+  createdAt   DateTime  @default(now())
+  
+  locationId  String?
+  location    Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 }
 
 model Appointment {
@@ -192,8 +347,18 @@ model Appointment {
   durationAtBooking Int
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
+  
+  // Google Yorum İstek Takibi
+  reviewRequestSent Boolean                    @default(false)
+
+  // Lokasyon İlişkisi
+  locationId        String?
+  location          Location?                  @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
   statusHistory     AppointmentStatusHistory[]
   transaction       Transaction?
+  payment           Payment?
+  staffCommission   StaffCommission?
 }
 
 model AppointmentStatusHistory {
@@ -208,30 +373,53 @@ model AppointmentStatusHistory {
 model Page {
   id           String            @id @default(uuid())
   isActive     Boolean           @default(true)
+  isDeleted    Boolean           @default(false)
+  deletedAt    DateTime?
   translations PageTranslation[]
+  faqs         Faq[]
 }
 
 model PageTranslation {
-  id       String   @id @default(uuid())
-  pageId   String
-  page     Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  language Language
-  slug     String
-  title    String
-  content  String   @db.Text
-  seoTitle String?
-  seoDesc  String?
+  id            String          @id @default(uuid())
+  pageId        String
+  page          Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  language      Language
+  slug          String
+  title         String
+  content       String          @db.Text
+  
+  // SEO Alanları
+  seoTitle      String?
+  seoDesc       String?
+  canonical     String?
+  ogTitle       String?
+  ogDesc        String?
+  ogImage       String?
+  index         Boolean         @default(true)
+  sitemap       Boolean         @default(true)
 
   @@unique([pageId, language])
+  @@unique([slug, language])
+}
+
+model MenuItem {
+  id            String          @id @default(uuid())
+  menuType      MenuType
+  language      Language
+  title         String
+  url           String
+  order         Int             @default(0)
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
 }
 
 model GalleryImage {
-  id        String   @id @default(uuid())
-  url       String
-  altText   String?
-  order     Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id            String          @id @default(uuid())
+  url           String
+  altText       String?
+  order         Int             @default(0)
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
 }
 
 model GoogleReview {
@@ -287,4 +475,395 @@ model Transaction {
   staff         Staff?              @relation(fields: [staffId], references: [id], onDelete: SetNull)
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  userEmail String?
+  action    String
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+}
+
+// 📰 BLOG MODEL YAPISI
+model BlogPost {
+  id           String                @id @default(uuid())
+  image        String?               
+  authorName   String?               
+  isActive     Boolean               @default(true)
+  isFeatured   Boolean               @default(false)
+  isDeleted    Boolean               @default(false)
+  deletedAt    DateTime?
+  publishedAt  DateTime?             
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  translations BlogPostTranslation[]
+  categories   BlogPostCategory[]
+  tags         BlogPostTag[]
+  faqs         Faq[]
+  
+  relatedServices BlogPostService[]
+  relatedPosts    RelatedBlogPost[]   @relation("PostToRelated")
+  referencedBy    RelatedBlogPost[]   @relation("RelatedToPost")
+}
+
+model BlogPostTranslation {
+  id            String          @id @default(uuid())
+  blogPostId    String
+  blogPost      BlogPost        @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  language      Language
+  title         String
+  slug          String
+  excerpt       String?         @db.Text 
+  content       String          @db.Text 
+  
+  // SEO Alanları
+  seoTitle      String?
+  seoDesc       String?
+  canonical     String?
+  ogTitle       String?
+  ogDesc        String?
+  ogImage       String?
+  index         Boolean         @default(true)
+  sitemap       Boolean         @default(true)
+
+  @@unique([blogPostId, language])
+  @@unique([slug, language])
+}
+
+model BlogCategory {
+  id           String                     @id @default(uuid())
+  order        Int                        @default(0)
+  isActive     Boolean                    @default(true)
+  translations BlogCategoryTranslation[]
+  posts        BlogPostCategory[]
+}
+
+model BlogCategoryTranslation {
+  id           String       @id @default(uuid())
+  categoryId   String
+  category     BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  language     Language
+  name         String
+  slug         String
+  description  String?      @db.Text
+  
+  // SEO Alanları
+  seoTitle     String?
+  seoDesc      String?
+
+  @@unique([categoryId, language])
+  @@unique([slug, language])
+}
+
+model BlogTag {
+  id           String               @id @default(uuid())
+  isActive     Boolean              @default(true)
+  translations BlogTagTranslation[]
+  posts        BlogPostTag[]
+}
+
+model BlogTagTranslation {
+  id        String   @id @default(uuid())
+  tagId     String
+  tag       BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  language  Language
+  name      String
+  slug      String
+
+  @@unique([tagId, language])
+  @@unique([slug, language])
+}
+
+model BlogPostCategory {
+  blogPostId String
+  categoryId String
+  post       BlogPost     @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  category   BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, categoryId])
+}
+
+model BlogPostTag {
+  blogPostId String
+  tagId      String
+  post       BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  tag        BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, tagId])
+}
+
+// ❓ SIKÇA SORULAN SORULAR (FAQ) MODELİ
+model Faq {
+  id           String          @id @default(uuid())
+  question     String
+  answer       String          @db.Text
+  language     Language
+  isActive     Boolean         @default(true)
+  order        Int             @default(0)
+  schemaActive Boolean         @default(true) 
+  
+  pageId       String?
+  page         Page?           @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  serviceId    String?
+  service      Service?        @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  blogPostId   String?
+  blogPost     BlogPost?       @relation(fields: [blogPostId], references: [id], onDelete: SetNull)
+}
+
+// ↪️ YÖNLENDİRME (301/302 REDIRECTS) MODELİ
+model Redirect {
+  id         String   @id @default(uuid())
+  oldUrl     String   @unique 
+  newUrl     String   
+  statusCode Int      @default(301) 
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+// 🤝 CRM / TALEPLER (LEADS) MODELİ
+model Lead {
+  id        String     @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  source    String?    
+  message   String?    @db.Text
+  status    LeadStatus @default(PENDING)
+  notes     String?    @db.Text
+  createdAt DateTime   @default(now())
+}
+
+// 📧 E-BÜLTEN ABONELİK (NEWSLETTER SUBSCRIBERS) MODELİ
+model Subscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  language  Language
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// 🏷️ KAMPANYA VE KUPON MODELİ (COUPONS)
+model Coupon {
+  id           String       @id @default(uuid())
+  code         String       @unique
+  discountType DiscountType
+  value        Decimal      @db.Decimal(10, 2)
+  startDate    DateTime
+  endDate      DateTime
+  usageLimit   Int?
+  usageCount   Int          @default(0)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+}
+
+// 🎁 HEDİYE KARTI (GIFT CARDS) MODELİ
+model GiftCard {
+  id          String         @id @default(uuid())
+  code        String         @unique
+  amount      Decimal        @db.Decimal(10, 2)
+  balance     Decimal        @db.Decimal(10, 2)
+  expiryDate  DateTime?
+  status      GiftCardStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+}
+
+// 📸 PORTFÖY / ÖNCESİ-SONRASI (BEFORE/AFTER) MODELİ
+model PortfolioItem {
+  id           String                       @id @default(uuid())
+  beforeImage  String                       
+  afterImage   String                       
+  category     String                       
+  isFeatured   Boolean                      @default(false)
+  isActive     Boolean                      @default(true)
+  order        Int                          @default(0)
+  createdAt    DateTime                     @default(now())
+  translations PortfolioItemTranslation[]
+}
+
+model PortfolioItemTranslation {
+  id              String        @id @default(uuid())
+  portfolioItemId String
+  portfolioItem   PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  language        Language
+  title           String
+  description     String?       @db.Text
+  
+  @@unique([portfolioItemId, language])
+}
+
+// 📂 MERKEZİ MEDYA KÜTÜPHANESİ MODELİ (MEDIA LIBRARY)
+model MediaItem {
+  id        String   @id @default(uuid())
+  url       String   @unique
+  title     String?
+  altText   String?
+  caption   String?
+  fileName  String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime @default(now())
+}
+
+// SEO Dahili Bağlantı Ara Tabloları
+model BlogPostService {
+  blogPostId String
+  serviceId  String
+  post       BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, serviceId])
+}
+
+model RelatedBlogPost {
+  postId        String
+  relatedPostId String
+  post          BlogPost @relation("PostToRelated", fields: [postId], references: [id], onDelete: Cascade)
+  relatedPost   BlogPost @relation("RelatedToPost", fields: [relatedPostId], references: [id], onDelete: Cascade)
+
+  @@id([postId, relatedPostId])
+}
+
+// 💳 ÇEVRİMİÇİ ÖDEME GEÇİDİ (PAYMENTS) MODELİ
+model Payment {
+  id            String        @id @default(uuid())
+  appointmentId String        @unique
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  provider      String        
+  transactionId String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// ⏳ BEKLEME LİSTESİ (WAITLIST) MODELİ
+model Waitlist {
+  id            String         @id @default(uuid())
+  serviceId     String
+  service       Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  locationId    String?
+  location      Location?      @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  requestedDate DateTime       @db.Date
+  requestedTime String
+  customerName  String
+  customerPhone String
+  status        WaitlistStatus @default(PENDING)
+  createdAt     DateTime       @default(now())
+}
+
+// 🔔 ÇOKLU KANAL BİLDİRİM MERKEZİ (NOTIFICATION CENTER)
+model Notification {
+  id           String             @id @default(uuid())
+  recipient    String
+  type         NotificationType
+  status       NotificationStatus @default(PENDING)
+  content      String             @db.Text
+  attemptCount Int                @default(0)
+  errorMessage String?
+  createdAt    DateTime           @default(now())
+  sentAt       DateTime?
+}
+
+// 💬 SMS / WHATSAPP İLETİ GÜNLÜĞÜ (MESSAGE LOGS)
+model MessageLog {
+  id           String        @id @default(uuid())
+  recipient    String
+  content      String        @db.Text
+  type         MessageType
+  status       MessageStatus @default(SENT)
+  errorMessage String?
+  createdAt    DateTime      @default(now())
+}
+
+// 💵 PERSONEL KOMİSYON MODELİ (COMMISSIONS)
+model StaffCommission {
+  id            String      @id @default(uuid())
+  staffId       String
+  staff         Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  amount        Decimal     @db.Decimal(10, 2)
+  createdAt     DateTime    @default(now())
+}
+
+// 📦 HİZMET PAKETLERİ (PACKAGES) MODÜLLERİ
+model Package {
+  id           String               @id @default(uuid())
+  price        Decimal              @db.Decimal(10, 2)
+  isActive     Boolean              @default(true)
+  isDeleted    Boolean              @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  translations PackageTranslation[]
+  services     PackageService[]
+}
+
+model PackageTranslation {
+  id          String   @id @default(uuid())
+  packageId   String
+  package     Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  language    Language
+  slug        String
+  name        String
+  description String   @db.Text
+  
+  // SEO Alanları
+  seoTitle      String?
+  seoDesc       String?
+  canonical     String?
+  ogTitle       String?
+  ogDesc        String?
+  ogImage       String?
+  index         Boolean         @default(true)
+  sitemap       Boolean         @default(true)
+
+  @@unique([packageId, language])
+  @@unique([slug, language])
+}
+
+model PackageService {
+  packageId String
+  serviceId String
+  quantity  Int     @default(1)
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([packageId, serviceId])
+}
+
+// 🎯 SEO AÇILIŞ SAYFALARI (SEO LANDING PAGES) MODELİ
+model LandingPage {
+  id           String                     @id @default(uuid())
+  isActive     Boolean                    @default(true)
+  isDeleted    Boolean                    @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  translations LandingPageTranslation[]
+}
+
+model LandingPageTranslation {
+  id            String      @id @default(uuid())
+  landingPageId String
+  landingPage   LandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+  language      Language
+  slug          String
+  title         String
+  content       String      @db.Text
+  
+  // SEO Alanları
+  seoTitle      String?
+  seoDesc       String?
+  canonical     String?
+  ogTitle       String?
+  ogDesc        String?
+  ogImage       String?
+  index         Boolean     @default(true)
+  sitemap       Boolean     @default(true)
+
+  @@unique([landingPageId, language])
+  @@unique([slug, language])
 }

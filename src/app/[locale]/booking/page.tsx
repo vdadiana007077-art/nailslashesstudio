@@ -7,24 +7,66 @@ export default async function BookingPage({ params }: { params: Promise<{ locale
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
 
-  const t = await getTranslations('Index');
+  // 1. Aktif şubeleri çek
+  const rawLocations = await prisma.location.findMany({
+    where: { isDeleted: false, isActive: true },
+    orderBy: { name: 'asc' },
+  });
 
-  // Sadece aktif hizmetleri çek
+  const locations = rawLocations.map(l => ({
+    id: l.id,
+    name: l.name,
+    address: l.address,
+    phone: l.phone || '',
+  }));
+
+  // 2. Aktif hizmetleri ve kategorilerini çek
   const rawServices = await prisma.service.findMany({
-    where: { isActive: true },
+    where: { isDeleted: false, isActive: true },
     include: {
       translations: {
         where: { language: locale },
       },
+      category: {
+        include: {
+          translations: {
+            where: { language: locale },
+          },
+        },
+      },
     },
+    orderBy: { price: 'asc' },
   });
 
-  // Client'a uygun formata çevir
   const services = rawServices.map(s => ({
     id: s.id,
     name: s.translations[0]?.name || 'İsimsiz Hizmet',
     price: s.price.toString(),
-    duration: s.duration
+    duration: s.duration,
+    categoryId: s.categoryId,
+    categoryName: s.category.translations[0]?.name || 'Diğer',
+  }));
+
+  // 3. Aktif çalışanları ve verdikleri hizmetleri çek
+  const rawStaff = await prisma.staff.findMany({
+    where: { isDeleted: false, isActive: true },
+    include: {
+      services: {
+        select: {
+          serviceId: true,
+        },
+      },
+    },
+    orderBy: { name: 'asc' },
+  });
+
+  const staffList = rawStaff.map(st => ({
+    id: st.id,
+    name: st.name,
+    image: st.image || '',
+    specialty: st.specialty || '',
+    locationId: st.locationId || '',
+    serviceIds: st.services.map(s => s.serviceId),
   }));
 
   return (
@@ -34,7 +76,11 @@ export default async function BookingPage({ params }: { params: Promise<{ locale
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[var(--color-rose-300)]/10 rounded-full blur-3xl -z-10 animate-glow" style={{ animationDelay: '1.5s' }}></div>
       
       <div className="w-full px-6 z-10">
-        <BookingForm services={services} />
+        <BookingForm 
+          initialLocations={locations} 
+          initialServices={services} 
+          initialStaff={staffList} 
+        />
       </div>
     </main>
   );

@@ -1,82 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Gül Kurusu (Dusty Rose) Palette */
-  --color-rose-300: #E6C5C7;
-  --color-rose-400: #D09B9D;
-  --color-rose-500: #B87B7F;
-  --color-rose-600: #9B5E62;
+  /* White & Dusty Rose (Gül Kurusu) Luxury Palette */
+  --color-primary-300: #F3E5E5; /* Çok yumuşak pembe-beyaz */
+  --color-primary-400: #E6C5C5; /* Yumuşak gül kurusu tonu */
+  --color-primary-500: #C58B8B; /* Ana vurgu rengi - Gül Kurusu */
+  --color-primary-600: #A66C6C; /* Koyu gül kurusu */
   
-  /* Soft Backgrounds */
+  --color-rose-300: #E6C5C5;
+  --color-rose-400: #DCAEAE;
+  --color-rose-500: #C58B8B;
+  --color-rose-600: #A66C6C;
+  
+  /* Arka Planlar - Beyaz ve Gül Kurusu Esintili Krem */
   --color-light-100: #FFFFFF;
-  --color-light-200: #FCF8F9;
-  --color-light-300: #F4EBEB;
+  --color-light-200: #FCFAFA; /* Temiz gül kurusu esintili beyaz */
+  --color-light-300: #F6EEEE; /* Hafif gölgeli krem-pembe */
   
-  --color-glass: rgba(255, 255, 255, 0.6);
-  --color-glass-border: rgba(255, 255, 255, 0.4);
+  --color-text-main: #3C2E2E; /* Sıcak mürdüm/kahve tonunda koyu renk (siyah yerine) */
+  --color-text-muted: #7E6B6B; /* Yumuşak kahve-gri */
+  
+  --color-glass: rgba(255, 255, 255, 0.85);
+  --color-glass-border: rgba(197, 139, 139, 0.12);
+
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
 
   --animate-glow: glow 3s ease-in-out infinite alternate;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-up: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom Keyframes for Tailwind v4 */
 @keyframes glow {
-  0% { box-shadow: 0 0 10px rgba(184, 123, 127, 0.15); }
-  100% { box-shadow: 0 0 25px rgba(184, 123, 127, 0.35); }
+  0% { box-shadow: 0 0 15px rgba(197, 139, 139, 0.08); }
+  100% { box-shadow: 0 0 30px rgba(197, 139, 139, 0.2); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 :root {
   --background: var(--color-light-200);
-  --foreground: #2D2D2D;
+  --foreground: var(--color-text-main);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Soft background gradient for depth */
-  background-image: radial-gradient(circle at 50% 0%, #FFFFFF 0%, #FCF8F9 60%);
+  background-image: radial-gradient(circle at 50% 0%, #FFFFFF 0%, #FCFAFA 100%);
   background-attachment: fixed;
 }
 
-/* Glassmorphism Utilities */
+/* Premium Light Glassmorphism */
 @utility glass {
   background: var(--color-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-glass-border);
 }
 
 @utility glass-panel {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(184, 123, 127, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(197, 139, 139, 0.15);
+  border-right: 1px solid rgba(197, 139, 139, 0.15);
+  box-shadow: 0 15px 35px rgba(197, 139, 139, 0.05), inset 0 1px 0 0 rgba(255,255,255,0.9);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar for Light Mode */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: var(--color-light-200);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--color-rose-300);
-  border-radius: 4px;
+  background: var(--color-primary-400);
+  border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-rose-500);
+  background: var(--color-primary-600);
 }
 
 /* Selection */
 ::selection {
-  background: var(--color-rose-400);
+  background: var(--color-primary-500);
   color: #FFFFFF;
 }
+
+/* Anim delay utilities */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
