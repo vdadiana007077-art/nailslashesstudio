@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/routing';
-import { Menu, X, Globe } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function Navbar() {
@@ -48,7 +47,7 @@ export default function Navbar() {
         {/* Right Actions: Lang + Booking */}
         <div className="hidden md:flex items-center gap-6">
           <div className="group relative cursor-pointer flex items-center gap-2 text-gray-300 hover:text-white">
-            <Globe size={18} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
             <span className="text-sm font-medium uppercase">TR</span>
             
             {/* Lang Dropdown */}
@@ -67,7 +66,11 @@ export default function Navbar() {
 
         {/* Mobile Menu Toggle */}
         <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          {mobileMenuOpen ? (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          ) : (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+          )}
         </button>
 
       </div>
