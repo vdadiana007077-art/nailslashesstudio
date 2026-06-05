@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
+@theme {
+  --color-gold-400: #F3E5AB;
+  --color-gold-500: #D4AF37;
+  --color-gold-600: #AA882E;
+  
+  --color-dark-900: #050505;
+  --color-dark-800: #121212;
+  --color-dark-700: #1A1A1A;
+  
+  --color-glass: rgba(255, 255, 255, 0.03);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+
+  --animate-glow: glow 3s ease-in-out infinite alternate;
+}
+
+/* Custom Keyframes for Tailwind v4 */
+@keyframes glow {
+  0% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+  100% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.6); }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: var(--color-dark-900);
+  --foreground: #F5F5F5;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* Soft background gradient for depth */
+  background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 60%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphism Utilities */
+@utility glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-glass-border);
+}
+
+@utility glass-panel {
+  background: rgba(18, 18, 18, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-dark-900);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-700);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-600);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-gold-500);
+  color: var(--color-dark-900);
 }
