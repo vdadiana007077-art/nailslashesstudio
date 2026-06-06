@@ -5,7 +5,7 @@ import { routing } from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Statik dosyaları ve api rotalarını atla
@@ -59,13 +59,6 @@ export async function proxy(request: NextRequest) {
   // Dil ön takısı yönlendirmesini next-intl ile yap
   return intlMiddleware(request);
 }
-
-// Netlify uyumluluğu için eski middleware adıyla da export et
-// @netlify/plugin-nextjs hâlâ "middleware" fonksiyon adını arıyor
-export const middleware = proxy;
-
-// Default export olarak da proxy'yi sun
-export default proxy;
 
 export const config = {
   // Sadece çok dilli yolları ve ana sayfayı işle
