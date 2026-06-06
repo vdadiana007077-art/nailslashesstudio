@@ -1,6 +1,13 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import '../globals.css';
+
+export const metadata = {
+  title: 'Admin Panel',
+  description: 'Nails & Lashes Admin Panel',
+};
+
 export default async function AdminLayout({
   children,
 }: {
@@ -9,12 +16,13 @@ export default async function AdminLayout({
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_token');
 
-  // Login sayfası ise layout'u olduğu gibi render et (Sonsuz döngüyü önle)
-  // Bu layout /admin altında olduğu için login sayfası da buradan geçer
-  
   return (
-    <div className="admin-wrapper bg-gray-50 min-h-screen">
-      {children}
-    </div>
+    <html lang="tr">
+      <body>
+        <div className="admin-wrapper bg-gray-50 min-h-screen">
+          {children}
+        </div>
+      </body>
+    </html>
   );
 }
