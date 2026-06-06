@@ -98,17 +98,30 @@ export default async function LocaleLayout({
     return `/${locale}${cleanUrl}`;
   };
 
-  const headerMenus = menuItems.filter(m => m.menuType === 'HEADER').map(m => ({
+  // Mükerrer menü kayıtlarını URL bazında filtrele (aynı URL'yi bir kez göster)
+  const deduplicateMenus = (items: typeof menuItems) => {
+    const seen = new Set<string>();
+    return items.filter(m => {
+      const key = `${m.menuType}_${m.url}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const uniqueMenuItems = deduplicateMenus(menuItems);
+
+  const headerMenus = uniqueMenuItems.filter(m => m.menuType === 'HEADER').map(m => ({
     name: m.title,
     href: addLocalePrefix(m.url)
   }));
 
-  const footerMenus = menuItems.filter(m => m.menuType === 'FOOTER').map(m => ({
+  const footerMenus = uniqueMenuItems.filter(m => m.menuType === 'FOOTER').map(m => ({
     name: m.title,
     href: addLocalePrefix(m.url)
   }));
 
-  const legalMenus = menuItems.filter(m => m.menuType === 'LEGAL_FOOTER').map(m => ({
+  const legalMenus = uniqueMenuItems.filter(m => m.menuType === 'LEGAL_FOOTER').map(m => ({
     name: m.title,
     href: addLocalePrefix(m.url)
   }));

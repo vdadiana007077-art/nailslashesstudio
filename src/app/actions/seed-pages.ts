@@ -73,93 +73,159 @@ export async function seedPagesAndMenus() {
     }
 
     // ============ MENÜ LİNKLERİ ============
+    // Yeni yapı: Her menü öğesi için tek bir MenuItem kaydı + 4 dilde MenuItemTranslation
     const menuCount = await prisma.menuItem.count();
     if (menuCount === 0) {
-      const menuItems = [
+      const menuDefinitions = [
         // ---- HEADER (Üst Menü) ----
-        // TR
-        { menuType: 'HEADER' as const, language: 'TR' as const, title: 'Ana Sayfa', url: '/', order: 1 },
-        { menuType: 'HEADER' as const, language: 'TR' as const, title: 'Hizmetler', url: '/services', order: 2 },
-        { menuType: 'HEADER' as const, language: 'TR' as const, title: 'Galeri', url: '/galeri', order: 3 },
-        { menuType: 'HEADER' as const, language: 'TR' as const, title: 'Blog', url: '/blog', order: 4 },
-        { menuType: 'HEADER' as const, language: 'TR' as const, title: 'İletişim', url: '/iletisim', order: 5 },
-        { menuType: 'HEADER' as const, language: 'TR' as const, title: 'Randevu Al', url: '/randevu', order: 6 },
-        // EN
-        { menuType: 'HEADER' as const, language: 'EN' as const, title: 'Home', url: '/', order: 1 },
-        { menuType: 'HEADER' as const, language: 'EN' as const, title: 'Services', url: '/services', order: 2 },
-        { menuType: 'HEADER' as const, language: 'EN' as const, title: 'Gallery', url: '/galeri', order: 3 },
-        { menuType: 'HEADER' as const, language: 'EN' as const, title: 'Blog', url: '/blog', order: 4 },
-        { menuType: 'HEADER' as const, language: 'EN' as const, title: 'Contact', url: '/iletisim', order: 5 },
-        { menuType: 'HEADER' as const, language: 'EN' as const, title: 'Book Now', url: '/randevu', order: 6 },
-        // DE
-        { menuType: 'HEADER' as const, language: 'DE' as const, title: 'Startseite', url: '/', order: 1 },
-        { menuType: 'HEADER' as const, language: 'DE' as const, title: 'Dienstleistungen', url: '/services', order: 2 },
-        { menuType: 'HEADER' as const, language: 'DE' as const, title: 'Galerie', url: '/galeri', order: 3 },
-        { menuType: 'HEADER' as const, language: 'DE' as const, title: 'Blog', url: '/blog', order: 4 },
-        { menuType: 'HEADER' as const, language: 'DE' as const, title: 'Kontakt', url: '/iletisim', order: 5 },
-        { menuType: 'HEADER' as const, language: 'DE' as const, title: 'Termin Buchen', url: '/randevu', order: 6 },
-        // RU
-        { menuType: 'HEADER' as const, language: 'RU' as const, title: 'Главная', url: '/', order: 1 },
-        { menuType: 'HEADER' as const, language: 'RU' as const, title: 'Услуги', url: '/services', order: 2 },
-        { menuType: 'HEADER' as const, language: 'RU' as const, title: 'Галерея', url: '/galeri', order: 3 },
-        { menuType: 'HEADER' as const, language: 'RU' as const, title: 'Блог', url: '/blog', order: 4 },
-        { menuType: 'HEADER' as const, language: 'RU' as const, title: 'Контакт', url: '/iletisim', order: 5 },
-        { menuType: 'HEADER' as const, language: 'RU' as const, title: 'Записаться', url: '/randevu', order: 6 },
+        {
+          menuType: 'HEADER' as const, order: 1,
+          translations: [
+            { language: 'TR' as const, title: 'Ana Sayfa', url: '/' },
+            { language: 'EN' as const, title: 'Home', url: '/' },
+            { language: 'DE' as const, title: 'Startseite', url: '/' },
+            { language: 'RU' as const, title: 'Главная', url: '/' },
+          ]
+        },
+        {
+          menuType: 'HEADER' as const, order: 2,
+          translations: [
+            { language: 'TR' as const, title: 'Hizmetler', url: '/services' },
+            { language: 'EN' as const, title: 'Services', url: '/services' },
+            { language: 'DE' as const, title: 'Dienstleistungen', url: '/services' },
+            { language: 'RU' as const, title: 'Услуги', url: '/services' },
+          ]
+        },
+        {
+          menuType: 'HEADER' as const, order: 3,
+          translations: [
+            { language: 'TR' as const, title: 'Galeri', url: '/galeri' },
+            { language: 'EN' as const, title: 'Gallery', url: '/galeri' },
+            { language: 'DE' as const, title: 'Galerie', url: '/galeri' },
+            { language: 'RU' as const, title: 'Галерея', url: '/galeri' },
+          ]
+        },
+        {
+          menuType: 'HEADER' as const, order: 4,
+          translations: [
+            { language: 'TR' as const, title: 'Blog', url: '/blog' },
+            { language: 'EN' as const, title: 'Blog', url: '/blog' },
+            { language: 'DE' as const, title: 'Blog', url: '/blog' },
+            { language: 'RU' as const, title: 'Блог', url: '/blog' },
+          ]
+        },
+        {
+          menuType: 'HEADER' as const, order: 5,
+          translations: [
+            { language: 'TR' as const, title: 'İletişim', url: '/iletisim' },
+            { language: 'EN' as const, title: 'Contact', url: '/iletisim' },
+            { language: 'DE' as const, title: 'Kontakt', url: '/iletisim' },
+            { language: 'RU' as const, title: 'Контакты', url: '/iletisim' },
+          ]
+        },
 
         // ---- FOOTER (Alt Menü) ----
-        // TR
-        { menuType: 'FOOTER' as const, language: 'TR' as const, title: 'Hakkımızda', url: '/hakkimizda', order: 1 },
-        { menuType: 'FOOTER' as const, language: 'TR' as const, title: 'Hizmetlerimiz', url: '/services', order: 2 },
-        { menuType: 'FOOTER' as const, language: 'TR' as const, title: 'Blog', url: '/blog', order: 3 },
-        { menuType: 'FOOTER' as const, language: 'TR' as const, title: 'Portfolyo', url: '/portfolio', order: 4 },
-        { menuType: 'FOOTER' as const, language: 'TR' as const, title: 'İletişim', url: '/iletisim', order: 5 },
-        { menuType: 'FOOTER' as const, language: 'TR' as const, title: 'Randevu Al', url: '/randevu', order: 6 },
-        // EN
-        { menuType: 'FOOTER' as const, language: 'EN' as const, title: 'About Us', url: '/hakkimizda', order: 1 },
-        { menuType: 'FOOTER' as const, language: 'EN' as const, title: 'Our Services', url: '/services', order: 2 },
-        { menuType: 'FOOTER' as const, language: 'EN' as const, title: 'Blog', url: '/blog', order: 3 },
-        { menuType: 'FOOTER' as const, language: 'EN' as const, title: 'Portfolio', url: '/portfolio', order: 4 },
-        { menuType: 'FOOTER' as const, language: 'EN' as const, title: 'Contact', url: '/iletisim', order: 5 },
-        { menuType: 'FOOTER' as const, language: 'EN' as const, title: 'Book Now', url: '/randevu', order: 6 },
-        // DE
-        { menuType: 'FOOTER' as const, language: 'DE' as const, title: 'Über Uns', url: '/hakkimizda', order: 1 },
-        { menuType: 'FOOTER' as const, language: 'DE' as const, title: 'Dienstleistungen', url: '/services', order: 2 },
-        { menuType: 'FOOTER' as const, language: 'DE' as const, title: 'Blog', url: '/blog', order: 3 },
-        { menuType: 'FOOTER' as const, language: 'DE' as const, title: 'Portfolio', url: '/portfolio', order: 4 },
-        { menuType: 'FOOTER' as const, language: 'DE' as const, title: 'Kontakt', url: '/iletisim', order: 5 },
-        { menuType: 'FOOTER' as const, language: 'DE' as const, title: 'Termin Buchen', url: '/randevu', order: 6 },
-        // RU
-        { menuType: 'FOOTER' as const, language: 'RU' as const, title: 'О нас', url: '/hakkimizda', order: 1 },
-        { menuType: 'FOOTER' as const, language: 'RU' as const, title: 'Наши услуги', url: '/services', order: 2 },
-        { menuType: 'FOOTER' as const, language: 'RU' as const, title: 'Блог', url: '/blog', order: 3 },
-        { menuType: 'FOOTER' as const, language: 'RU' as const, title: 'Портфолио', url: '/portfolio', order: 4 },
-        { menuType: 'FOOTER' as const, language: 'RU' as const, title: 'Контакт', url: '/iletisim', order: 5 },
-        { menuType: 'FOOTER' as const, language: 'RU' as const, title: 'Записаться', url: '/randevu', order: 6 },
+        {
+          menuType: 'FOOTER' as const, order: 1,
+          translations: [
+            { language: 'TR' as const, title: 'Hakkımızda', url: '/hakkimizda' },
+            { language: 'EN' as const, title: 'About Us', url: '/hakkimizda' },
+            { language: 'DE' as const, title: 'Über Uns', url: '/hakkimizda' },
+            { language: 'RU' as const, title: 'О нас', url: '/hakkimizda' },
+          ]
+        },
+        {
+          menuType: 'FOOTER' as const, order: 2,
+          translations: [
+            { language: 'TR' as const, title: 'Hizmetlerimiz', url: '/services' },
+            { language: 'EN' as const, title: 'Our Services', url: '/services' },
+            { language: 'DE' as const, title: 'Dienstleistungen', url: '/services' },
+            { language: 'RU' as const, title: 'Наши услуги', url: '/services' },
+          ]
+        },
+        {
+          menuType: 'FOOTER' as const, order: 3,
+          translations: [
+            { language: 'TR' as const, title: 'Blog', url: '/blog' },
+            { language: 'EN' as const, title: 'Blog', url: '/blog' },
+            { language: 'DE' as const, title: 'Blog', url: '/blog' },
+            { language: 'RU' as const, title: 'Блог', url: '/blog' },
+          ]
+        },
+        {
+          menuType: 'FOOTER' as const, order: 4,
+          translations: [
+            { language: 'TR' as const, title: 'Portfolyo', url: '/portfolio' },
+            { language: 'EN' as const, title: 'Portfolio', url: '/portfolio' },
+            { language: 'DE' as const, title: 'Portfolio', url: '/portfolio' },
+            { language: 'RU' as const, title: 'Портфолио', url: '/portfolio' },
+          ]
+        },
+        {
+          menuType: 'FOOTER' as const, order: 5,
+          translations: [
+            { language: 'TR' as const, title: 'İletişim', url: '/iletisim' },
+            { language: 'EN' as const, title: 'Contact', url: '/iletisim' },
+            { language: 'DE' as const, title: 'Kontakt', url: '/iletisim' },
+            { language: 'RU' as const, title: 'Контакты', url: '/iletisim' },
+          ]
+        },
 
         // ---- LEGAL FOOTER (Yasal Menü) ----
-        // TR
-        { menuType: 'LEGAL_FOOTER' as const, language: 'TR' as const, title: 'Gizlilik Sözleşmesi', url: '/gizlilik-sozlesmesi', order: 1 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'TR' as const, title: 'Kullanım Koşulları', url: '/kullanim-kosullari', order: 2 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'TR' as const, title: 'KVKK Aydınlatma Metni', url: '/kvkk', order: 3 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'TR' as const, title: 'Çerez Politikası', url: '/cerez-politikasi', order: 4 },
-        // EN
-        { menuType: 'LEGAL_FOOTER' as const, language: 'EN' as const, title: 'Privacy Policy', url: '/privacy-policy', order: 1 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'EN' as const, title: 'Terms of Use', url: '/terms-of-use', order: 2 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'EN' as const, title: 'Data Protection', url: '/data-protection', order: 3 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'EN' as const, title: 'Cookie Policy', url: '/cookie-policy', order: 4 },
-        // DE
-        { menuType: 'LEGAL_FOOTER' as const, language: 'DE' as const, title: 'Datenschutzrichtlinie', url: '/datenschutz', order: 1 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'DE' as const, title: 'Nutzungsbedingungen', url: '/nutzungsbedingungen', order: 2 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'DE' as const, title: 'Datenschutzhinweis', url: '/datenschutzhinweis', order: 3 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'DE' as const, title: 'Cookie-Richtlinie', url: '/cookie-richtlinie', order: 4 },
-        // RU
-        { menuType: 'LEGAL_FOOTER' as const, language: 'RU' as const, title: 'Политика конфиденциальности', url: '/politika-konfidencialnosti', order: 1 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'RU' as const, title: 'Условия использования', url: '/usloviya-ispolzovaniya', order: 2 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'RU' as const, title: 'Защита данных', url: '/zashchita-dannyh', order: 3 },
-        { menuType: 'LEGAL_FOOTER' as const, language: 'RU' as const, title: 'Политика cookie', url: '/politika-cookie', order: 4 },
+        {
+          menuType: 'LEGAL_FOOTER' as const, order: 1,
+          translations: [
+            { language: 'TR' as const, title: 'Gizlilik Sözleşmesi', url: '/gizlilik-sozlesmesi' },
+            { language: 'EN' as const, title: 'Privacy Policy', url: '/privacy-policy' },
+            { language: 'DE' as const, title: 'Datenschutzrichtlinie', url: '/datenschutz' },
+            { language: 'RU' as const, title: 'Политика конфиденциальности', url: '/politika-konfidencialnosti' },
+          ]
+        },
+        {
+          menuType: 'LEGAL_FOOTER' as const, order: 2,
+          translations: [
+            { language: 'TR' as const, title: 'Kullanım Koşulları', url: '/kullanim-kosullari' },
+            { language: 'EN' as const, title: 'Terms of Use', url: '/terms-of-use' },
+            { language: 'DE' as const, title: 'Nutzungsbedingungen', url: '/nutzungsbedingungen' },
+            { language: 'RU' as const, title: 'Условия использования', url: '/usloviya-ispolzovaniya' },
+          ]
+        },
+        {
+          menuType: 'LEGAL_FOOTER' as const, order: 3,
+          translations: [
+            { language: 'TR' as const, title: 'KVKK Aydınlatma Metni', url: '/kvkk' },
+            { language: 'EN' as const, title: 'Data Protection', url: '/data-protection' },
+            { language: 'DE' as const, title: 'Datenschutzhinweis', url: '/datenschutzhinweis' },
+            { language: 'RU' as const, title: 'Защита данных', url: '/zashchita-dannyh' },
+          ]
+        },
+        {
+          menuType: 'LEGAL_FOOTER' as const, order: 4,
+          translations: [
+            { language: 'TR' as const, title: 'Çerez Politikası', url: '/cerez-politikasi' },
+            { language: 'EN' as const, title: 'Cookie Policy', url: '/cookie-policy' },
+            { language: 'DE' as const, title: 'Cookie-Richtlinie', url: '/cookie-richtlinie' },
+            { language: 'RU' as const, title: 'Политика cookie', url: '/politika-cookie' },
+          ]
+        },
       ];
 
-      await prisma.menuItem.createMany({ data: menuItems });
+      for (const def of menuDefinitions) {
+        await prisma.menuItem.create({
+          data: {
+            menuType: def.menuType,
+            order: def.order,
+            isActive: true,
+            translations: {
+              create: def.translations.map(t => ({
+                language: t.language,
+                title: t.title,
+                url: t.url,
+              })),
+            },
+          },
+        });
+      }
     }
 
     return { success: true };

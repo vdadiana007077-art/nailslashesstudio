@@ -5,6 +5,7 @@ export const routing = defineRouting({
   locales: ['tr', 'en', 'ru', 'de'],
   defaultLocale: 'tr',
   localePrefix: 'as-needed',
+  localeDetection: false,
   // SİSTEM DİNAMİK URL (HEADLESS) MİMARİSİNE GEÇTİĞİ İÇİN
   // SABİT (HARDCODED) PATHNAMES SİLİNMİŞTİR.
   // TÜM URL YÖNETİMİ VERİTABANI ÜZERİNDEN (MENU & PAGE SLUG) [landingSlug] İLE YAPILMAKTADIR.

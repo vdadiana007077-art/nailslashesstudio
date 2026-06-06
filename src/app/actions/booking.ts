@@ -34,20 +34,109 @@ export async function createBooking(data: {
 
     const upperLocale = (data.locale || 'tr').toUpperCase();
     const resolvedLanguage = ['TR', 'EN', 'RU', 'DE'].includes(upperLocale) ? upperLocale : 'TR';
+    const dateStr = data.dateStr;
+    const dateObj = new Date(dateStr + 'T00:00:00');
+    const dayOfWeek = dateObj.getDay();
 
-    // 1. İlgili hizmetin detaylarını al (fiyat ve süre için)
+    // ═══════════════ 10 MADDELİK SERVER-SIDE KONTROL ZİNCİRİ ═══════════════
+
+    // 1. Şube aktif mi?
+    const location = await prisma.location.findUnique({ where: { id: data.locationId } });
+    if (!location || !location.isActive || location.isDeleted) {
+      return { success: false, error: 'Seçilen şube aktif değil.' };
+    }
+
+    // 2. Hizmet aktif mi?
     const service = await prisma.service.findUnique({
       where: { id: data.serviceId },
       include: { translations: { where: { language: resolvedLanguage as any } } }
     });
-
     if (!service || service.isDeleted || !service.isActive) {
       return { success: false, error: 'Hizmet bulunamadı veya pasif.' };
     }
 
-    // 2. Sunucu Tarafı Müsaitlik Kontrolü (Çifte Rezervasyon Engeli)
-    const dateStr = data.dateStr; // YYYY-MM-DD formatında
-    const dateObj = new Date(dateStr + 'T00:00:00');
+    // 3. Hizmet bu şubede aktif mi? (LocationService kontrolü)
+    const locationService = await prisma.locationService.findUnique({
+      where: { locationId_serviceId: { locationId: data.locationId, serviceId: data.serviceId } }
+    });
+    if (!locationService) {
+      return { success: false, error: 'Bu hizmet seçilen şubede verilmemektedir.' };
+    }
+
+    // 4. Personel bu şubede çalışıyor mu? (Belirli personel seçildiyse)
+    if (data.staffId !== 'ANY') {
+      const staff = await prisma.staff.findUnique({ where: { id: data.staffId } });
+      if (!staff || !staff.isActive || staff.isDeleted) {
+        return { success: false, error: 'Seçilen personel aktif değil.' };
+      }
+      if (staff.locationId !== data.locationId) {
+        return { success: false, error: 'Seçilen personel bu şubede çalışmıyor.' };
+      }
+
+      // 5. Personel bu hizmeti verebiliyor mu? (StaffService kontrolü)
+      const staffService = await prisma.staffService.findUnique({
+        where: { staffId_serviceId: { staffId: data.staffId, serviceId: data.serviceId } }
+      });
+      // Fallback: StaffService ataması yoksa tüm hizmetleri verebilir
+      const anyStaffService = await prisma.staffService.count({ where: { staffId: data.staffId } });
+      if (anyStaffService > 0 && !staffService) {
+        return { success: false, error: 'Seçilen personel bu hizmeti veremiyor.' };
+      }
+
+      // 6. Personel izinde mi?
+      const staffLeave = await prisma.staffLeave.findFirst({
+        where: { staffId: data.staffId, date: dateObj, isFullDay: true }
+      });
+      if (staffLeave) {
+        return { success: false, error: 'Seçilen personel bu tarihte izinlidir.' };
+      }
+    }
+
+    // 7. Şube tatili var mı?
+    const holiday = await prisma.holiday.findFirst({
+      where: { locationId: data.locationId, date: dateObj }
+    });
+    if (holiday) {
+      return { success: false, error: `Şube bu tarihte kapalıdır: ${holiday.description || 'Tatil günü'}` };
+    }
+
+    // 8. Şube çalışma saati kontrolü
+    const shopHours = await prisma.workingHours.findFirst({
+      where: { locationId: data.locationId, dayOfWeek }
+    });
+    if (shopHours && shopHours.isClosed) {
+      return { success: false, error: 'Şube bu gün kapalıdır.' };
+    }
+
+    // 9. Hizmet süresi slot aralığına uyuyor mu?
+    const [startH, startM] = data.startTime.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = startMinutes + service.duration;
+    const shopCloseMin = shopHours ? parseInt(shopHours.closeTime.split(':')[0]) * 60 + parseInt(shopHours.closeTime.split(':')[1]) : 19 * 60;
+    if (endMinutes > shopCloseMin) {
+      return { success: false, error: 'Hizmet süresi şube kapanış saatini aşıyor.' };
+    }
+
+    // 10. TimeBlock kontrolü (belirli personel veya şube geneli)
+    const timeBlockCheck = await prisma.timeBlock.findFirst({
+      where: {
+        locationId: data.locationId,
+        date: dateObj,
+        OR: [
+          { staffId: data.staffId !== 'ANY' ? data.staffId : undefined },
+          { staffId: null },
+        ],
+      }
+    });
+    if (timeBlockCheck) {
+      const tbStart = parseInt(timeBlockCheck.startTime.split(':')[0]) * 60 + parseInt(timeBlockCheck.startTime.split(':')[1]);
+      const tbEnd = parseInt(timeBlockCheck.endTime.split(':')[0]) * 60 + parseInt(timeBlockCheck.endTime.split(':')[1]);
+      if (startMinutes < tbEnd && endMinutes > tbStart) {
+        return { success: false, error: `Bu saat aralığı blokeli: ${timeBlockCheck.reason}` };
+      }
+    }
+
+    // ═══════════════ MÜSAITLIK KONTROLÜ ═══════════════
 
     const availability = await getAvailableTimeSlots(
       data.locationId,
@@ -107,8 +196,8 @@ export async function createBooking(data: {
     const [hours, minutes] = data.startTime.split(':').map(Number);
     const totalMinutes = hours * 60 + minutes + service.duration;
     const endHours = Math.floor(totalMinutes / 60);
-    const endMinutes = totalMinutes % 60;
-    const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    const endMins = totalMinutes % 60;
+    const endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
 
     // Aktif müşteri oturumunu al
     const customer = await getCurrentCustomer();
