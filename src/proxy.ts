@@ -60,6 +60,13 @@ export async function proxy(request: NextRequest) {
   return intlMiddleware(request);
 }
 
+// Netlify uyumluluğu için eski middleware adıyla da export et
+// @netlify/plugin-nextjs hâlâ "middleware" fonksiyon adını arıyor
+export const middleware = proxy;
+
+// Default export olarak da proxy'yi sun
+export default proxy;
+
 export const config = {
   // Sadece çok dilli yolları ve ana sayfayı işle
   matcher: ['/', '/(tr|en|ru|de)/:path*', '/((?!_next|_vercel|.*\\..*).*)']
