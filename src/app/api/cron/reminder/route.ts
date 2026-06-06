@@ -8,14 +8,15 @@ import { ApptStatus } from '@prisma/client';
 
 function detectCustomerLanguage(phone?: string | null): string {
   if (!phone) return 'TR';
-  const cleanPhone = phone.replace(/[\s()-]/g, '');
-  if (cleanPhone.startsWith('+90') || cleanPhone.startsWith('90') || cleanPhone.startsWith('05') || cleanPhone.startsWith('5')) {
+  // Sadece rakamları temizle (böylece + işareti ve boşluklar gider)
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('90') || cleanPhone.startsWith('05') || cleanPhone.startsWith('5')) {
     return 'TR';
   }
-  if (cleanPhone.startsWith('+7') || cleanPhone.startsWith('7') || cleanPhone.startsWith('+380')) {
+  if (cleanPhone.startsWith('7') || cleanPhone.startsWith('380')) {
     return 'RU';
   }
-  if (cleanPhone.startsWith('+49') || cleanPhone.startsWith('49')) {
+  if (cleanPhone.startsWith('49')) {
     return 'DE';
   }
   return 'EN';

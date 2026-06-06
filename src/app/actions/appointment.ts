@@ -8,14 +8,15 @@ import { sendTemplateEmail } from '@/lib/email';
 
 function detectCustomerLanguage(phone?: string | null): string {
   if (!phone) return 'TR';
-  const cleanPhone = phone.replace(/[\s()-]/g, '');
-  if (cleanPhone.startsWith('+90') || cleanPhone.startsWith('90') || cleanPhone.startsWith('05') || cleanPhone.startsWith('5')) {
+  // Sadece rakamları temizle (böylece + işareti ve boşluklar gider)
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('90') || cleanPhone.startsWith('05') || cleanPhone.startsWith('5')) {
     return 'TR';
   }
-  if (cleanPhone.startsWith('+7') || cleanPhone.startsWith('7') || cleanPhone.startsWith('+380')) {
+  if (cleanPhone.startsWith('7') || cleanPhone.startsWith('380')) {
     return 'RU';
   }
-  if (cleanPhone.startsWith('+49') || cleanPhone.startsWith('49')) {
+  if (cleanPhone.startsWith('49')) {
     return 'DE';
   }
   return 'EN';
@@ -100,6 +101,7 @@ export async function updateAppointmentStatus(
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
+    let emailWarning: string | null = null;
     if (customerEmail) {
       const emailVars = {
         customerName,
@@ -111,8 +113,15 @@ export async function updateAppointmentStatus(
 
       try {
         if (newStatus === ApptStatus.CONFIRMED) {
-          // Onay e-postası gönder
-          await sendTemplateEmail('booking_confirmation', customerEmail, emailVars, customerLang);
+          console.log(`Onay e-postası gönderiliyor: ${customerEmail} (Dil: ${customerLang})`);
+          console.log(`SMTP Kullanıcısı: ${process.env.EMAIL_USER}`);
+          
+          const emailRes = await sendTemplateEmail('booking_confirmation', customerEmail, emailVars, customerLang);
+          if (!emailRes.success) {
+            emailWarning = 'Onay e-postası gönderilemedi. SMTP ayarlarını veya e-posta şablonunu kontrol edin.';
+          } else {
+            console.log('Onay e-postası başarıyla gönderildi.');
+          }
 
           // 4 saatten az kaldıysa hatırlatma e-postasını hemen gönder
           const now = new Date();
@@ -122,26 +131,32 @@ export async function updateAppointmentStatus(
           const hoursUntil = (appointmentTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
           if (hoursUntil > 0 && hoursUntil <= 4) {
-            await sendTemplateEmail('booking_reminder', customerEmail, emailVars, customerLang);
-            // Hatırlatma gönderildi olarak işaretle
-            await prisma.appointment.update({
-              where: { id: appointmentId },
-              data: { reminderSent: true }
-            });
+            const reminderRes = await sendTemplateEmail('booking_reminder', customerEmail, emailVars, customerLang);
+            if (reminderRes.success) {
+              // Hatırlatma gönderildi olarak işaretle
+              await prisma.appointment.update({
+                where: { id: appointmentId },
+                data: { reminderSent: true }
+              });
+            }
           }
         } else if (newStatus === ApptStatus.CANCELLED) {
-          // İptal e-postası gönder
-          await sendTemplateEmail('booking_cancellation', customerEmail, emailVars, customerLang);
+          console.log(`İptal e-postası gönderiliyor: ${customerEmail}`);
+          const emailRes = await sendTemplateEmail('booking_cancellation', customerEmail, emailVars, customerLang);
+          if (!emailRes.success) {
+            emailWarning = 'İptal e-postası gönderilemedi.';
+          }
         }
-      } catch (emailErr) {
+      } catch (emailErr: any) {
         console.error('Durum değişikliği e-posta hatası:', emailErr);
+        emailWarning = `E-posta gönderimi sırasında hata oluştu: ${emailErr.message || emailErr}`;
       }
     }
 
     await logAction('Randevu Durumu Güncellendi', `Randevu ID: ${appointmentId}, Yeni Durum: ${newStatus}`);
 
     revalidatePath('/[locale]/admin', 'page');
-    return { success: true };
+    return { success: true, warning: emailWarning };
   } catch (error: any) {
     console.error('Randevu durum güncelleme hatası:', error);
     return { success: false, error: 'Durum güncellenirken bir hata oluştu.' };

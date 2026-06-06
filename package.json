@@ -6,7 +6,14 @@
     "dev": "next dev -p 1000",
     "build": "prisma generate && next build",
     "start": "next start -p 1000",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check-email": "npx tsx --env-file=.env scratch/check-email-templates.ts",
+    "test-email": "npx tsx --env-file=.env scratch/test-email-send.ts",
+    "check-appts": "npx tsx --env-file=.env scratch/check-appointments.ts",
+    "check-logs": "npx tsx --env-file=.env scratch/check-logs.ts",
+    "test-lang": "npx tsx scratch/test-language.ts",
+    "test-update": "npx tsx --env-file=.env scratch/test-update-status.ts",
+    "check-specific": "npx tsx --env-file=.env scratch/check-specific-template.ts"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.11",

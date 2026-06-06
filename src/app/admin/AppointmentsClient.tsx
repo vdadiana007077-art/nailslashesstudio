@@ -95,7 +95,11 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
       if (selectedAppt?.id === id) {
         setSelectedAppt(prev => prev ? { ...prev, status: newStatus } : prev);
       }
-      showFeedback('success', 'Durum güncellendi.');
+      if (result.warning) {
+        showFeedback('error', `Durum güncellendi fakat: ${result.warning}`);
+      } else {
+        showFeedback('success', 'Durum güncellendi.');
+      }
     } else {
       showFeedback('error', result.error || 'Hata oluştu.');
     }
