@@ -39,7 +39,13 @@ export async function registerCustomer(formData: FormData) {
     });
 
     if (existingUser) {
-      return { success: false, error: 'Bu e-posta adresiyle kayıtlı bir kullanıcı zaten mevcut!' };
+      if (existingUser.loginType === LoginType.GOOGLE) {
+        return { success: false, error: 'Bu e-posta adresi ile daha önce Google hesabınızla giriş yapmıştınız. Lütfen "Google ile Devam Et" butonunu kullanarak giriş yapın.' };
+      }
+      if (existingUser.loginType === LoginType.APPLE) {
+        return { success: false, error: 'Bu e-posta adresi ile daha önce Apple hesabınızla giriş yapmıştınız. Lütfen "Apple ile Devam Et" butonunu kullanarak giriş yapın.' };
+      }
+      return { success: false, error: 'Bu e-posta adresiyle kayıtlı bir hesap zaten mevcut. Giriş yapmayı deneyin veya şifrenizi sıfırlayın.' };
     }
 
     const hashedPassword = hashPassword(password);
@@ -104,13 +110,25 @@ export async function loginCustomer(formData: FormData) {
       where: { email }
     });
 
-    if (!user || user.loginType !== LoginType.MANUAL || !user.password) {
-      return { success: false, error: 'Geçersiz e-posta veya şifre!' };
+    if (!user) {
+      return { success: false, error: 'Bu e-posta adresiyle kayıtlı bir hesap bulunamadı!' };
+    }
+
+    if (user.loginType === LoginType.GOOGLE) {
+      return { success: false, error: 'Bu hesap Google ile oluşturulmuş. Lütfen "Google ile Devam Et" butonunu kullanın.' };
+    }
+
+    if (user.loginType === LoginType.APPLE) {
+      return { success: false, error: 'Bu hesap Apple ile oluşturulmuş. Lütfen "Apple ile Devam Et" butonunu kullanın.' };
+    }
+
+    if (!user.password) {
+      return { success: false, error: 'Bu hesapta şifre tanımlanmamış. Lütfen sosyal giriş butonlarını kullanın.' };
     }
 
     const isMatch = verifyPassword(password, user.password);
     if (!isMatch) {
-      return { success: false, error: 'Geçersiz e-posta veya şifre!' };
+      return { success: false, error: 'Geçersiz şifre! Lütfen tekrar deneyin.' };
     }
 
     // HTTP-Only Çerez Set Etme
@@ -190,7 +208,10 @@ export async function getCurrentCustomer() {
         startTime: appt.startTime,
         endTime: appt.endTime,
         status: appt.status,
-        price: appt.priceAtBooking.toString()
+        price: appt.priceAtBooking.toString(),
+        locationId: appt.locationId,
+        serviceId: appt.serviceId,
+        staffId: appt.staffId
       })),
       subscriberActive: user.subscriber?.isActive || false
     };

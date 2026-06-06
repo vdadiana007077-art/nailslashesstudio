@@ -32,8 +32,7 @@ import {
 } from 'lucide-react';
 import { logoutAdmin } from '@/app/actions/auth';
 
-interface AdminSidebarProps {
-  }
+
 
 type MenuItem = {
   name: string;

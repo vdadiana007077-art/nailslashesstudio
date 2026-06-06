@@ -122,5 +122,20 @@
     "examineDetails": "Detayları İncele",
     "quickBooking": "Hızlı Randevu",
     "minutes": "Dk"
+  },
+  "CookieConsent": {
+    "title": "Çerez Tercihleriniz",
+    "description": "Size daha iyi, kişiselleştirilmiş ve güvenli bir güzellik deneyimi sunmak için çerezleri kullanıyoruz.",
+    "necessary": "Zorunlu Çerezler",
+    "necessaryDesc": "Sitenin çalışması için temel çerezler.",
+    "alwaysActive": "Her Zaman Aktif",
+    "analytics": "Analiz Çerezleri",
+    "analyticsDesc": "Ziyaretçi hareketlerini analiz etmek için.",
+    "marketing": "Pazarlama Çerezleri",
+    "marketingDesc": "Size özel kampanyaları gösterebilmek için.",
+    "goBack": "Geri Dön",
+    "savePreferences": "Tercihleri Kaydet",
+    "customize": "Özelleştir",
+    "accept": "Kabul Et"
   }
 }

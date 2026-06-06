@@ -24,7 +24,7 @@ export async function getAvailableTimeSlots(
 ) {
   try {
     if (!locationId || !serviceId || !dateStr) {
-      return { success: false, error: 'Şube, hizmet ve tarih seçilmesi zorunludur!' };
+      return { success: false, error: 'Şube, hizmet ve tarih seçilmesi zorunludur!', slots: [] as string[], shopOpenTime: '10:00', shopCloseTime: '19:00' };
     }
 
     const dateObj = new Date(dateStr + 'T00:00:00');
@@ -36,7 +36,7 @@ export async function getAvailableTimeSlots(
     });
 
     if (!service || service.isDeleted || !service.isActive) {
-      return { success: false, error: 'Hizmet bulunamadı veya pasif.' };
+      return { success: false, error: 'Hizmet bulunamadı veya pasif.', slots: [] as string[], shopOpenTime: '10:00', shopCloseTime: '19:00' };
     }
 
     const duration = service.duration;
@@ -51,15 +51,15 @@ export async function getAvailableTimeSlots(
 
     // Şube o gün kapalı olarak işaretlenmişse
     if (shopHours && shopHours.isClosed) {
-      return { success: true, slots: [] }; // Şube o gün kapalı
+      return { success: true, slots: [] as string[], shopOpenTime: '10:00', shopCloseTime: '19:00' }; // Şube o gün kapalı
     }
 
-    // Çalışma saatleri tanımlanmamışsa varsayılan saatler (09:00 - 19:00)
+    // Çalışma saatleri tanımlanmamışsa varsayılan saatler (10:00 - 19:00)
     const effectiveShopHours = shopHours || {
-      openTime: '09:00',
+      openTime: '10:00',
       closeTime: '19:00',
-      breakStart: '13:00',
-      breakEnd: '14:00',
+      breakStart: null,
+      breakEnd: null,
     };
 
     // 3. Şubenin o gün resmi tatilde/kapalı olup olmadığını kontrol edelim
@@ -71,7 +71,7 @@ export async function getAvailableTimeSlots(
     });
 
     if (isHoliday) {
-      return { success: true, slots: [] }; // Resmi tatil, şube kapalı
+      return { success: true, slots: [] as string[], shopOpenTime: effectiveShopHours.openTime, shopCloseTime: effectiveShopHours.closeTime }; // Resmi tatil, şube kapalı
     }
 
     // 4. Hizmeti verebilen aktif personelleri bulalım
@@ -149,7 +149,7 @@ export async function getAvailableTimeSlots(
     }
 
     if (qualifiedStaff.length === 0) {
-      return { success: true, slots: [] }; // O gün o şubede müsait personel yok
+      return { success: true, slots: [] as string[], shopOpenTime: effectiveShopHours.openTime, shopCloseTime: effectiveShopHours.closeTime }; // O gün o şubede müsait personel yok
     }
 
     // O gün için tanımlanmış kapasite / bloke slotları veritabanından çekelim (SaaS kapasite yönetimi)
@@ -236,8 +236,8 @@ export async function getAvailableTimeSlots(
         });
       });
 
-      // Zaman dilimlerini tara (15'er dakikalık adımlarla)
-      const stepMinutes = 15;
+      // Zaman dilimlerini tara (60'ar dakikalık adımlarla, buçuklular oluşmayacak)
+      const stepMinutes = 60;
       for (let current = openMin; current + duration <= closeMin; current += stepMinutes) {
         const slotStart = current;
         const slotEnd = current + duration;
@@ -267,7 +267,14 @@ export async function getAvailableTimeSlots(
         }
 
         if (!isBlocked) {
-          allAvailableSlots.add(slotTime);
+          // Geçmiş tarih/saat ve minimum 4 saat sonrasına rezervasyon kontrolü
+          const slotDateTime = new Date(`${dateStr}T${slotTime}:00`);
+          const now = new Date();
+          const fourHoursLater = new Date(now.getTime() + 4 * 60 * 60 * 1000);
+
+          if (slotDateTime >= fourHoursLater) {
+            allAvailableSlots.add(slotTime);
+          }
         }
       }
     }
@@ -277,10 +284,15 @@ export async function getAvailableTimeSlots(
       return timeToMinutes(a) - timeToMinutes(b);
     });
 
-    return { success: true, slots: sortedSlots };
+    return { 
+      success: true, 
+      slots: sortedSlots,
+      shopOpenTime: effectiveShopHours.openTime,
+      shopCloseTime: effectiveShopHours.closeTime
+    };
   } catch (error: any) {
     console.error('Müsaitlik slot hesaplama hatası:', error);
-    return { success: false, error: 'Müsaitlik saatleri hesaplanırken bir hata oluştu.' };
+    return { success: false, error: 'Müsaitlik saatleri hesaplanırken bir hata oluştu.', slots: [] as string[], shopOpenTime: '10:00', shopCloseTime: '19:00' };
   }
 }
 

@@ -277,3 +277,152 @@ export async function cancelAppointment(appointmentId: string) {
   }
 }
 
+/**
+ * Müşteri randevusunu yeni tarih/saate erteler.
+ * Eski randevu RESCHEDULED statüsüne alınır, yeni tarih/saat atanır.
+ */
+export async function rescheduleAppointment(
+  appointmentId: string,
+  newDateStr: string,
+  newStartTime: string
+) {
+  try {
+    const customer = await getCurrentCustomer();
+    if (!customer) {
+      return { success: false, error: 'Lütfen önce giriş yapın!' };
+    }
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { service: true }
+    });
+
+    if (!appointment) {
+      return { success: false, error: 'Randevu bulunamadı!' };
+    }
+
+    if (appointment.customerId !== customer.id) {
+      return { success: false, error: 'Bu randevuyu değiştirme yetkiniz yok!' };
+    }
+
+    if (appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED') {
+      return { success: false, error: 'İptal edilmiş veya tamamlanmış randevular değiştirilemez.' };
+    }
+
+    // Değişiklik limiti kontrolü (randevuya 24 saatten az kaldıysa engellensin)
+    const cancelLimitSetting = await prisma.setting.findUnique({
+      where: { key_language: { key: 'cancellation_limit_hours', language: 'TR' } }
+    });
+    const limitHours = cancelLimitSetting ? parseInt(cancelLimitSetting.value) : 24;
+
+    const appointmentTimeStr = appointment.date.toISOString().split('T')[0] + 'T' + appointment.startTime + ':00';
+    const appointmentDate = new Date(appointmentTimeStr);
+    const now = new Date();
+    const diffHours = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (diffHours < limitHours) {
+      return { 
+        success: false, 
+        error: `Randevunuza ${limitHours} saatten az zaman kaldığı için online değişiklik yapılamaz. Lütfen şube ile iletişime geçin.` 
+      };
+    }
+
+    // Yeni tarih/saat müsait mi kontrol et
+    const staffId = appointment.staffId || 'ANY';
+    const newDateObj = new Date(newDateStr + 'T00:00:00');
+
+    const availability = await getAvailableTimeSlots(
+      appointment.locationId || '',
+      appointment.serviceId,
+      newDateStr,
+      staffId
+    );
+
+    if (!availability.success || !availability.slots?.includes(newStartTime)) {
+      return { success: false, error: 'Seçtiğiniz yeni tarih/saat müsait değil. Lütfen başka bir saat seçin.' };
+    }
+
+    // Bitiş saatini hesapla
+    const duration = appointment.service.duration;
+    const [hours, minutes] = newStartTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + duration;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    const newEndTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+
+    // Eski slot'un bookedCount'unu azalt
+    if (appointment.locationId) {
+      const oldSlot = await prisma.appointmentSlot.findFirst({
+        where: {
+          locationId: appointment.locationId,
+          staffId: appointment.staffId || null,
+          date: appointment.date,
+          time: appointment.startTime
+        }
+      });
+      if (oldSlot && oldSlot.bookedCount > 0) {
+        await prisma.appointmentSlot.update({
+          where: { id: oldSlot.id },
+          data: { bookedCount: { decrement: 1 } }
+        });
+      }
+    }
+
+    // Randevuyu güncelle
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        date: newDateObj,
+        startTime: newStartTime,
+        endTime: newEndTime,
+        status: 'RESCHEDULED'
+      }
+    });
+
+    // Durum geçmişine ekle
+    await prisma.appointmentStatusHistory.create({
+      data: {
+        appointmentId,
+        status: 'RESCHEDULED',
+        notes: `Müşteri tarafından online ertelendi. Yeni tarih: ${newDateStr} ${newStartTime}`
+      }
+    });
+
+    // Yeni slot'un bookedCount'unu artır
+    if (appointment.locationId) {
+      const existingSlot = await prisma.appointmentSlot.findFirst({
+        where: {
+          locationId: appointment.locationId,
+          staffId: appointment.staffId || null,
+          date: newDateObj,
+          time: newStartTime
+        }
+      });
+
+      if (existingSlot) {
+        await prisma.appointmentSlot.update({
+          where: { id: existingSlot.id },
+          data: { bookedCount: { increment: 1 } }
+        });
+      } else {
+        await prisma.appointmentSlot.create({
+          data: {
+            locationId: appointment.locationId,
+            staffId: appointment.staffId || null,
+            date: newDateObj,
+            time: newStartTime,
+            capacity: 1,
+            bookedCount: 1
+          }
+        });
+      }
+    }
+
+    await logAction('Müşteri Randevu Erteledi', `ID: ${customer.id}, Randevu: ${appointmentId}, Yeni: ${newDateStr} ${newStartTime}`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Randevu erteleme hatası:', error);
+    return { success: false, error: 'Randevu ertelenirken bir hata oluştu.' };
+  }
+}

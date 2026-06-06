@@ -46,9 +46,10 @@ type BookingFormProps = {
   initialLocations: Location[];
   initialServices: Service[];
   initialStaff: Staff[];
+  initialCustomer?: { name: string; email: string; phone: string } | null;
 };
 
-export default function BookingForm({ initialLocations, initialServices, initialStaff }: BookingFormProps) {
+export default function BookingForm({ initialLocations, initialServices, initialStaff, initialCustomer }: BookingFormProps) {
   const t = useTranslations("Booking");
   const params = useParams();
   const locale = (params?.locale as string) || 'tr';
@@ -60,15 +61,85 @@ export default function BookingForm({ initialLocations, initialServices, initial
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [shopOpenTime, setShopOpenTime] = useState<string>('10:00');
+  const [shopCloseTime, setShopCloseTime] = useState<string>('19:00');
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
+    name: initialCustomer?.name || '',
+    phone: initialCustomer?.phone || '',
+    email: initialCustomer?.email || '',
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Rezervasyon ilerlemesini localStorage'a kaydet
+  useEffect(() => {
+    if (step === 6) {
+      localStorage.removeItem('booking_progress');
+      return;
+    }
+    
+    const progress = {
+      locationId: selectedLocation?.id,
+      serviceId: selectedService?.id,
+      staffId: selectedStaff === 'ANY' ? 'ANY' : selectedStaff?.id,
+      date: selectedDate ? selectedDate.toISOString() : null,
+      time: selectedTime,
+      step
+    };
+    localStorage.setItem('booking_progress', JSON.stringify(progress));
+  }, [selectedLocation, selectedService, selectedStaff, selectedDate, selectedTime, step]);
+
+  // Rezervasyon ilerlemesini localStorage'dan yükle
+  useEffect(() => {
+    const saved = localStorage.getItem('booking_progress');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.locationId) {
+          const loc = initialLocations.find(l => l.id === data.locationId);
+          if (loc) setSelectedLocation(loc);
+        }
+        if (data.serviceId) {
+          const ser = initialServices.find(s => s.id === data.serviceId);
+          if (ser) setSelectedService(ser);
+        }
+        if (data.staffId) {
+          if (data.staffId === 'ANY') {
+            setSelectedStaff('ANY');
+          } else {
+            const st = initialStaff.find(s => s.id === data.staffId);
+            if (st) setSelectedStaff(st);
+          }
+        }
+        if (data.date) {
+          setSelectedDate(new Date(data.date));
+        }
+        if (data.time) {
+          setSelectedTime(data.time);
+        }
+        if (data.step) {
+          // Başarılı ekranının tekrar gösterilmesini önlemek için step'i 5 ile sınırla
+          setStep(Math.min(data.step, 5));
+        }
+      } catch (e) {
+        console.error('Rezervasyon ilerlemesi yüklenirken hata oluştu:', e);
+      }
+    }
+  }, []);
+
+  // Oturum açıldığında veya değiştiğinde bilgileri otomatik doldur
+  useEffect(() => {
+    if (initialCustomer) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || initialCustomer.name,
+        phone: prev.phone || initialCustomer.phone,
+        email: prev.email || initialCustomer.email
+      }));
+    }
+  }, [initialCustomer]);
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 6));
   const prevStep = () => {
@@ -136,6 +207,8 @@ export default function BookingForm({ initialLocations, initialServices, initial
 
       if (result.success && result.slots) {
         setTimeSlots(result.slots);
+        if (result.shopOpenTime) setShopOpenTime(result.shopOpenTime);
+        if (result.shopCloseTime) setShopCloseTime(result.shopCloseTime);
       } else {
         setTimeSlots([]);
         console.error(result.error || 'Saat dilimleri alınamadı.');
@@ -461,21 +534,40 @@ export default function BookingForm({ initialLocations, initialServices, initial
                   </div>
                 ) : selectedDate ? (
                   timeSlots.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
-                      {timeSlots.map((time, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setSelectedTime(time)}
-                          className={`py-2.5 rounded-xl font-bold transition-all text-sm ${
-                            selectedTime === time
-                              ? 'bg-gray-900 text-white shadow-md'
-                              : 'bg-white hover:bg-gray-50 border border-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
+                    <div className="grid grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                      {(() => {
+                        const allPossibleSlots = [];
+                        const openHour = parseInt(shopOpenTime.split(':')[0]) || 10;
+                        const closeHour = parseInt(shopCloseTime.split(':')[0]) || 19;
+                        
+                        for (let h = openHour; h <= closeHour; h++) {
+                          allPossibleSlots.push(`${h.toString().padStart(2, '0')}:00`);
+                          if (h < closeHour) {
+                            allPossibleSlots.push(`${h.toString().padStart(2, '0')}:30`);
+                          }
+                        }
+                        
+                        return allPossibleSlots.map((time, i) => {
+                          const isAvailable = timeSlots.includes(time);
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              disabled={!isAvailable}
+                              onClick={() => isAvailable && setSelectedTime(time)}
+                              className={`py-2.5 rounded-xl font-bold transition-all text-sm border ${
+                                selectedTime === time
+                                  ? 'bg-gray-900 text-white shadow-md border-gray-900'
+                                  : isAvailable
+                                    ? 'bg-white hover:bg-gray-50 border-gray-200 text-gray-800 cursor-pointer'
+                                    : 'bg-gray-50 border-gray-100 text-gray-400 opacity-60 cursor-not-allowed'
+                              }`}
+                            >
+                              {time}
+                            </button>
+                          );
+                        });
+                      })()}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-400 text-xs font-semibold">

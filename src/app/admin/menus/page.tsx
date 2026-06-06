@@ -21,6 +21,7 @@ export default async function AdminMenusPage() {
   // Tüm menü elemanlarını getir
   const menuItems = await prisma.menuItem.findMany({
     include: {
+      translations: true,
       page: { include: { translations: true } },
       serviceCategory: { include: { translations: true } },
       service: { include: { translations: true } },
@@ -37,9 +38,6 @@ export default async function AdminMenusPage() {
   const formattedMenuItems = menuItems.map(item => ({
     id: item.id,
     menuType: item.menuType,
-    language: item.language,
-    title: item.title,
-    url: item.url,
     order: item.order,
     isActive: item.isActive,
     target: item.target || '_self',
@@ -53,14 +51,20 @@ export default async function AdminMenusPage() {
     landingPageId: item.landingPageId,
     page: item.page,
     serviceCategory: item.serviceCategory,
-    service: item.service,
+    service: item.service ? { ...item.service, price: item.service.price.toString(), deletedAt: item.service.deletedAt?.toISOString() || null } : null,
     blogCategory: item.blogCategory,
     blogPost: item.blogPost,
-    landingPage: item.landingPage
+    landingPage: item.landingPage,
+    translations: item.translations.map(t => ({
+      id: t.id,
+      language: t.language,
+      title: t.title,
+      url: t.url,
+    })),
   }));
 
   // İçerik Seçenekleri için Verileri Çek
-  const [pages, serviceCategories, services, blogCategories, blogPosts, landingPages] = await Promise.all([
+  const [pages, serviceCategories, rawServices, blogCategories, blogPosts, landingPages] = await Promise.all([
     prisma.page.findMany({ where: { isDeleted: false }, include: { translations: true } }),
     prisma.serviceCategory.findMany({ where: { isDeleted: false }, include: { translations: true } }),
     prisma.service.findMany({ where: { isDeleted: false }, include: { translations: true } }),
@@ -68,6 +72,13 @@ export default async function AdminMenusPage() {
     prisma.blogPost.findMany({ where: { isDeleted: false }, include: { translations: true } }),
     prisma.landingPage.findMany({ where: { isDeleted: false }, include: { translations: true } }),
   ]);
+
+  // Decimal objelerini serialize et (client component'e göndermek için)
+  const services = rawServices.map(s => ({
+    ...s,
+    price: s.price.toString(),
+    deletedAt: s.deletedAt?.toISOString() || null
+  }));
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">

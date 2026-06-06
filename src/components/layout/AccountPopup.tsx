@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { getCurrentCustomer, logoutCustomer, addPasswordToSocialAccount, updateCustomerMarketing } from '@/app/actions/customerAuth';
-import { cancelAppointment } from '@/app/actions/booking';
-import { X, User, Phone, Mail, Calendar, Clock, LogOut, CheckCircle, AlertTriangle, Play, Settings, BellRing } from 'lucide-react';
+import { cancelAppointment, rescheduleAppointment } from '@/app/actions/booking';
+import { getAvailableTimeSlots } from '@/app/actions/availability';
+import { X, User, Phone, Mail, Calendar, Clock, LogOut, CheckCircle, AlertTriangle, Play, Settings, BellRing, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface AccountPopupProps {
@@ -25,6 +26,14 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
+  // Randevu Erteleme (Reschedule) State'leri
+  const [reschedulingApptId, setReschedulingApptId] = useState<string | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState<string>('');
+  const [rescheduleTime, setRescheduleTime] = useState<string | null>(null);
+  const [rescheduleSlots, setRescheduleSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [reschedulingSubmit, setReschedulingSubmit] = useState(false);
+
   const handleCancelAppointment = async (apptId: string) => {
     if (!confirm('Randevunuzu iptal etmek istediğinize emin misiniz?')) return;
     setCancellingId(apptId);
@@ -38,6 +47,52 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
     } else {
       setError(res.error || 'Randevu iptal edilirken bir hata oluştu.');
     }
+  };
+
+  const loadRescheduleSlots = async (dateStr: string, appt: any) => {
+    setLoadingSlots(true);
+    setRescheduleTime(null);
+    const res = await getAvailableTimeSlots(
+      appt.locationId,
+      appt.serviceId,
+      dateStr,
+      appt.staffId || 'ANY'
+    );
+    setLoadingSlots(false);
+    if (res.success && res.slots) {
+      setRescheduleSlots(res.slots);
+    } else {
+      setRescheduleSlots([]);
+    }
+  };
+
+  const handleReschedule = async (apptId: string) => {
+    if (!rescheduleDate || !rescheduleTime) {
+      setError('Lütfen yeni tarih ve saat seçin.');
+      return;
+    }
+    setReschedulingSubmit(true);
+    setError(null);
+    setMsg(null);
+    const res = await rescheduleAppointment(apptId, rescheduleDate, rescheduleTime);
+    setReschedulingSubmit(false);
+    if (res.success) {
+      setMsg('Randevunuz başarıyla ertelendi.');
+      setReschedulingApptId(null);
+      loadCustomer();
+    } else {
+      setError(res.error || 'Randevu ertelenirken bir hata oluştu.');
+    }
+  };
+
+  const getNext7Days = () => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+    return days;
   };
 
   useEffect(() => {
@@ -167,6 +222,19 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
 
             {/* Content Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2 animate-fade-in shrink-0">
+                  <AlertTriangle className="text-red-500 shrink-0 mt-0.5" size={14} />
+                  <p className="text-xs text-red-700 font-medium">{error}</p>
+                </div>
+              )}
+              {msg && (
+                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-start gap-2 animate-fade-in shrink-0">
+                  <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={14} />
+                  <p className="text-xs text-emerald-700 font-medium">{msg}</p>
+                </div>
+              )}
+
               {/* Randevu Geçmişi */}
               <div>
                 <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
@@ -205,15 +273,112 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
                             </div>
                           </div>
 
-                          {(appt.status === 'PENDING' || appt.status === 'CONFIRMED') && (
-                            <div className="mt-3 pt-2 border-t border-gray-50 flex justify-end">
-                              <button
-                                onClick={() => handleCancelAppointment(appt.id)}
-                                disabled={cancellingId === appt.id}
-                                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 disabled:bg-gray-100 disabled:text-gray-400 text-red-600 font-bold text-[10px] rounded-xl transition-colors cursor-pointer"
-                              >
-                                {cancellingId === appt.id ? 'İptal Ediliyor...' : 'Randevuyu İptal Et'}
-                              </button>
+                           {(appt.status === 'PENDING' || appt.status === 'CONFIRMED') && (
+                            <div className="mt-3 pt-2 border-t border-gray-55">
+                              {reschedulingApptId === appt.id ? (
+                                <div className="space-y-3 pt-2 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Yeni Tarih Seçin</p>
+                                  <div className="grid grid-cols-4 gap-1.5">
+                                    {getNext7Days().map((d, idx) => {
+                                      const year = d.getFullYear();
+                                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                                      const day = String(d.getDate()).padStart(2, '0');
+                                      const dateStr = `${year}-${month}-${day}`;
+                                      const isSelected = rescheduleDate === dateStr;
+
+                                      return (
+                                        <button
+                                          key={idx}
+                                          type="button"
+                                          onClick={() => {
+                                            setRescheduleDate(dateStr);
+                                            loadRescheduleSlots(dateStr, appt);
+                                          }}
+                                          className={`p-1.5 rounded-lg text-center flex flex-col items-center justify-center transition-all border cursor-pointer ${
+                                            isSelected
+                                              ? 'bg-[var(--color-rose-600)] text-white border-[var(--color-rose-600)]'
+                                              : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-800'
+                                          }`}
+                                        >
+                                          <span className="text-[8px] uppercase font-bold opacity-80">{d.toLocaleDateString('tr-TR', { weekday: 'short' })}</span>
+                                          <span className="text-xs font-bold">{d.getDate()}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+
+                                  {rescheduleDate && (
+                                    <div className="space-y-2">
+                                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Yeni Saat Seçin</p>
+                                      {loadingSlots ? (
+                                        <div className="text-center py-4 text-xs text-gray-400">Saat dilimleri yükleniyor...</div>
+                                      ) : rescheduleSlots.length > 0 ? (
+                                        <div className="grid grid-cols-4 gap-1.5 max-h-32 overflow-y-auto pr-1">
+                                          {rescheduleSlots.map((time, idx) => (
+                                            <button
+                                              key={idx}
+                                              type="button"
+                                              onClick={() => setRescheduleTime(time)}
+                                              className={`py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                                                rescheduleTime === time
+                                                  ? 'bg-gray-900 text-white border-gray-900 shadow-sm'
+                                                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                              }`}
+                                            >
+                                              {time}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="text-center py-3 text-[10px] font-bold text-red-500 bg-red-50 rounded-lg">Seçtiğiniz tarihte müsait saat bulunamadı.</div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  <div className="flex gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setReschedulingApptId(null)}
+                                      className="flex-1 py-2 border border-gray-200 text-gray-600 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer text-center bg-white"
+                                    >
+                                      İptal
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleReschedule(appt.id)}
+                                      disabled={reschedulingSubmit || !rescheduleTime}
+                                      className="flex-1 py-2 bg-gradient-to-r from-[var(--color-rose-500)] to-[var(--color-rose-600)] text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer text-center disabled:opacity-50"
+                                    >
+                                      {reschedulingSubmit ? 'Güncelleniyor...' : 'Onayla'}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setReschedulingApptId(appt.id);
+                                      setRescheduleDate('');
+                                      setRescheduleTime(null);
+                                      setRescheduleSlots([]);
+                                      setError(null);
+                                      setMsg(null);
+                                    }}
+                                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-[var(--color-rose-600)] font-bold text-[10px] rounded-xl transition-colors cursor-pointer"
+                                  >
+                                    Yeniden Planla
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelAppointment(appt.id)}
+                                    disabled={cancellingId === appt.id}
+                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 disabled:bg-gray-100 disabled:text-gray-400 text-red-600 font-bold text-[10px] rounded-xl transition-colors cursor-pointer"
+                                  >
+                                    {cancellingId === appt.id ? 'İptal Ediliyor...' : 'Randevuyu İptal Et'}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -298,21 +463,29 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
             </div>
 
             {/* Logout Action Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-4 shrink-0 justify-between items-center">
-              <Link 
-                href={`/${locale}/booking`}
-                onClick={onClose}
-                className="px-6 py-3 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
-              >
-                Yeni Randevu Al
-              </Link>
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex flex-col gap-3 shrink-0">
+              <div className="flex gap-3">
+                <Link 
+                  href={`/${locale}/hesabim`}
+                  onClick={onClose}
+                  className="px-5 py-3 bg-gray-900 hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
+                >
+                  Hesabıma Git
+                </Link>
+                <Link 
+                  href={`/${locale}/booking`}
+                  onClick={onClose}
+                  className="px-5 py-3 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
+                >
+                  Yeni Randevu
+                </Link>
+              </div>
               
               <button
                 onClick={handleLogout}
-                className="px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
-                title="Çıkış Yap"
+                className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <LogOut size={16} />
+                <LogOut size={14} />
                 Çıkış Yap
               </button>
             </div>

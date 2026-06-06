@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma';
 import { LogOut, Calendar, Settings, Users, Scissors, Tags, MapPin } from 'lucide-react';
 import { logoutAdmin } from '@/app/actions/auth';
 import Link from 'next/link';
-import AddCategoryForm from '@/components/admin/AddCategoryForm';
 import CategoryList from '@/components/admin/CategoryList';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -72,7 +71,12 @@ export default async function AdminCategoriesPage() {
                 <h2 className="text-xl font-bold text-gray-800">Kategoriler & SEO</h2>
                 <p className="text-sm text-gray-500 mt-1">Zengin içerikli kategori sayfaları oluşturun ve Google'da üst sıralara çıkın.</p>
               </div>
-              <AddCategoryForm />
+              <Link 
+                href="/admin/categories/new"
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-black transition-colors"
+              >
+                Yeni Kategori Ekle
+              </Link>
             </div>
 
             <CategoryList categories={formattedCategories} />

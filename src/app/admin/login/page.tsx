@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { loginAdmin } from '@/app/actions/auth';
 import { Loader2, Lock, ShieldCheck } from 'lucide-react';
-import { useRouter } from '@/i18n/routing';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
   const [error, setError] = useState('');
@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
     const result = await loginAdmin(formData);
 
     if (result.success) {
-      router.push('/admin' as any);
+      router.push('/admin');
     } else {
       setError(result.error || 'Giriş başarısız.');
       setIsSubmitting(false);

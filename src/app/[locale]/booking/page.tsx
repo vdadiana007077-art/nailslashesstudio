@@ -2,10 +2,19 @@ import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
 import BookingForm from '@/components/booking/BookingForm';
+import { getCurrentCustomer } from '@/app/actions/customerAuth';
 
 export default async function BookingPage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
+
+  // Giriş yapmış müşteri bilgilerini çek
+  const customer = await getCurrentCustomer();
+  const initialCustomer = customer ? {
+    name: customer.name || '',
+    email: customer.email || '',
+    phone: customer.phone || ''
+  } : null;
 
   // 1. Aktif şubeleri çek
   const rawLocations = await prisma.location.findMany({
@@ -80,6 +89,7 @@ export default async function BookingPage({ params }: { params: Promise<{ locale
           initialLocations={locations} 
           initialServices={services} 
           initialStaff={staffList} 
+          initialCustomer={initialCustomer}
         />
       </div>
     </main>

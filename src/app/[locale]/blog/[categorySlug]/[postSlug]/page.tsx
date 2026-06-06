@@ -308,7 +308,7 @@ export default async function BlogPostDetailPage({ params }: Props) {
               Yazıda Geçen Hizmetlerimiz
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {post.relatedServices.map(({ service }) => {
+              {post.relatedServices.map(({ service }: any) => {
                 const sTrans = service.translations[0];
                 return (
                   <div key={service.id} className="p-4 rounded-2xl border border-gray-100 hover:border-[var(--color-rose-200)] transition-all flex items-center justify-between">
@@ -339,7 +339,7 @@ export default async function BlogPostDetailPage({ params }: Props) {
               Sıkça Sorulan Sorular
             </h2>
             <div className="space-y-4">
-              {post.faqs.map((faq) => (
+              {post.faqs.map((faq: any) => (
                 <div key={faq.id} className="bg-white border border-[var(--color-rose-100)] rounded-2xl p-6 shadow-sm">
                   <h3 className="font-bold text-sm md:text-base text-gray-900 mb-2">{faq.question}</h3>
                   <p className="text-gray-600 text-xs md:text-sm leading-relaxed">{faq.answer}</p>

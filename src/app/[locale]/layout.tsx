@@ -42,15 +42,38 @@ export default async function LocaleLayout({
   // Veritabanından o dile ait aktif menü elemanlarını çekelim
   const languageEnum = locale.toUpperCase() as Language;
   
-  let menuItems: Array<{ id: string; menuType: any; language: Language; title: string; url: string; order: number; isActive: boolean; createdAt: Date }> = [];
+  let menuItems: Array<{ id: string; menuType: any; title: string; url: string; order: number; isActive: boolean }> = [];
   let settings: Array<{ id: string; key: string; value: string; language: Language | null }> = [];
   try {
-    menuItems = await prisma.menuItem.findMany({
+    const rawMenuItems = await prisma.menuItem.findMany({
       where: { 
         isActive: true,
-        language: languageEnum
+        translations: {
+          some: {
+            language: languageEnum
+          }
+        }
+      },
+      include: {
+        translations: {
+          where: {
+            language: languageEnum
+          }
+        }
       },
       orderBy: { order: 'asc' }
+    });
+
+    menuItems = rawMenuItems.map(item => {
+      const trans = item.translations[0];
+      return {
+        id: item.id,
+        menuType: item.menuType,
+        title: trans?.title || '',
+        url: trans?.url || '',
+        order: item.order,
+        isActive: item.isActive
+      };
     });
 
     settings = await prisma.setting.findMany({

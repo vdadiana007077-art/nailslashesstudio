@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import ServiceList from '@/components/admin/ServiceList';
-import AddServiceForm from '@/components/admin/AddServiceForm';
+import Link from 'next/link';
 
 export default async function AdminServicesPage() {
   const cookieStore = await cookies();
@@ -121,7 +121,12 @@ export default async function AdminServicesPage() {
               <h2 className="text-lg font-bold text-gray-800">Tüm Hizmetler</h2>
               <p className="text-sm text-gray-500">Tüm dillerdeki detayları, görselleri, SSS ve Blog ilişkilerini yönetebilirsiniz.</p>
             </div>
-            <AddServiceForm categories={formattedCategories} />
+            <Link 
+              href="/admin/services/new"
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-black transition-colors"
+            >
+              Yeni Hizmet Ekle
+            </Link>
           </div>
 
           <ServiceList 

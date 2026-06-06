@@ -60,8 +60,8 @@ export default async function AdminDashboard() {
         }
       },
       orderBy: [
-        { date: 'asc' },
-        { startTime: 'asc' }
+        { date: 'desc' },
+        { startTime: 'desc' }
       ],
       include: {
         service: {

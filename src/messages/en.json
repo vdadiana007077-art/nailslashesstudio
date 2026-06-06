@@ -122,5 +122,20 @@
     "examineDetails": "Examine Details",
     "quickBooking": "Quick Booking",
     "minutes": "min"
+  },
+  "CookieConsent": {
+    "title": "Your Cookie Preferences",
+    "description": "We use cookies to provide you with a better, personalized, and secure beauty experience.",
+    "necessary": "Necessary Cookies",
+    "necessaryDesc": "Essential cookies for the site to function.",
+    "alwaysActive": "Always Active",
+    "analytics": "Analytics Cookies",
+    "analyticsDesc": "To analyze visitor movements.",
+    "marketing": "Marketing Cookies",
+    "marketingDesc": "To show you tailored campaigns.",
+    "goBack": "Go Back",
+    "savePreferences": "Save Preferences",
+    "customize": "Customize",
+    "accept": "Accept All"
   }
 }

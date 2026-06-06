@@ -450,14 +450,17 @@ model PageTranslation {
 model MenuItem {
   id                String            @id @default(uuid())
   menuType          MenuType
-  language          Language
-  title             String
-  url               String
+  language          Language?
+  title             String?
+  url               String?
   order             Int               @default(0)
   isActive          Boolean           @default(true)
   target            String?           @default("_self")
   isExternal        Boolean           @default(false)
   
+  // Çoklu Dil İlişkisi
+  translations      MenuItemTranslation[]
+
   // SEO & İçerik Bağlantıları
   linkType          LinkType          @default(CUSTOM_URL)
   pageId            String?
@@ -476,6 +479,21 @@ model MenuItem {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt @default(now())
 }
+
+model MenuItemTranslation {
+  id                String            @id @default(uuid())
+  menuItemId        String
+  menuItem          MenuItem          @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  language          Language
+  title             String
+  url               String
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt @default(now())
+
+  @@unique([menuItemId, language])
+}
+
 
 model GalleryImage {
   id            String          @id @default(uuid())

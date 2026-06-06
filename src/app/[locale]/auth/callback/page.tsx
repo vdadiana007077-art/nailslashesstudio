@@ -45,8 +45,7 @@ export default function AuthCallbackPage() {
           // URL hash'ini temizle
           window.history.replaceState(null, '', window.location.pathname);
           // Ana sayfaya veya randevu sayfasına yönlendir
-          router.replace(`/${locale}`);
-          router.refresh();
+          window.location.href = `/${locale}`;
         } else {
           setStatusMsg(`Giriş hatası: ${result.error || 'Doğrulanamadı.'}`);
           setTimeout(() => router.replace(`/${locale}`), 3000);

@@ -122,5 +122,20 @@
     "examineDetails": "Details ansehen",
     "quickBooking": "Schnelle Buchung",
     "minutes": "Min."
+  },
+  "CookieConsent": {
+    "title": "Ihre Cookie-Einstellungen",
+    "description": "Wir verwenden Cookies, um Ihnen ein besseres, personalisiertes und sicheres Beauty-Erlebnis zu bieten.",
+    "necessary": "Notwendige Cookies",
+    "necessaryDesc": "Unverzichtbare Cookies für die Funktion der Website.",
+    "alwaysActive": "Immer aktiv",
+    "analytics": "Analyse-Cookies",
+    "analyticsDesc": "Zur Analyse der Besucherbewegungen.",
+    "marketing": "Marketing-Cookies",
+    "marketingDesc": "Um Ihnen maßgeschneiderte Kampagnen zu zeigen.",
+    "goBack": "Zurück",
+    "savePreferences": "Einstellungen speichern",
+    "customize": "Anpassen",
+    "accept": "Akzeptieren"
   }
 }
