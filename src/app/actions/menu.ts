@@ -87,7 +87,7 @@ export async function createMenuItem(formData: FormData) {
   const landingPageId = formData.get('landingPageId') as string || null;
 
   const translationsRaw = formData.get('translations') as string;
-  let translations: Array<{ language: Language; title: string; url: string }> = [];
+  let translations: Array<{ language: Language; title: string; url: string; seoTitle?: string; seoDesc?: string; ogImage?: string; headerImage?: string; }> = [];
   try {
     translations = JSON.parse(translationsRaw);
   } catch (e) {
@@ -117,7 +117,11 @@ export async function createMenuItem(formData: FormData) {
           create: translations.filter(t => t.title && t.url).map(t => ({
             language: t.language,
             title: t.title,
-            url: t.url
+            url: t.url,
+            seoTitle: t.seoTitle || null,
+            seoDesc: t.seoDesc || null,
+            ogImage: t.ogImage || null,
+            headerImage: t.headerImage || null
           }))
         }
       },
@@ -150,7 +154,7 @@ export async function updateMenuItem(id: string, translationsRaw: string, formDa
   const blogPostId = formData.get('blogPostId') as string || null;
   const landingPageId = formData.get('landingPageId') as string || null;
 
-  let translations: Array<{ language: Language; title: string; url: string }> = [];
+  let translations: Array<{ language: Language; title: string; url: string; seoTitle?: string; seoDesc?: string; ogImage?: string; headerImage?: string; }> = [];
   try {
     translations = JSON.parse(translationsRaw);
   } catch (e) {
@@ -202,7 +206,11 @@ export async function updateMenuItem(id: string, translationsRaw: string, formDa
           where: { id: existingTrans.id },
           data: {
             title: t.title,
-            url: t.url
+            url: t.url,
+            seoTitle: t.seoTitle || null,
+            seoDesc: t.seoDesc || null,
+            ogImage: t.ogImage || null,
+            headerImage: t.headerImage || null
           }
         });
       } else {
@@ -211,7 +219,11 @@ export async function updateMenuItem(id: string, translationsRaw: string, formDa
             menuItemId: id,
             language: t.language,
             title: t.title,
-            url: t.url
+            url: t.url,
+            seoTitle: t.seoTitle || null,
+            seoDesc: t.seoDesc || null,
+            ogImage: t.ogImage || null,
+            headerImage: t.headerImage || null
           }
         });
       }

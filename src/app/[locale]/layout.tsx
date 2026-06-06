@@ -89,19 +89,28 @@ export default async function LocaleLayout({
   }
 
   // Header ve Footer menüleri filtrele
+  // Menü URL'leri veritabanında /${slug} formatında kayıtlı.
+  // Frontend'e aktarırken locale prefix ekliyoruz.
+  const addLocalePrefix = (url: string) => {
+    if (!url || url.startsWith('http')) return url; // external linkler olduğu gibi kalır
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    if (locale === 'tr') return cleanUrl;
+    return `/${locale}${cleanUrl}`;
+  };
+
   const headerMenus = menuItems.filter(m => m.menuType === 'HEADER').map(m => ({
     name: m.title,
-    href: m.url
+    href: addLocalePrefix(m.url)
   }));
 
   const footerMenus = menuItems.filter(m => m.menuType === 'FOOTER').map(m => ({
     name: m.title,
-    href: m.url
+    href: addLocalePrefix(m.url)
   }));
 
   const legalMenus = menuItems.filter(m => m.menuType === 'LEGAL_FOOTER').map(m => ({
     name: m.title,
-    href: m.url
+    href: addLocalePrefix(m.url)
   }));
 
   // Güvenli Fallback Menü Linkleri (İlk Kurulum Güvenliği)

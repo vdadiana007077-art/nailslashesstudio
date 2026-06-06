@@ -416,6 +416,7 @@ model AppointmentStatusHistory {
 
 model Page {
   id           String            @id @default(uuid())
+  pageGroup    String?
   isActive     Boolean           @default(true)
   isDeleted    Boolean           @default(false)
   deletedAt    DateTime?
@@ -431,7 +432,12 @@ model PageTranslation {
   language      Language
   slug          String
   title         String
+  h1Title       String?
+  editorTitle   String?
+  introText     String?         @db.Text
   content       String          @db.Text
+  headerImage   String?
+  thumbnailImage String?
   
   // SEO Alanları
   seoTitle      String?
@@ -487,6 +493,10 @@ model MenuItemTranslation {
   language          Language
   title             String
   url               String
+  seoTitle          String?
+  seoDesc           String?
+  ogImage           String?
+  headerImage       String?
 
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt @default(now())

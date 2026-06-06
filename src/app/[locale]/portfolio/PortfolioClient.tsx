@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Sparkles, Calendar } from 'lucide-react';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 
 type PortfolioItem = {
   id: string;
@@ -17,9 +17,10 @@ type PortfolioItem = {
 type PortfolioClientProps = {
   items: PortfolioItem[];
   categories: string[];
+  bookingHref?: string;
 };
 
-export default function PortfolioClient({ items, categories }: PortfolioClientProps) {
+export default function PortfolioClient({ items, categories, bookingHref = '/randevu-al' }: PortfolioClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   const filteredItems = items.filter(item => {
@@ -78,7 +79,7 @@ export default function PortfolioClient({ items, categories }: PortfolioClientPr
                   {item.category}
                 </span>
                 <Link
-                  href="/booking"
+                  href={bookingHref}
                   className="px-5 py-2.5 bg-gray-900 text-white font-bold rounded-xl hover:bg-black transition-colors flex items-center gap-1 shadow-sm"
                 >
                   <Calendar size={12} />

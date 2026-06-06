@@ -13,7 +13,8 @@
     "check-logs": "npx tsx --env-file=.env scratch/check-logs.ts",
     "test-lang": "npx tsx scratch/test-language.ts",
     "test-update": "npx tsx --env-file=.env scratch/test-update-status.ts",
-    "check-specific": "npx tsx --env-file=.env scratch/check-specific-template.ts"
+    "check-specific": "npx tsx --env-file=.env scratch/check-specific-template.ts",
+    "insert-branch": "npx tsx --env-file=.env scratch/insert_branch.ts"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.11",
@@ -29,6 +30,7 @@
     "@tiptap/starter-kit": "^3.26.0",
     "@types/pg": "^8.20.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
     "next": "^15.5.19",

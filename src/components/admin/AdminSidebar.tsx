@@ -119,7 +119,7 @@ export default function AdminSidebar() {
           activePattern: new RegExp(`^/admin/blog/tags`)
         },
         {
-          name: 'Sayfalar',
+          name: 'Menü Sayfaları',
           href: `/admin/pages`,
           icon: FileText,
           activePattern: new RegExp(`^/admin/pages`)
@@ -141,12 +141,6 @@ export default function AdminSidebar() {
           href: `/admin/media`,
           icon: Image,
           activePattern: new RegExp(`^/admin/media`)
-        },
-        {
-          name: 'Menü Yönetimi',
-          href: `/admin/menus`,
-          icon: Menu,
-          activePattern: new RegExp(`^/admin/menus`)
         },
       ]
     },

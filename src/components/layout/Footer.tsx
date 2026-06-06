@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations } from 'next-intl';
-import { Link, usePathname } from '@/i18n/routing';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 type MenuItemProp = {
   name: string;
@@ -62,7 +63,7 @@ export default function Footer({ menus, legalMenus, contact }: { menus: MenuItem
             <ul className="flex flex-col gap-4 text-sm text-[var(--color-text-muted)]">
               {menus.map((menu, idx) => (
                 <li key={idx}>
-                  <Link href={menu.href as any} className="hover:text-[var(--color-primary-500)] transition-colors">
+                  <Link href={menu.href} className="hover:text-[var(--color-primary-500)] transition-colors">
                     {menu.name}
                   </Link>
                 </li>
@@ -95,7 +96,7 @@ export default function Footer({ menus, legalMenus, contact }: { menus: MenuItem
           <p>© {new Date().getFullYear()} Nails & Lashes Studio. {t('allRightsReserved')}</p>
           <div className="flex gap-4">
             {legalMenus.map((menu, idx) => (
-              <Link key={idx} href={menu.href as any} className="hover:text-[var(--color-text-main)] transition-colors">
+              <Link key={idx} href={menu.href} className="hover:text-[var(--color-text-main)] transition-colors">
                 {menu.name}
               </Link>
             ))}

@@ -1,15 +1,55 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
-import { Link } from '@/i18n/routing';
+import Link from 'next/link';
 import { Language } from '@prisma/client';
 import { Sparkles, Calendar as CalendarIcon, ArrowRight, Star } from 'lucide-react';
 import ServiceExplorer from '@/components/layout/ServiceExplorer';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const locale = resolvedParams.locale.toUpperCase() as Language;
+
+  const page = await prisma.pageTranslation.findFirst({
+    where: { slug: '', language: locale }
+  });
+
+  const title = page?.seoTitle || 'Nails & Lashes Studio - Lüks Manikür ve İpek Kirpik Merkezi';
+  const desc = page?.seoDesc || 'Antalya\'nın en prestijli güzellik merkezi Nails & Lashes Studio.';
+
+  return {
+    title,
+    description: desc,
+    alternates: {
+      canonical: `https://nailslashesstudio.com/${resolvedParams.locale}`,
+      languages: {
+        'tr': `https://nailslashesstudio.com/tr`,
+        'en': `https://nailslashesstudio.com/en`,
+        'de': `https://nailslashesstudio.com/de`,
+        'ru': `https://nailslashesstudio.com/ru`,
+      }
+    },
+    openGraph: {
+      title,
+      description: desc,
+      images: [{ url: page?.ogImage || page?.headerImage || 'https://nailslashesstudio.com/images/luxury_salon_hero.png' }],
+    }
+  };
+}
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
 
   const t = await getTranslations('Index');
+
+  const pageContent = await prisma.pageTranslation.findFirst({
+    where: { slug: '', language: locale }
+  });
+
+  const heroImage = pageContent?.headerImage || '/images/luxury_salon_hero.png';
+  const heroTitle = pageContent?.h1Title || `${t('heroTitle1')} ${t('heroTitle2')}`;
+  const introText = pageContent?.introText || t('subtitle');
 
   const rawCategories = await prisma.serviceCategory.findMany({
     where: { isActive: true },
@@ -22,6 +62,21 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       },
     },
   });
+
+  // Dinamik slug çözümleme: booking ve services slug'larını PageTranslation'dan çek
+  const [bookingSlugs, servicesSlugs] = await Promise.all([
+    prisma.pageTranslation.findFirst({
+      where: { language: locale, page: { pageGroup: 'BOOKING', isActive: true, isDeleted: false } },
+      select: { slug: true }
+    }),
+    prisma.pageTranslation.findFirst({
+      where: { language: locale, page: { pageGroup: 'SERVICES', isActive: true, isDeleted: false } },
+      select: { slug: true }
+    }),
+  ]);
+  const localePrefix = resolvedParams.locale === 'tr' ? '' : `/${resolvedParams.locale}`;
+  const bookingHref = `${localePrefix}/${bookingSlugs?.slug || 'randevu-al'}`;
+  const servicesHref = `${localePrefix}/${servicesSlugs?.slug || 'hizmetlerimiz'}`;
 
   const categories = rawCategories.map(cat => ({
     id: cat.id,
@@ -57,22 +112,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <Sparkles size={14} className="text-[var(--color-primary-500)]" /> {t('heroTag')}
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-8 leading-[1.1] animate-fade-up text-[var(--color-text-main)]">
-              {t('heroTitle1')} <br />
-              <span className="text-[var(--color-primary-500)] italic">{t('heroTitle2')}</span>
-            </h1>
+            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-8 leading-[1.1] animate-fade-up text-[var(--color-text-main)]" dangerouslySetInnerHTML={{ __html: heroTitle.replace(/(Yeniden Keşfedin|Studio)/gi, '<span class="text-[var(--color-primary-500)] italic">$1</span>') }} />
             
             <p className="text-lg md:text-xl text-[var(--color-text-muted)] font-light max-w-2xl mb-12 animate-fade-up delay-100 leading-relaxed">
-              {t('subtitle') || 'Nails & Lashes Studio ile en iyi versiyonunuza kavuşun. Yenilikçi dokunuşlar, kusursuz sonuçlar.'}
+              {introText}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 animate-fade-up delay-200 w-full sm:w-auto">
-              <Link href="/booking" className="group flex items-center justify-center gap-3 px-10 py-5 bg-[var(--color-primary-500)] text-white font-bold rounded-full hover:bg-[var(--color-primary-600)] transition-all duration-300 shadow-[0_10px_35px_rgba(197,139,139,0.35)] hover:shadow-[0_15px_45px_rgba(197,139,139,0.5)] hover:-translate-y-0.5 cursor-pointer">
+              <Link href={bookingHref} className="group flex items-center justify-center gap-3 px-10 py-5 bg-[var(--color-primary-500)] text-white font-bold rounded-full hover:bg-[var(--color-primary-600)] transition-all duration-300 shadow-[0_10px_35px_rgba(197,139,139,0.35)] hover:shadow-[0_15px_45px_rgba(197,139,139,0.5)] hover:-translate-y-0.5 cursor-pointer">
                 <CalendarIcon size={18} /> {t('bookNow')}
               </Link>
-              <a href="#services" className="flex items-center justify-center gap-3 px-10 py-5 glass-panel text-[var(--color-text-main)] font-bold rounded-full hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer border border-[var(--color-primary-300)]/25">
+              <Link href={servicesHref} className="flex items-center justify-center gap-3 px-10 py-5 glass-panel text-[var(--color-text-main)] font-bold rounded-full hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer border border-[var(--color-primary-300)]/25">
                 {t('services')} <ArrowRight size={18} />
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -89,7 +141,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </div>
 
             <img 
-              src="/images/luxury_salon_hero.png" 
+              src={heroImage} 
               alt="Lüks Nails & Lashes Studio" 
               className="w-full aspect-[4/5] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
             />
@@ -274,7 +326,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
           <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">{t('ctaTitle')}</h2>
           <p className="text-white/90 text-lg md:text-xl mb-12 font-light max-w-xl">{t('ctaDesc')}</p>
-          <Link href="/booking" className="inline-flex items-center gap-3 px-10 py-5 bg-white text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)] font-bold rounded-full hover:bg-[var(--color-light-100)] hover:-translate-y-0.5 transition-all duration-300 shadow-[0_10px_35px_rgba(0,0,0,0.1)]">
+          <Link href={bookingHref} className="inline-flex items-center gap-3 px-10 py-5 bg-white text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)] font-bold rounded-full hover:bg-[var(--color-light-100)] hover:-translate-y-0.5 transition-all duration-300 shadow-[0_10px_35px_rgba(0,0,0,0.1)]">
             <CalendarIcon size={18} /> {t('ctaButton')}
           </Link>
         </div>

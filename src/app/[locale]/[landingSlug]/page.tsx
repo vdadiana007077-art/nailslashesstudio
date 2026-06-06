@@ -4,152 +4,201 @@ import { Metadata } from 'next';
 import { Language } from '@prisma/client';
 import Link from 'next/link';
 import { CalendarDays, Sparkles } from 'lucide-react';
+import { resolvePageBySlug, resolveLandingPageBySlug, createLocalizedUrl, buildHreflangAlternates } from '@/lib/page-resolver';
+
+// Page bileşenleri artık _pages/ klasöründe (underscore prefix = Next.js route DEĞİL)
+import ServicesPageContent from '../_pages/ServicesPage';
+import GalleryPageContent from '../_pages/GalleryPage';
+import ContactPageContent from '../_pages/ContactPage';
+import PortfolioPageContent from '../_pages/PortfolioPage';
+import BookingPageContent from '../_pages/BookingPage';
+import BlogPageContent from '../_pages/BlogPage';
 
 type Props = {
   params: Promise<{ locale: string; landingSlug: string }>;
 };
 
-// Dinamik SEO Metadata Üretimi
+// ─────────────────────────────────────────
+// SEO METADATA
+// ─────────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const { locale, landingSlug } = resolvedParams;
   const languageEnum = locale.toUpperCase() as Language;
 
-  // Bilinen statik rotaları filtrele
-  const staticRoutes = ['galeri', 'iletisim', 'blog', 'services', 'booking', 'admin'];
-  if (staticRoutes.includes(landingSlug)) {
-    return {};
-  }
-
-  let translation = null;
-  let isCmsPage = false;
-
   try {
-    // 1. Önce Landing Page çevirisini ara
-    translation = await prisma.landingPageTranslation.findFirst({
-      where: {
-        slug: landingSlug,
-        language: languageEnum,
-        landingPage: {
-          isActive: true,
-          isDeleted: false
-        }
-      }
-    });
+    // 1. PageTranslation'da slug ara
+    const pageResult = await resolvePageBySlug(landingSlug, languageEnum);
+    
+    if (pageResult) {
+      const { translation, pageGroup, allTranslations } = pageResult;
+      
+      // Sistem sayfaları için orijinal sayfanın metadata'sını delegele
+      if (pageGroup === 'SERVICES' || pageGroup === 'CONTACT' || pageGroup === 'GALLERY' || 
+          pageGroup === 'PORTFOLIO' || pageGroup === 'BOOKING' || pageGroup === 'BLOG') {
+        // Bu sayfaların kendi generateMetadata'ları var, ama biz daha iyi bir metadata üretebiliriz
+        const title = translation.seoTitle || `${translation.title} | Nails & Lashes Studio`;
+        const desc = translation.seoDesc || translation.title;
+        const hreflang = buildHreflangAlternates(allTranslations);
+        const currentUrl = createLocalizedUrl(locale, landingSlug);
 
-    // 2. Bulamazsan CMS Page (Kurumsal/Yasal Sayfa) çevirisini ara
-    if (!translation) {
-      translation = await prisma.pageTranslation.findFirst({
-        where: {
-          slug: landingSlug,
-          language: languageEnum,
-          page: {
-            isActive: true,
-            isDeleted: false
+        return {
+          title,
+          description: desc,
+          alternates: {
+            canonical: translation.canonical || `https://nailslashesstudio.com${currentUrl}`,
+            languages: hreflang
+          },
+          openGraph: {
+            title: translation.ogTitle || title,
+            description: translation.ogDesc || desc,
+            images: [{ url: translation.ogImage || translation.headerImage || 'https://nailslashesstudio.com/images/luxury_salon_hero.png' }],
+          },
+          twitter: {
+            card: 'summary_large_image',
+            title: translation.ogTitle || title,
+            description: translation.ogDesc || desc,
+          },
+          robots: {
+            index: translation.index ?? true,
+            follow: translation.index ?? true,
           }
-        }
-      });
-      if (translation) {
-        isCmsPage = true;
+        };
       }
+
+      // Normal CMS sayfaları
+      const title = translation.seoTitle || `${translation.title} | Nails & Lashes Studio`;
+      const desc = translation.seoDesc || translation.title;
+      const hreflang = buildHreflangAlternates(allTranslations);
+      const currentUrl = createLocalizedUrl(locale, landingSlug);
+
+      return {
+        title,
+        description: desc,
+        alternates: {
+          canonical: translation.canonical || `https://nailslashesstudio.com${currentUrl}`,
+          languages: hreflang
+        },
+        openGraph: {
+          title: translation.ogTitle || title,
+          description: translation.ogDesc || desc,
+          images: translation.ogImage ? [{ url: translation.ogImage }] : [{ url: 'https://nailslashesstudio.com/images/luxury_salon_hero.png' }],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: translation.ogTitle || title,
+          description: translation.ogDesc || desc,
+        },
+        robots: {
+          index: translation.index ?? true,
+          follow: translation.index ?? true,
+        }
+      };
+    }
+
+    // 2. LandingPageTranslation'da ara
+    const landingResult = await resolveLandingPageBySlug(landingSlug, languageEnum);
+
+    if (landingResult) {
+      const { translation, allTranslations } = landingResult;
+      const title = translation.seoTitle || `${translation.title} | Nails & Lashes Studio`;
+      const desc = translation.seoDesc || translation.title;
+      const hreflang = buildHreflangAlternates(allTranslations);
+      const currentUrl = createLocalizedUrl(locale, landingSlug);
+
+      return {
+        title,
+        description: desc,
+        alternates: {
+          canonical: translation.canonical || `https://nailslashesstudio.com${currentUrl}`,
+          languages: hreflang
+        },
+        openGraph: {
+          title: translation.ogTitle || title,
+          description: translation.ogDesc || desc,
+          images: translation.ogImage ? [{ url: translation.ogImage }] : [{ url: 'https://nailslashesstudio.com/images/luxury_salon_hero.png' }],
+        },
+        robots: {
+          index: translation.index ?? true,
+          follow: translation.index ?? true,
+        }
+      };
     }
   } catch (error) {
-    console.error("SEO metadata hatası:", error);
+    console.error("Slug metadata hatası:", error);
   }
 
-  if (!translation) {
-    return { title: 'Sayfa Bulunamadı' };
-  }
-
-  const title = translation.seoTitle || `${isCmsPage ? translation.title : (translation as any).title} | Nails & Lashes Studio`;
-  const desc = translation.seoDesc || (isCmsPage ? translation.title : (translation as any).title);
-
-  return {
-    title,
-    description: desc,
-    alternates: {
-      canonical: translation.canonical || `https://nailslashesstudio.com/${locale}/${landingSlug}`,
-      languages: {
-        'tr': `https://nailslashesstudio.com/tr/${landingSlug}`,
-        'en': `https://nailslashesstudio.com/en/${landingSlug}`,
-        'de': `https://nailslashesstudio.com/de/${landingSlug}`,
-        'ru': `https://nailslashesstudio.com/ru/${landingSlug}`,
-      }
-    },
-    openGraph: {
-      title: translation.ogTitle || title,
-      description: translation.ogDesc || desc,
-      images: translation.ogImage ? [{ url: translation.ogImage }] : [{ url: 'https://nailslashesstudio.com/images/luxury_salon_hero.png' }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: translation.ogTitle || title,
-      description: translation.ogDesc || desc,
-    },
-    robots: {
-      index: translation.index,
-      follow: translation.index,
-    }
-  };
+  return { title: 'Sayfa Bulunamadı' };
 }
 
-export default async function LandingPageDetail({ params }: Props) {
+// ─────────────────────────────────────────
+// PAGE RENDER
+// ─────────────────────────────────────────
+export default async function DynamicSlugPage({ params }: Props) {
   const resolvedParams = await params;
   const { locale, landingSlug } = resolvedParams;
   const languageEnum = locale.toUpperCase() as Language;
 
-  // Bilinen statik rotaları filtrele
-  const staticRoutes = ['galeri', 'iletisim', 'blog', 'services', 'booking', 'admin'];
-  if (staticRoutes.includes(landingSlug)) {
-    notFound();
-  }
-
-  let translation = null;
-  let isCmsPage = false;
-
   try {
-    translation = await prisma.landingPageTranslation.findFirst({
-      where: {
-        slug: landingSlug,
-        language: languageEnum,
-        landingPage: {
-          isActive: true,
-          isDeleted: false
-        }
-      }
-    });
+    // 1. PageTranslation'da slug + language ara
+    const pageResult = await resolvePageBySlug(landingSlug, languageEnum);
 
-    if (!translation) {
-      translation = await prisma.pageTranslation.findFirst({
-        where: {
-          slug: landingSlug,
-          language: languageEnum,
-          page: {
-            isActive: true,
-            isDeleted: false
-          }
-        }
-      });
-      if (translation) {
-        isCmsPage = true;
+    if (pageResult) {
+      const { translation, pageGroup } = pageResult;
+
+      // ─── HEADLESS ROUTER: pageGroup'a göre doğru bileşeni render et ───
+      // Hangi slug ile gelinirse gelinsin, pageGroup "SERVICES" ise
+      // Hizmetler sayfasının tam tasarımı render edilir.
+      
+      if (pageGroup === 'SERVICES') {
+        return <ServicesPageContent params={Promise.resolve({ locale })} />;
       }
+      if (pageGroup === 'CONTACT') {
+        return <ContactPageContent params={Promise.resolve({ locale })} />;
+      }
+      if (pageGroup === 'GALLERY') {
+        return <GalleryPageContent params={Promise.resolve({ locale })} />;
+      }
+      if (pageGroup === 'PORTFOLIO') {
+        return <PortfolioPageContent params={Promise.resolve({ locale })} />;
+      }
+      if (pageGroup === 'BOOKING') {
+        return <BookingPageContent params={Promise.resolve({ locale })} />;
+      }
+      if (pageGroup === 'BLOG') {
+        return <BlogPageContent params={Promise.resolve({ locale })} />;
+      }
+
+      // ─── ABOUT, LEGAL ve diğer CMS sayfaları genel şablonla render edilir ───
+      return renderCmsPage(translation, locale, landingSlug, true);
     }
+
+    // 2. LandingPageTranslation'da ara
+    const landingResult = await resolveLandingPageBySlug(landingSlug, languageEnum);
+
+    if (landingResult) {
+      return renderCmsPage(landingResult.translation, locale, landingSlug, false);
+    }
+
   } catch (error) {
-    console.error("Sayfa çekme hatası:", error);
+    console.error("Slug sayfa çekme hatası:", error);
   }
 
-  if (!translation) {
-    notFound();
-  }
+  // Hiçbir eşleşme bulunamadı
+  notFound();
+}
 
-  const titleText = isCmsPage ? (translation as any).title : (translation as any).title;
+// ─────────────────────────────────────────
+// CMS / Landing Page Render Helper
+// ─────────────────────────────────────────
+function renderCmsPage(translation: any, locale: string, slug: string, isCmsPage: boolean) {
+  const titleText = translation.title || translation.h1Title || '';
 
-  // CMS Sayfa için Schema
   const webpageSchema = isCmsPage ? {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": titleText,
-    "url": `https://nailslashesstudio.com/${locale}/${landingSlug}`,
+    "url": `https://nailslashesstudio.com${createLocalizedUrl(locale, slug)}`,
     "description": translation.seoDesc || titleText
   } : null;
 
@@ -158,7 +207,7 @@ export default async function LandingPageDetail({ params }: Props) {
     "@type": "BeautySalon",
     "name": `Nails & Lashes Studio - ${titleText}`,
     "image": "https://nailslashesstudio.com/images/luxury_salon_hero.png",
-    "url": `https://nailslashesstudio.com/${locale}/${landingSlug}`,
+    "url": `https://nailslashesstudio.com${createLocalizedUrl(locale, slug)}`,
     "description": translation.seoDesc || titleText,
     "address": {
       "@type": "PostalAddress",
@@ -175,20 +224,19 @@ export default async function LandingPageDetail({ params }: Props) {
         "@type": "ListItem",
         "position": 1,
         "name": locale === 'tr' ? 'Ana Sayfa' : 'Home',
-        "item": `https://nailslashesstudio.com/${locale}`
+        "item": `https://nailslashesstudio.com/${locale === 'tr' ? '' : locale}`
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": titleText,
-        "item": `https://nailslashesstudio.com/${locale}/${landingSlug}`
+        "item": `https://nailslashesstudio.com${createLocalizedUrl(locale, slug)}`
       }
     ]
   };
 
   return (
     <main className="min-h-screen pt-32 pb-24 relative overflow-hidden bg-[#faf8f7]">
-      {/* Structured Data Scripts */}
       {businessSchema && (
         <script
           type="application/ld+json"
@@ -206,17 +254,14 @@ export default async function LandingPageDetail({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      {/* Decorative Lights */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-rose-400)]/5 rounded-full blur-3xl -z-10 animate-glow"></div>
 
       <div className="max-w-4xl mx-auto px-6 z-10">
         <div className="bg-white border border-[var(--color-rose-100)] rounded-[2.5rem] p-8 md:p-16 shadow-sm relative overflow-hidden">
-          {/* Accent decoration */}
           {!isCmsPage && (
             <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[var(--color-rose-300)] via-[var(--color-rose-500)] to-[var(--color-rose-300)]"></div>
           )}
 
-          {/* Heading */}
           <div className="mb-10 text-center">
             {isCmsPage ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-500 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
@@ -233,7 +278,6 @@ export default async function LandingPageDetail({ params }: Props) {
             <div className="w-16 h-1 bg-[var(--color-rose-200)] mx-auto rounded-full"></div>
           </div>
 
-          {/* Content */}
           <article className="prose max-w-none text-gray-700 leading-relaxed text-sm md:text-base mb-12 prose-headings:font-serif prose-headings:text-gray-900 prose-a:text-[var(--color-rose-600)] hover:prose-a:text-[var(--color-rose-800)] prose-img:rounded-3xl">
             <div 
               className="whitespace-pre-line text-left"
@@ -241,7 +285,6 @@ export default async function LandingPageDetail({ params }: Props) {
             />
           </article>
 
-          {/* Call To Action Banner (Only for landing pages, hide on KVKK/CMS pages) */}
           {!isCmsPage && (
             <div className="mt-12 p-8 rounded-3xl bg-[var(--color-light-200)] border border-[var(--color-primary-300)]/30 text-center space-y-6">
               <h3 className="text-xl font-serif font-bold text-gray-950">

@@ -1,7 +1,9 @@
 "use client";
 
-import { Check, X, Edit } from 'lucide-react';
+import { Check, X, Edit, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
+import { autoFillCategorySEO } from '@/app/actions/category-auto-fill';
 
 type CategoryTranslation = {
   id: string;
@@ -28,6 +30,20 @@ type Category = {
 };
 
 export default function CategoryList({ categories }: { categories: Category[] }) {
+  const [isFilling, setIsFilling] = useState(false);
+
+  const handleAutoFill = async () => {
+    setIsFilling(true);
+    const res = await autoFillCategorySEO();
+    setIsFilling(false);
+    if (res.success) {
+      alert(res.message);
+      window.location.reload();
+    } else {
+      alert('Hata: ' + res.error);
+    }
+  };
+
   if (categories.length === 0) {
     return (
       <div className="bg-white p-12 text-center rounded-3xl border border-gray-150 shadow-sm">
@@ -41,8 +57,19 @@ export default function CategoryList({ categories }: { categories: Category[] })
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-150 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button 
+          onClick={handleAutoFill} 
+          disabled={isFilling}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all disabled:opacity-50"
+        >
+          {isFilling ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+          Tüm Eksik SEO & Çevirileri Otomatik Doldur
+        </button>
+      </div>
+      <div className="bg-white rounded-3xl border border-gray-150 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
@@ -96,6 +123,7 @@ export default function CategoryList({ categories }: { categories: Category[] })
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

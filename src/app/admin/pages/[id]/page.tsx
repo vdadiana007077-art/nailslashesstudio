@@ -19,7 +19,7 @@ export default async function PageEditPage({ params }: { params: Promise<{ id: s
   if (!isNew) {
     page = await prisma.page.findUnique({
       where: { id },
-      include: { translations: true },
+      include: { translations: true, menuItems: true },
     });
 
     if (!page) {
@@ -30,12 +30,19 @@ export default async function PageEditPage({ params }: { params: Promise<{ id: s
   const serializedPage = page ? {
     id: page.id,
     isActive: page.isActive,
+    pageGroup: page.pageGroup,
+    menuItems: page.menuItems.map(m => ({ menuType: m.menuType, isActive: m.isActive })),
     translations: page.translations.map(t => ({
       id: t.id,
       language: t.language,
       slug: t.slug,
       title: t.title,
+      h1Title: t.h1Title,
+      editorTitle: t.editorTitle,
+      introText: t.introText,
       content: t.content,
+      headerImage: t.headerImage,
+      thumbnailImage: t.thumbnailImage,
       seoTitle: t.seoTitle,
       seoDesc: t.seoDesc,
       canonical: t.canonical,
