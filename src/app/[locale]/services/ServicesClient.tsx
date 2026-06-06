@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Clock, Tag, MapPin, ChevronRight, Calendar } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type Location = {
   id: string;
@@ -41,6 +42,7 @@ type ServicesClientProps = {
 };
 
 export default function ServicesClient({ locations, categories, staff, locale }: ServicesClientProps) {
+  const t = useTranslations("Services");
   const [selectedLocationId, setSelectedLocationId] = useState<string>('ALL');
 
   // Şube seçildiğinde, o şubede sunulan hizmetlerin ID'lerini belirle
@@ -61,7 +63,7 @@ export default function ServicesClient({ locations, categories, staff, locale }:
       <div className="flex flex-col items-center justify-center gap-4 bg-white border border-[var(--color-rose-100)] rounded-3xl p-6 shadow-sm">
         <span className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
           <MapPin size={14} className="text-[var(--color-rose-600)]" />
-          Şubeye Göre Hizmet Durumu Sorgula
+          {t('checkAvailability')}
         </span>
         <div className="flex flex-wrap justify-center gap-2">
           <button
@@ -72,7 +74,7 @@ export default function ServicesClient({ locations, categories, staff, locale }:
                 : 'bg-gray-50 border border-gray-100 text-gray-700 hover:bg-gray-100'
             }`}
           >
-            Tüm Şubeler
+            {t('allLocations')}
           </button>
           {locations.map(loc => (
             <button
@@ -90,7 +92,7 @@ export default function ServicesClient({ locations, categories, staff, locale }:
         </div>
         {selectedLocationId !== 'ALL' && (
           <p className="text-xs text-gray-400 text-center leading-relaxed">
-            Seçilen şubede aktif olmayan hizmetler pasif (`opak`) görünecektir ve randevu alınamaz.
+            {t('inactiveServicesInfo')}
           </p>
         )}
       </div>
@@ -137,14 +139,14 @@ export default function ServicesClient({ locations, categories, staff, locale }:
                         </div>
 
                         <p className="text-gray-500 text-xs leading-relaxed mb-6">
-                          {service.description || 'Bu işlem için detaylı açıklama eklenmemiştir.'}
+                          {service.description || t('noDescription')}
                         </p>
                       </div>
 
                       <div className="space-y-3">
                         <div className="flex items-center gap-4 text-[11px] font-bold text-gray-400 border-t border-gray-50 pt-4">
                           <span className="flex items-center gap-1">
-                            <Clock size={12} /> {service.duration} Dk
+                            <Clock size={12} /> {service.duration} {t('minutes')}
                           </span>
                           <span className="flex items-center gap-1">
                             <Tag size={12} /> {category.name}
@@ -160,7 +162,7 @@ export default function ServicesClient({ locations, categories, staff, locale }:
                                 : 'border-gray-100 text-gray-400 cursor-not-allowed'
                             }`}
                           >
-                            Detayları İncele
+                            {t('examineDetails')}
                           </Link>
                           
                           <Link
@@ -172,7 +174,7 @@ export default function ServicesClient({ locations, categories, staff, locale }:
                             }`}
                           >
                             <Calendar size={12} />
-                            Hızlı Randevu
+                            {t('quickBooking')}
                           </Link>
                         </div>
                       </div>

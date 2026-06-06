@@ -11,22 +11,34 @@ export async function createBooking(data: {
   serviceId: string;
   locationId: string;
   staffId: string;
-  date: Date;
+  dateStr: string;
   startTime: string;
   name: string;
   email: string;
   phone: string;
   notes?: string;
+  locale?: string;
 }) {
   try {
-    if (!data.locationId || !data.serviceId || !data.staffId || !data.date || !data.startTime) {
+    if (!data.locationId || !data.serviceId || !data.staffId || !data.dateStr || !data.startTime) {
       return { success: false, error: 'Eksik randevu bilgileri!' };
     }
+
+    if (!data.name || !data.name.trim()) {
+      return { success: false, error: 'Ad Soyad alanı zorunludur!' };
+    }
+
+    if (!data.email || !data.email.trim()) {
+      return { success: false, error: 'E-posta alanı zorunludur!' };
+    }
+
+    const upperLocale = (data.locale || 'tr').toUpperCase();
+    const resolvedLanguage = ['TR', 'EN', 'RU', 'DE'].includes(upperLocale) ? upperLocale : 'TR';
 
     // 1. İlgili hizmetin detaylarını al (fiyat ve süre için)
     const service = await prisma.service.findUnique({
       where: { id: data.serviceId },
-      include: { translations: { where: { language: 'TR' } } }
+      include: { translations: { where: { language: resolvedLanguage as any } } }
     });
 
     if (!service || service.isDeleted || !service.isActive) {
@@ -34,9 +46,8 @@ export async function createBooking(data: {
     }
 
     // 2. Sunucu Tarafı Müsaitlik Kontrolü (Çifte Rezervasyon Engeli)
-    // Tarihi stringe çevir (YYYY-MM-DD)
-    const dateObj = new Date(data.date);
-    const dateStr = dateObj.toISOString().split('T')[0];
+    const dateStr = data.dateStr; // YYYY-MM-DD formatında
+    const dateObj = new Date(dateStr + 'T00:00:00');
 
     const availability = await getAvailableTimeSlots(
       data.locationId,
@@ -161,7 +172,8 @@ export async function createBooking(data: {
           data.name,
           service.translations[0]?.name || 'Randevu',
           dateObj,
-          data.startTime
+          data.startTime,
+          resolvedLanguage
         );
       } catch (err) {
         console.error("E-posta gönderim hatası (randevu başarıyla kaydedildi):", err);

@@ -11,7 +11,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const t = await getTranslations('Index');
 
-  const categories = await prisma.serviceCategory.findMany({
+  const rawCategories = await prisma.serviceCategory.findMany({
     where: { isActive: true },
     orderBy: { order: 'asc' },
     include: {
@@ -22,6 +22,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       },
     },
   });
+
+  const categories = rawCategories.map(cat => ({
+    id: cat.id,
+    isActive: cat.isActive,
+    order: cat.order,
+    image: cat.image,
+    translations: cat.translations,
+    services: cat.services.map(s => ({
+      id: s.id,
+      categoryId: s.categoryId,
+      duration: s.duration,
+      price: s.price.toString(),
+      image: s.image,
+      isActive: s.isActive,
+      translations: s.translations
+    }))
+  }));
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-[var(--color-light-200)] text-[var(--color-text-main)] font-sans selection:bg-[var(--color-primary-500)] selection:text-white">
@@ -37,12 +54,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           {/* Left Text Column */}
           <div className="lg:col-span-7 flex flex-col items-start text-left">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[var(--color-primary-500)]/20 bg-white/60 backdrop-blur-md mb-8 animate-fade-up text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest shadow-sm">
-              <Sparkles size={14} className="text-[var(--color-primary-500)]" /> Lüks Bakım Deneyimi
+              <Sparkles size={14} className="text-[var(--color-primary-500)]" /> {t('heroTag')}
             </div>
 
             <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-8 leading-[1.1] animate-fade-up text-[var(--color-text-main)]">
-              Güzelliğinizi <br />
-              <span className="text-[var(--color-primary-500)] italic">Yeniden Keşfedin.</span>
+              {t('heroTitle1')} <br />
+              <span className="text-[var(--color-primary-500)] italic">{t('heroTitle2')}</span>
             </h1>
             
             <p className="text-lg md:text-xl text-[var(--color-text-muted)] font-light max-w-2xl mb-12 animate-fade-up delay-100 leading-relaxed">
@@ -81,7 +98,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-float opacity-40">
-          <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-muted)] font-bold">Aşağı Kaydır</span>
+          <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-muted)] font-bold">{t('scrollDown')}</span>
           <div className="w-[1px] h-10 bg-gradient-to-b from-[var(--color-primary-500)] to-transparent"></div>
         </div>
       </section>
@@ -90,13 +107,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10 border-t border-[var(--color-primary-300)]/20">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-white/70 text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
-            Kolaylık & Hız
+            {t('howItWorksTag')}
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
-            Randevu Sürecimiz
+            {t('howItWorksTitle')}
           </h2>
           <p className="text-[var(--color-text-muted)] mt-4 max-w-xl mx-auto font-light">
-            Sadece birkaç tıklamayla premium bakım randevunuzu kolayca planlayın.
+            {t('howItWorksDesc')}
           </p>
         </div>
 
@@ -109,9 +126,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <div className="w-20 h-20 rounded-full bg-white border border-[var(--color-primary-300)]/45 flex items-center justify-center font-serif text-3xl font-bold text-[var(--color-primary-500)] shadow-[0_8px_25px_rgba(197,139,139,0.05)] group-hover:scale-105 transition-transform duration-300 group-hover:bg-[var(--color-primary-500)] group-hover:text-white group-hover:border-transparent">
               1
             </div>
-            <h3 className="text-xl font-bold text-[var(--color-text-main)] mt-6 mb-3">Hizmet Seçimi</h3>
+            <h3 className="text-xl font-bold text-[var(--color-text-main)] mt-6 mb-3">{t('step1Title')}</h3>
             <p className="text-[var(--color-text-muted)] text-sm font-light leading-relaxed max-w-xs">
-              Gezginimizden dilediğiniz tırnak veya kirpik bakım işlemini seçin.
+              {t('step1Desc')}
             </p>
           </div>
 
@@ -120,9 +137,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <div className="w-20 h-20 rounded-full bg-white border border-[var(--color-primary-300)]/45 flex items-center justify-center font-serif text-3xl font-bold text-[var(--color-primary-500)] shadow-[0_8px_25px_rgba(197,139,139,0.05)] group-hover:scale-105 transition-transform duration-300 group-hover:bg-[var(--color-primary-500)] group-hover:text-white group-hover:border-transparent">
               2
             </div>
-            <h3 className="text-xl font-bold text-[var(--color-text-main)] mt-6 mb-3">Tarih & Uzman Belirleme</h3>
+            <h3 className="text-xl font-bold text-[var(--color-text-main)] mt-6 mb-3">{t('step2Title')}</h3>
             <p className="text-[var(--color-text-muted)] text-sm font-light leading-relaxed max-w-xs">
-              Size en uygun tarih ve saati, tercih ettiğiniz uzmanla birlikte seçin.
+              {t('step2Desc')}
             </p>
           </div>
 
@@ -131,9 +148,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <div className="w-20 h-20 rounded-full bg-white border border-[var(--color-primary-300)]/45 flex items-center justify-center font-serif text-3xl font-bold text-[var(--color-primary-500)] shadow-[0_8px_25px_rgba(197,139,139,0.05)] group-hover:scale-105 transition-transform duration-300 group-hover:bg-[var(--color-primary-500)] group-hover:text-white group-hover:border-transparent">
               3
             </div>
-            <h3 className="text-xl font-bold text-[var(--color-text-main)] mt-6 mb-3">Onay & VIP Karşılama</h3>
+            <h3 className="text-xl font-bold text-[var(--color-text-main)] mt-6 mb-3">{t('step3Title')}</h3>
             <p className="text-[var(--color-text-muted)] text-sm font-light leading-relaxed max-w-xs">
-              Randevu detaylarınız e-posta ile anında iletilir. Randevu saatinde sizi bekliyoruz!
+              {t('step3Desc')}
             </p>
           </div>
         </div>
@@ -143,19 +160,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section id="services" className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10 border-t border-[var(--color-primary-300)]/20">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-white/70 text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
-            Hizmet Menümüz
+            {t('servicesTag')}
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
-            Kusursuz <span className="text-[var(--color-primary-500)]">Dokunuşlar</span>
+            {t('servicesTitle1')} <span className="text-[var(--color-primary-500)]">{t('servicesTitle2')}</span>
           </h2>
           <p className="text-[var(--color-text-muted)] mt-4 max-w-xl mx-auto font-light">
-            Size özel tasarlanmış, en kaliteli ürünler ve uzman ekibimizle sunduğumuz lüks bakım hizmetlerimiz.
+            {t('servicesDesc')}
           </p>
         </div>
 
         {categories.length === 0 ? (
           <div className="text-center text-[var(--color-text-muted)] py-24 glass-panel rounded-3xl">
-            Henüz hizmet eklenmemiş.
+            {t('noServices')}
           </div>
         ) : (
           <ServiceExplorer categories={categories} locale={locale.toLowerCase()} />
@@ -167,13 +184,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex flex-col items-center text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-[var(--color-light-200)] text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
-              Uygulamalarımız
+              {t('galleryTag')}
             </div>
             <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
-              İlham Verici <span className="text-[var(--color-primary-500)]">Sanat</span>
+              {t('galleryTitle1')} <span className="text-[var(--color-primary-500)]">{t('galleryTitle2')}</span>
             </h2>
             <p className="text-[var(--color-text-muted)] max-w-xl mt-4 font-light">
-              Stüdyomuzdan en özel ve taze tırnak-kirpik sanatı kareleri.
+              {t('galleryDesc')}
             </p>
           </div>
           
@@ -209,10 +226,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section id="reviews" className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-white/75 text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
-            Sosyal Kanıt
+            {t('reviewsTag')}
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
-            Misafirlerimizin <span className="text-[var(--color-primary-500)]">Deneyimleri</span>
+            {t('reviewsTitle1')} <span className="text-[var(--color-primary-500)]">{t('reviewsTitle2')}</span>
           </h2>
           <div className="flex justify-center gap-1.5 text-[#FABB05] mt-6">
             {[1, 2, 3, 4, 5].map((s) => (
@@ -241,7 +258,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
                 <div>
                   <p className="font-bold text-[var(--color-text-main)] text-sm">{item.name}</p>
-                  <p className="text-[10px] text-[var(--color-primary-600)] uppercase tracking-widest mt-0.5 font-bold">Doğrulanmış Müşteri</p>
+                  <p className="text-[10px] text-[var(--color-primary-600)] uppercase tracking-widest mt-0.5 font-bold">{t('verifiedCustomer')}</p>
                 </div>
               </div>
             </div>
@@ -255,10 +272,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/10 rounded-full blur-[120px] -z-10"></div>
         
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
-          <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">Güzelliğinizi Ödüllendirin</h2>
-          <p className="text-white/90 text-lg md:text-xl mb-12 font-light max-w-xl">Sıradaki VIP misafirimiz olun. Hemen bugün kolayca randevunuzu oluşturun.</p>
+          <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">{t('ctaTitle')}</h2>
+          <p className="text-white/90 text-lg md:text-xl mb-12 font-light max-w-xl">{t('ctaDesc')}</p>
           <Link href="/booking" className="inline-flex items-center gap-3 px-10 py-5 bg-white text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)] font-bold rounded-full hover:bg-[var(--color-light-100)] hover:-translate-y-0.5 transition-all duration-300 shadow-[0_10px_35px_rgba(0,0,0,0.1)]">
-            <CalendarIcon size={18} /> Şimdi Randevu Al
+            <CalendarIcon size={18} /> {t('ctaButton')}
           </Link>
         </div>
       </section>

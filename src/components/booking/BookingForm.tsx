@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import { createBooking } from '@/app/actions/booking';
 import { getAvailableTimeSlots } from '@/app/actions/availability';
+import { useTranslations } from 'next-intl';
 
 type Location = {
   id: string;
@@ -47,6 +49,9 @@ type BookingFormProps = {
 };
 
 export default function BookingForm({ initialLocations, initialServices, initialStaff }: BookingFormProps) {
+  const t = useTranslations("Booking");
+  const params = useParams();
+  const locale = (params?.locale as string) || 'tr';
   const [step, setStep] = useState(1);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -65,7 +70,7 @@ export default function BookingForm({ initialLocations, initialServices, initial
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 5));
+  const nextStep = () => setStep((s) => Math.min(s + 1, 6));
   const prevStep = () => {
     // Geri giderken durum temizlemeleri yapalım
     if (step === 4) {
@@ -76,16 +81,32 @@ export default function BookingForm({ initialLocations, initialServices, initial
   };
 
   // 1. Şubeye göre filtrelenmiş hizmetler
-  const filteredServices = initialServices.filter(service => {
-    if (!selectedLocation) return false;
-    // O şubede bu hizmeti verebilen en az bir aktif çalışan olmalı
-    return initialStaff.some(st => st.locationId === selectedLocation.id && st.serviceIds.includes(service.id));
-  });
+  const filteredServices = (() => {
+    if (!selectedLocation) return [];
+    
+    // O şubedeki personeller
+    const locationStaff = initialStaff.filter(st => st.locationId === selectedLocation.id);
+    
+    // Eğer şubede personel tanımlıysa VE en az birinin hizmet ataması varsa, sadece atanmış hizmetleri göster
+    const hasStaffWithServices = locationStaff.some(st => st.serviceIds.length > 0);
+    
+    if (hasStaffWithServices) {
+      return initialServices.filter(service =>
+        locationStaff.some(st => st.serviceIds.includes(service.id))
+      );
+    }
+    
+    // Personel-hizmet ataması yoksa, tüm aktif hizmetleri göster (fallback)
+    return initialServices;
+  })();
 
   // 2. Seçilen hizmete ve şubeye göre filtrelenmiş personeller
   const filteredStaff = initialStaff.filter(st => {
     if (!selectedLocation || !selectedService) return false;
-    return st.locationId === selectedLocation.id && st.serviceIds.includes(selectedService.id);
+    // Şubedeki personel ve (hizmet ataması varsa o hizmeti verebilen, yoksa tümü)
+    if (st.locationId !== selectedLocation.id) return false;
+    if (st.serviceIds.length === 0) return true; // Hizmet ataması yoksa tüm hizmetleri verebilir
+    return st.serviceIds.includes(selectedService.id);
   });
 
   // Tarih değiştiğinde müsait saat slotlarını çek
@@ -139,28 +160,49 @@ export default function BookingForm({ initialLocations, initialServices, initial
     e.preventDefault();
     if (!selectedLocation || !selectedService || !selectedDate || !selectedTime || !selectedStaff) return;
 
+    // İletişim bilgileri validasyonu
+    if (!formData.name.trim()) {
+      alert(t('missingNameError'));
+      return;
+    }
+    if (!formData.email.trim()) {
+      alert(t('missingEmailError'));
+      return;
+    }
+    if (!formData.phone.trim()) {
+      alert(t('missingPhoneError'));
+      return;
+    }
+
     setIsSubmitting(true);
     
     const staffIdParam = selectedStaff === 'ANY' ? 'ANY' : selectedStaff.id;
+
+    // Timezone-safe tarih string'i oluştur (YYYY-MM-DD)
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(selectedDate.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${dayStr}`;
 
     const result = await createBooking({
       serviceId: selectedService.id,
       locationId: selectedLocation.id,
       staffId: staffIdParam,
-      date: selectedDate,
+      dateStr: dateString,
       startTime: selectedTime,
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
-      notes: formData.notes
+      notes: formData.notes,
+      locale: locale
     });
 
     setIsSubmitting(false);
 
     if (result.success) {
-      setStep(5); // Başarılı ekranı
+      setStep(6); // Başarılı ekranı
     } else {
-      alert(result.error || 'Randevu oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+      alert(result.error || t('bookingError'));
     }
   };
 
@@ -168,10 +210,10 @@ export default function BookingForm({ initialLocations, initialServices, initial
     <div className="w-full max-w-4xl mx-auto glass-panel p-8 md:p-12 rounded-3xl relative overflow-hidden bg-white/80 border border-[var(--color-rose-100)] shadow-lg">
       
       {/* Progress Bar */}
-      {step < 5 && (
+      {step < 6 && (
         <div className="mb-10 relative">
           <div className="flex justify-between items-center relative z-10">
-            {[1, 2, 3, 4].map((num) => (
+            {[1, 2, 3, 4, 5].map((num) => (
               <div key={num} className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all duration-500 ${
                 step >= num 
                   ? 'bg-[var(--color-rose-600)] text-white shadow-[0_0_15px_rgba(184,123,127,0.4)]' 
@@ -194,8 +236,8 @@ export default function BookingForm({ initialLocations, initialServices, initial
       {step === 1 && (
         <div className="animate-in fade-in slide-in-from-right-8 duration-500">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">Şube Seçin</h2>
-            <p className="text-gray-500">İşlem yaptırmak istediğiniz salon şubemizi seçin.</p>
+            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">{t('selectLocationTitle')}</h2>
+            <p className="text-gray-500">{t('selectLocationDesc')}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -222,7 +264,7 @@ export default function BookingForm({ initialLocations, initialServices, initial
                   </p>
                 </div>
                 {loc.phone && (
-                  <p className="text-xs text-gray-400 mt-4">Tel: {loc.phone}</p>
+                  <p className="text-xs text-gray-400 mt-4">{t('phoneLabel')} {loc.phone}</p>
                 )}
               </div>
             ))}
@@ -234,7 +276,7 @@ export default function BookingForm({ initialLocations, initialServices, initial
               disabled={!selectedLocation}
               className="px-8 py-3.5 bg-gray-900 text-white font-semibold rounded-full hover:bg-black transition-all disabled:opacity-50 flex items-center gap-2 text-sm shadow-md"
             >
-              Hizmet Seçimine Geç <ChevronRight size={18} />
+              {t('proceedToService')} <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -244,8 +286,8 @@ export default function BookingForm({ initialLocations, initialServices, initial
       {step === 2 && (
         <div className="animate-in fade-in slide-in-from-right-8 duration-500">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">Hizmet Seçin</h2>
-            <p className="text-gray-500">{selectedLocation?.name} şubesinde sunulan işlemler.</p>
+            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">{t('selectServiceTitle')}</h2>
+            <p className="text-gray-500">{selectedLocation?.name} {t('selectServiceDesc')}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 max-h-[50vh] overflow-y-auto pr-2">
@@ -269,7 +311,7 @@ export default function BookingForm({ initialLocations, initialServices, initial
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500 mt-3">
                   <span className="flex items-center gap-1">
-                    <Clock size={14} /> {service.duration} dk
+                    <Clock size={14} /> {service.duration} {t('minutes')}
                   </span>
                   <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-600">
                     {service.categoryName}
@@ -284,14 +326,14 @@ export default function BookingForm({ initialLocations, initialServices, initial
               onClick={prevStep}
               className="px-8 py-3.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-50 transition-all flex items-center gap-2 text-sm"
             >
-              <ChevronLeft size={18} /> Geri
+              <ChevronLeft size={18} /> {t('back')}
             </button>
             <button 
               onClick={nextStep}
               disabled={!selectedService}
               className="px-8 py-3.5 bg-gray-900 text-white font-semibold rounded-full hover:bg-black transition-all disabled:opacity-50 flex items-center gap-2 text-sm shadow-md"
             >
-              Uzman Seçimine Geç <ChevronRight size={18} />
+              {t('proceedToSpecialist')} <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -301,8 +343,8 @@ export default function BookingForm({ initialLocations, initialServices, initial
       {step === 3 && (
         <div className="animate-in fade-in slide-in-from-right-8 duration-500">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">Uzman Seçimi</h2>
-            <p className="text-gray-500">{selectedService?.name} hizmeti için uzmanınızı seçin.</p>
+            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">{t('selectSpecialistTitle')}</h2>
+            <p className="text-gray-500">{selectedService?.name} {t('selectSpecialistDesc')}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -322,8 +364,8 @@ export default function BookingForm({ initialLocations, initialServices, initial
               <div className="w-16 h-16 rounded-full bg-[var(--color-rose-100)] border border-[var(--color-rose-200)] flex items-center justify-center font-bold text-[var(--color-rose-700)] mb-3">
                 ANY
               </div>
-              <h3 className="font-bold text-gray-900 text-base">Fark Etmez</h3>
-              <p className="text-xs text-gray-400 mt-1">En uygun müsait uzman atanır</p>
+              <h3 className="font-bold text-gray-900 text-base">{t('doesNotMatter')}</h3>
+              <p className="text-xs text-gray-400 mt-1">{t('doesNotMatterDesc')}</p>
             </div>
 
             {/* Gerçek Çalışanlar */}
@@ -349,7 +391,7 @@ export default function BookingForm({ initialLocations, initialServices, initial
                   )}
                 </div>
                 <h3 className="font-bold text-gray-900 text-base">{staff.name}</h3>
-                <p className="text-xs text-gray-400 mt-1">{staff.specialty || 'Güzellik Uzmanı'}</p>
+                <p className="text-xs text-gray-400 mt-1">{staff.specialty || t('beautyExpert')}</p>
               </div>
             ))}
           </div>
@@ -359,14 +401,14 @@ export default function BookingForm({ initialLocations, initialServices, initial
               onClick={prevStep}
               className="px-8 py-3.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-50 transition-all flex items-center gap-2 text-sm"
             >
-              <ChevronLeft size={18} /> Geri
+              <ChevronLeft size={18} /> {t('back')}
             </button>
             <button 
               onClick={nextStep}
               disabled={!selectedStaff}
               className="px-8 py-3.5 bg-gray-900 text-white font-semibold rounded-full hover:bg-black transition-all disabled:opacity-50 flex items-center gap-2 text-sm shadow-md"
             >
-              Tarih ve Saat Seç <ChevronRight size={18} />
+              {t('proceedToDateTime')} <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -376,15 +418,15 @@ export default function BookingForm({ initialLocations, initialServices, initial
       {step === 4 && (
         <div className="animate-in fade-in slide-in-from-right-8 duration-500">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">Tarih ve Saat</h2>
-            <p className="text-gray-500">Lütfen randevu gününü ve saatini seçin.</p>
+            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">{t('dateTimeTitle')}</h2>
+            <p className="text-gray-500">{t('dateTimeDesc')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Gün Seçimi */}
             <div className="bg-white/40 p-6 rounded-2xl border border-gray-100">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider text-gray-600">
-                <CalendarIcon size={18} className="text-[var(--color-rose-600)]" /> Gün Seçimi
+                <CalendarIcon size={18} className="text-[var(--color-rose-600)]" /> {t('daySelection')}
               </h3>
               <div className="grid grid-cols-4 gap-2">
                 {getNext7Days().map((date, i) => (
@@ -409,13 +451,13 @@ export default function BookingForm({ initialLocations, initialServices, initial
             <div className="bg-white/40 p-6 rounded-2xl border border-gray-100 flex flex-col justify-between">
               <div>
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider text-gray-600">
-                  <Clock size={18} className="text-[var(--color-rose-600)]" /> Saat Seçimi
+                  <Clock size={18} className="text-[var(--color-rose-600)]" /> {t('timeSelection')}
                 </h3>
                 
                 {isLoadingSlots ? (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                     <Loader2 size={32} className="animate-spin text-[var(--color-rose-500)] mb-2" />
-                    <span className="text-xs">Müsaitlik kontrol ediliyor...</span>
+                    <span className="text-xs">{t('checkingAvailability')}</span>
                   </div>
                 ) : selectedDate ? (
                   timeSlots.length > 0 ? (
@@ -437,12 +479,12 @@ export default function BookingForm({ initialLocations, initialServices, initial
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-400 text-xs font-semibold">
-                      Seçilen günde müsait saat kalmamıştır.
+                      {t('noAvailableSlots')}
                     </div>
                   )
                 ) : (
                   <div className="text-center py-12 text-gray-400 text-xs font-semibold">
-                    Lütfen önce soldan bir gün seçin.
+                    {t('pleaseSelectDay')}
                   </div>
                 )}
               </div>
@@ -454,14 +496,14 @@ export default function BookingForm({ initialLocations, initialServices, initial
               onClick={prevStep}
               className="px-8 py-3.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-50 transition-all flex items-center gap-2 text-sm"
             >
-              <ChevronLeft size={18} /> Geri
+              <ChevronLeft size={18} /> {t('back')}
             </button>
             <button 
               onClick={nextStep}
               disabled={!selectedDate || !selectedTime}
               className="px-8 py-3.5 bg-gray-900 text-white font-semibold rounded-full hover:bg-black transition-all disabled:opacity-50 flex items-center gap-2 text-sm shadow-md"
             >
-              İletişim Bilgilerine Geç <ChevronRight size={18} />
+              {t('proceedToContact')} <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -471,50 +513,50 @@ export default function BookingForm({ initialLocations, initialServices, initial
       {step === 5 && (
         <form onSubmit={handleBookingSubmit} className="animate-in fade-in slide-in-from-right-8 duration-500">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">İletişim Bilgileri</h2>
-            <p className="text-gray-500">Randevunuzu tamamlamak için bilgilerinizi doldurun.</p>
+            <h2 className="text-3xl font-serif font-bold text-gray-950 mb-2">{t('contactDetailsTitle')}</h2>
+            <p className="text-gray-500">{t('contactDetailsDesc')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Form Inputs */}
             <div className="bg-white/40 p-6 rounded-2xl border border-gray-100 flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Ad Soyad</label>
+                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">{t('fullNameLabel')}</label>
                 <input 
                   type="text" required
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] text-sm bg-white" 
-                  placeholder="Örn: Ayşe Yılmaz" 
+                  placeholder={t('fullNamePlaceholder')} 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Telefon</label>
+                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">{t('phoneLabel')}</label>
                 <input 
                   type="tel" required
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] text-sm bg-white" 
-                  placeholder="05XX XXX XX XX" 
+                  placeholder={t('phonePlaceholder')} 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">E-posta</label>
+                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">{t('emailLabel')}</label>
                 <input 
                   type="email" required
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] text-sm bg-white" 
-                  placeholder="ornek@email.com" 
+                  placeholder={t('emailPlaceholder')} 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Not (Opsiyonel)</label>
+                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">{t('notesLabel')}</label>
                 <textarea 
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
                   className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] text-sm bg-white h-20 resize-none" 
-                  placeholder="Varsa özel notunuz..." 
+                  placeholder={t('notesPlaceholder')} 
                 />
               </div>
             </div>
@@ -523,43 +565,43 @@ export default function BookingForm({ initialLocations, initialServices, initial
             <div className="bg-[var(--color-rose-50)]/30 p-6 rounded-2xl border border-[var(--color-rose-200)]/70 flex flex-col justify-between">
               <div>
                 <h3 className="font-serif font-bold text-lg text-gray-900 mb-4 border-b border-[var(--color-rose-200)] pb-2 flex items-center gap-1">
-                  <Scissors size={18} className="text-[var(--color-rose-600)]" /> Randevu Özeti
+                  <Scissors size={18} className="text-[var(--color-rose-600)]" /> {t('bookingSummary')}
                 </h3>
                 
                 <div className="space-y-2.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Şube:</span>
+                    <span className="text-gray-500">{t('location')}</span>
                     <span className="font-bold text-gray-800">{selectedLocation?.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Hizmet:</span>
+                    <span className="text-gray-500">{t('service')}</span>
                     <span className="font-bold text-gray-800">{selectedService?.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Uzman:</span>
+                    <span className="text-gray-500">{t('specialist')}</span>
                     <span className="font-bold text-gray-800">
-                      {selectedStaff === 'ANY' ? 'Fark Etmez (En Uygun Uzman)' : selectedStaff?.name}
+                      {selectedStaff === 'ANY' ? t('anySpecialist') : selectedStaff?.name}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Tarih:</span>
+                    <span className="text-gray-500">{t('date')}</span>
                     <span className="font-bold text-gray-800">
                       {selectedDate?.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Saat:</span>
+                    <span className="text-gray-500">{t('time')}</span>
                     <span className="font-bold text-gray-800">{selectedTime}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Süre:</span>
-                    <span className="font-bold text-gray-800">{selectedService?.duration} dk</span>
+                    <span className="text-gray-500">{t('duration')}</span>
+                    <span className="font-bold text-gray-800">{selectedService?.duration} {t('minutes')}</span>
                   </div>
                 </div>
               </div>
               
               <div className="mt-6 pt-4 border-t border-[var(--color-rose-200)] flex justify-between items-center">
-                <span className="font-bold text-gray-800 text-base">Toplam Ücret</span>
+                <span className="font-bold text-gray-800 text-base">{t('totalPrice')}</span>
                 <span className="text-2xl font-black text-[var(--color-rose-700)]">₺{selectedService?.price}</span>
               </div>
             </div>
@@ -571,7 +613,7 @@ export default function BookingForm({ initialLocations, initialServices, initial
               onClick={prevStep}
               className="px-8 py-3.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-50 transition-all flex items-center gap-2 text-sm"
             >
-              <ChevronLeft size={18} /> Geri
+              <ChevronLeft size={18} /> {t('back')}
             </button>
             <button 
               type="submit"
@@ -579,9 +621,9 @@ export default function BookingForm({ initialLocations, initialServices, initial
               className="px-8 py-3.5 bg-gray-900 text-white font-semibold rounded-full hover:bg-black shadow-md transition-all flex items-center gap-2 text-sm disabled:opacity-75"
             >
               {isSubmitting ? (
-                <>Rezervasyon Yapılıyor <Loader2 size={18} className="animate-spin" /></>
+                <>{t('bookingInProgress')} <Loader2 size={18} className="animate-spin" /></>
               ) : (
-                <>Randevuyu Onayla <CheckCircle2 size={18} /></>
+                <>{t('confirmBooking')} <CheckCircle2 size={18} /></>
               )}
             </button>
           </div>
@@ -589,21 +631,27 @@ export default function BookingForm({ initialLocations, initialServices, initial
       )}
 
       {/* Success View */}
-      {step === 5 && (
+      {step === 6 && (
         <div className="text-center py-12 animate-in zoom-in-95 duration-500">
           <div className="w-20 h-20 bg-green-50 border border-green-200 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
             <CheckCircle2 size={40} />
           </div>
-          <h2 className="text-3xl font-serif font-bold text-gray-950 mb-4">Randevunuz Alındı!</h2>
+          <h2 className="text-3xl font-serif font-bold text-gray-950 mb-4">{t('bookingConfirmed')}</h2>
           <p className="text-gray-600 text-base mb-8 max-w-md mx-auto leading-relaxed">
-            Sayın <span className="font-bold text-gray-800">{formData.name}</span>, <span className="font-bold text-gray-800">{selectedLocation?.name}</span> şubemizde, <span className="font-bold text-gray-800">{selectedDate?.toLocaleDateString('tr-TR')}</span> günü saat <span className="font-bold text-gray-800">{selectedTime}</span> için <span className="font-bold text-gray-800">{selectedService?.name}</span> randevunuz başarıyla oluşturuldu.
+            {t('successMessage', {
+              name: formData.name || '',
+              locationName: selectedLocation?.name || '',
+              date: selectedDate?.toLocaleDateString('tr-TR') || '',
+              time: selectedTime || '',
+              serviceName: selectedService?.name || ''
+            })}
           </p>
           <button 
             type="button"
             onClick={() => window.location.href = '/'}
             className="px-8 py-3 bg-[var(--color-rose-600)] text-white font-semibold rounded-full hover:bg-[var(--color-rose-700)] transition-all shadow-md text-sm"
           >
-            Ana Sayfaya Dön
+            {t('returnHome')}
           </button>
         </div>
       )}

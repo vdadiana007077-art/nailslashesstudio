@@ -1,0 +1,110 @@
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import MenusClient from './MenusClient';
+import { seedPagesAndMenus } from '@/app/actions/seed-pages';
+
+export default async function AdminMenusPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('admin_token');
+  
+
+  // Güvenlik Kontrolü
+  if (!token || token.value !== 'authenticated') {
+    redirect(`/admin/login`);
+  }
+
+  // Varsayılan menüleri oluştur (ilk sefer)
+  await seedPagesAndMenus();
+
+  // Tüm menü elemanlarını getir
+  const menuItems = await prisma.menuItem.findMany({
+    include: {
+      page: { include: { translations: true } },
+      serviceCategory: { include: { translations: true } },
+      service: { include: { translations: true } },
+      blogCategory: { include: { translations: true } },
+      blogPost: { include: { translations: true } },
+      landingPage: { include: { translations: true } }
+    },
+    orderBy: [
+      { menuType: 'asc' },
+      { order: 'asc' }
+    ]
+  });
+
+  const formattedMenuItems = menuItems.map(item => ({
+    id: item.id,
+    menuType: item.menuType,
+    language: item.language,
+    title: item.title,
+    url: item.url,
+    order: item.order,
+    isActive: item.isActive,
+    target: item.target || '_self',
+    isExternal: item.isExternal,
+    linkType: item.linkType,
+    pageId: item.pageId,
+    serviceCategoryId: item.serviceCategoryId,
+    serviceId: item.serviceId,
+    blogCategoryId: item.blogCategoryId,
+    blogPostId: item.blogPostId,
+    landingPageId: item.landingPageId,
+    page: item.page,
+    serviceCategory: item.serviceCategory,
+    service: item.service,
+    blogCategory: item.blogCategory,
+    blogPost: item.blogPost,
+    landingPage: item.landingPage
+  }));
+
+  // İçerik Seçenekleri için Verileri Çek
+  const [pages, serviceCategories, services, blogCategories, blogPosts, landingPages] = await Promise.all([
+    prisma.page.findMany({ where: { isDeleted: false }, include: { translations: true } }),
+    prisma.serviceCategory.findMany({ where: { isDeleted: false }, include: { translations: true } }),
+    prisma.service.findMany({ where: { isDeleted: false }, include: { translations: true } }),
+    prisma.blogCategory.findMany({ include: { translations: true } }),
+    prisma.blogPost.findMany({ where: { isDeleted: false }, include: { translations: true } }),
+    prisma.landingPage.findMany({ where: { isDeleted: false }, include: { translations: true } }),
+  ]);
+
+  return (
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Ortak Sidebar */}
+      <AdminSidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-800">Menü Yönetimi</h1>
+          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
+            A
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-gray-800">Gelişmiş Menü & İçerik Bağlantıları</h2>
+              <p className="text-sm text-gray-500 mt-1">Sitenin menülerini yönetin, CMS sayfalarınıza, hizmetlerinize ve bloglarınıza SEO uyumlu bir şekilde bağlayın.</p>
+            </div>
+            
+            <MenusClient 
+              initialItems={formattedMenuItems} 
+              
+              pages={pages}
+              serviceCategories={serviceCategories}
+              services={services}
+              blogCategories={blogCategories}
+              blogPosts={blogPosts}
+              landingPages={landingPages}
+            />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { MenuType, Language } from '@prisma/client';
+import { MenuType, Language, LinkType } from '@prisma/client';
 
 export async function createMenuItem(formData: FormData) {
   const menuType = formData.get('menuType') as MenuType;
@@ -13,6 +13,15 @@ export async function createMenuItem(formData: FormData) {
   const isActive = formData.get('isActive') === 'true';
   const target = formData.get('target') as string || '_self';
   const isExternal = formData.get('isExternal') === 'true';
+
+  // Yeni LinkType verileri
+  const linkType = (formData.get('linkType') as LinkType) || 'CUSTOM_URL';
+  const pageId = formData.get('pageId') as string || null;
+  const serviceCategoryId = formData.get('serviceCategoryId') as string || null;
+  const serviceId = formData.get('serviceId') as string || null;
+  const blogCategoryId = formData.get('blogCategoryId') as string || null;
+  const blogPostId = formData.get('blogPostId') as string || null;
+  const landingPageId = formData.get('landingPageId') as string || null;
 
   if (!menuType || !language || !title || !url) {
     return { success: false, error: 'Menü tipi, dil, başlık ve yönlendirme linki zorunludur!' };
@@ -29,7 +38,22 @@ export async function createMenuItem(formData: FormData) {
         isActive,
         target,
         isExternal,
+        linkType,
+        pageId,
+        serviceCategoryId,
+        serviceId,
+        blogCategoryId,
+        blogPostId,
+        landingPageId
       },
+      include: {
+        page: { include: { translations: true } },
+        serviceCategory: { include: { translations: true } },
+        service: { include: { translations: true } },
+        blogCategory: { include: { translations: true } },
+        blogPost: { include: { translations: true } },
+        landingPage: { include: { translations: true } }
+      }
     });
 
     revalidatePath('/[locale]/admin/menus', 'page');
@@ -51,6 +75,15 @@ export async function updateMenuItem(id: string, formData: FormData) {
   const target = formData.get('target') as string || '_self';
   const isExternal = formData.get('isExternal') === 'true';
 
+  // Yeni LinkType verileri
+  const linkType = (formData.get('linkType') as LinkType) || 'CUSTOM_URL';
+  const pageId = formData.get('pageId') as string || null;
+  const serviceCategoryId = formData.get('serviceCategoryId') as string || null;
+  const serviceId = formData.get('serviceId') as string || null;
+  const blogCategoryId = formData.get('blogCategoryId') as string || null;
+  const blogPostId = formData.get('blogPostId') as string || null;
+  const landingPageId = formData.get('landingPageId') as string || null;
+
   if (!menuType || !language || !title || !url) {
     return { success: false, error: 'Menü tipi, dil, başlık ve yönlendirme linki zorunludur!' };
   }
@@ -67,7 +100,22 @@ export async function updateMenuItem(id: string, formData: FormData) {
         isActive,
         target,
         isExternal,
+        linkType,
+        pageId,
+        serviceCategoryId,
+        serviceId,
+        blogCategoryId,
+        blogPostId,
+        landingPageId
       },
+      include: {
+        page: { include: { translations: true } },
+        serviceCategory: { include: { translations: true } },
+        service: { include: { translations: true } },
+        blogCategory: { include: { translations: true } },
+        blogPost: { include: { translations: true } },
+        landingPage: { include: { translations: true } }
+      }
     });
 
     revalidatePath('/[locale]/admin/menus', 'page');
@@ -95,4 +143,3 @@ export async function deleteMenuItem(id: string) {
     return { success: false, error: 'Menü elemanı silinirken bir hata oluştu.' };
   }
 }
-

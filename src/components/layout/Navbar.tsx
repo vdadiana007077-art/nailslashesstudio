@@ -90,7 +90,7 @@ export default function Navbar({ menus }: { menus: MenuItemProp[] }) {
                 onClick={() => setAuthModalOpen(true)}
                 className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-main)] hover:text-[var(--color-primary-500)] cursor-pointer flex items-center gap-1.5 transition-colors"
               >
-                <User size={15} /> Giriş Yap
+                <User size={15} /> {t('login')}
               </button>
             )}
 
@@ -155,13 +155,13 @@ export default function Navbar({ menus }: { menus: MenuItemProp[] }) {
                 onClick={() => { setAuthModalOpen(true); setMobileMenuOpen(false); }}
                 className="text-base font-bold text-[var(--color-text-main)] hover:text-[var(--color-primary-500)] text-left py-2 flex items-center gap-2 cursor-pointer"
               >
-                <User size={18} /> Giriş Yap / Üye Ol
+                <User size={18} /> {t('loginSignup')}
               </button>
             )}
 
             <div className="h-px bg-[var(--color-primary-300)]/20 my-2"></div>
 
-            <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Dil Seçimi</p>
+            <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">{t('languageSelection')}</p>
             <div className="flex gap-4">
               <Link href={pathname as any} locale="tr" className="text-[var(--color-text-main)] font-bold hover:text-[var(--color-primary-500)]" onClick={() => setMobileMenuOpen(false)}>TR</Link>
               <Link href={pathname as any} locale="en" className="text-[var(--color-text-main)] font-bold hover:text-[var(--color-primary-500)]" onClick={() => setMobileMenuOpen(false)}>EN</Link>

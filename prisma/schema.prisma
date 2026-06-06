@@ -70,6 +70,17 @@ enum MenuType {
   LEGAL_FOOTER
 }
 
+enum LinkType {
+  CMS_PAGE
+  SERVICE_CATEGORY
+  SERVICE_DETAIL
+  BLOG_CATEGORY
+  BLOG_DETAIL
+  LANDING_PAGE
+  EXTERNAL_URL
+  CUSTOM_URL
+}
+
 enum LeadStatus {
   PENDING
   IN_PROGRESS
@@ -193,6 +204,7 @@ model ServiceCategory {
   deletedAt    DateTime?
   services     Service[]
   translations ServiceCategoryTranslation[]
+  menuItems    MenuItem[]
 }
 
 model ServiceCategoryTranslation {
@@ -235,6 +247,7 @@ model Service {
   blogPosts    BlogPostService[]
   waitlist     Waitlist[]
   packages     PackageService[]
+  menuItems    MenuItem[]
 }
 
 model ServiceTranslation {
@@ -380,6 +393,7 @@ model Appointment {
   
   // Google Yorum İstek Takibi
   reviewRequestSent Boolean                    @default(false)
+  reminderSent      Boolean                    @default(false)
 
   // Lokasyon İlişkisi
   locationId        String?
@@ -407,6 +421,7 @@ model Page {
   deletedAt    DateTime?
   translations PageTranslation[]
   faqs         Faq[]
+  menuItems    MenuItem[]
 }
 
 model PageTranslation {
@@ -433,16 +448,33 @@ model PageTranslation {
 }
 
 model MenuItem {
-  id            String          @id @default(uuid())
-  menuType      MenuType
-  language      Language
-  title         String
-  url           String
-  order         Int             @default(0)
-  isActive      Boolean         @default(true)
-  target        String?         @default("_self")
-  isExternal    Boolean         @default(false)
-  createdAt     DateTime        @default(now())
+  id                String            @id @default(uuid())
+  menuType          MenuType
+  language          Language
+  title             String
+  url               String
+  order             Int               @default(0)
+  isActive          Boolean           @default(true)
+  target            String?           @default("_self")
+  isExternal        Boolean           @default(false)
+  
+  // SEO & İçerik Bağlantıları
+  linkType          LinkType          @default(CUSTOM_URL)
+  pageId            String?
+  page              Page?             @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  serviceCategoryId String?
+  serviceCategory   ServiceCategory?  @relation(fields: [serviceCategoryId], references: [id], onDelete: SetNull)
+  serviceId         String?
+  service           Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  blogCategoryId    String?
+  blogCategory      BlogCategory?     @relation(fields: [blogCategoryId], references: [id], onDelete: SetNull)
+  blogPostId        String?
+  blogPost          BlogPost?         @relation(fields: [blogPostId], references: [id], onDelete: SetNull)
+  landingPageId     String?
+  landingPage       LandingPage?      @relation(fields: [landingPageId], references: [id], onDelete: SetNull)
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt @default(now())
 }
 
 model GalleryImage {
@@ -540,6 +572,7 @@ model BlogPost {
   relatedServices BlogPostService[]
   relatedPosts    RelatedBlogPost[]   @relation("PostToRelated")
   referencedBy    RelatedBlogPost[]   @relation("RelatedToPost")
+  menuItems       MenuItem[]
 }
 
 model BlogPostTranslation {
@@ -572,6 +605,7 @@ model BlogCategory {
   isActive     Boolean                    @default(true)
   translations BlogCategoryTranslation[]
   posts        BlogPostCategory[]
+  menuItems    MenuItem[]
 }
 
 model BlogCategoryTranslation {
@@ -883,6 +917,7 @@ model LandingPage {
   createdAt    DateTime                   @default(now())
   updatedAt    DateTime                   @updatedAt
   translations LandingPageTranslation[]
+  menuItems    MenuItem[]
 }
 
 model LandingPageTranslation {
@@ -937,4 +972,30 @@ model CookieConsent {
   marketing     Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// =================== E-POSTA ŞABLONLARİ ===================
+model EmailTemplate {
+  id        String   @id @default(uuid())
+  key       String   @unique  // booking_confirmation, booking_reminder, booking_cancellation, etc.
+  name      String             // Görüntüleme adı (ör. "Randevu Onay E-postası")
+  subject   String             // E-posta konu satırı
+  body      String   @db.Text  // HTML şablon içeriği
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 🌐 ARAYÜZ METİNLERİ (SİSTEM ÇEVİRİLERİ)
+model SystemTranslation {
+  id        String   @id @default(uuid())
+  namespace String   // (Örn: "Index", "Blog", "Booking")
+  key       String   // (Örn: "readMore", "checkAvailability")
+  language  Language // (TR, EN, DE, RU)
+  value     String   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([namespace, key, language])
 }

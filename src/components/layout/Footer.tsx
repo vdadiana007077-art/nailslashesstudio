@@ -35,7 +35,7 @@ export default function Footer({ menus, legalMenus, contact }: { menus: MenuItem
           <div className="col-span-1 md:col-span-1">
             <h2 className="text-3xl font-serif italic font-bold text-[var(--color-primary-500)] tracking-widest mb-6">N&L</h2>
             <p className="text-[var(--color-text-muted)] text-sm leading-relaxed">
-              Premium güzellik, tırnak ve kirpik tasarımında en yüksek kalite standardı ile hizmetinizdeyiz. 
+              {t('brandDescription')}
             </p>
             <div className="flex gap-4 mt-6">
               {contact.instagram && (
@@ -58,7 +58,7 @@ export default function Footer({ menus, legalMenus, contact }: { menus: MenuItem
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-[var(--color-text-main)] font-bold mb-6 text-sm uppercase tracking-wider">Hızlı Menü</h3>
+            <h3 className="text-[var(--color-text-main)] font-bold mb-6 text-sm uppercase tracking-wider">{t('quickMenu')}</h3>
             <ul className="flex flex-col gap-4 text-sm text-[var(--color-text-muted)]">
               {menus.map((menu, idx) => (
                 <li key={idx}>
@@ -72,7 +72,7 @@ export default function Footer({ menus, legalMenus, contact }: { menus: MenuItem
 
           {/* Contact */}
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-[var(--color-text-main)] font-bold mb-6 text-sm uppercase tracking-wider">İletişim</h3>
+            <h3 className="text-[var(--color-text-main)] font-bold mb-6 text-sm uppercase tracking-wider">{t('contact')}</h3>
             <ul className="flex flex-col gap-4 text-sm text-[var(--color-text-muted)]">
               <li className="flex items-start gap-3">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-primary-500)] shrink-0 mt-0.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -92,7 +92,7 @@ export default function Footer({ menus, legalMenus, contact }: { menus: MenuItem
         </div>
 
         <div className="mt-16 pt-8 border-t border-[var(--color-primary-300)]/30 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--color-text-muted)]">
-          <p>© {new Date().getFullYear()} Nails & Lashes Studio. Tüm hakları saklıdır.</p>
+          <p>© {new Date().getFullYear()} Nails & Lashes Studio. {t('allRightsReserved')}</p>
           <div className="flex gap-4">
             {legalMenus.map((menu, idx) => (
               <Link key={idx} href={menu.href as any} className="hover:text-[var(--color-text-main)] transition-colors">

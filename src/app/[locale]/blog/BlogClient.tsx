@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Calendar, User, Search, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type Post = {
   id: string;
@@ -30,6 +31,7 @@ type BlogClientProps = {
 };
 
 export default function BlogClient({ initialPosts, categories, locale }: BlogClientProps) {
+  const t = useTranslations("Blog");
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -66,7 +68,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
                 : 'bg-gray-50 border border-gray-100 text-gray-700 hover:bg-gray-100'
             }`}
           >
-            Tümü
+            {t('all')}
           </button>
           {categories.map(cat => (
             <button
@@ -87,7 +89,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
         <div className="relative w-full md:w-64 order-1 md:order-2">
           <input
             type="text"
-            placeholder="Makale ara..."
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-xs focus:outline-none focus:ring-1 focus:ring-[var(--color-rose-500)] focus:bg-white"
@@ -111,7 +113,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
               <div className="w-full h-full flex items-center justify-center text-gray-300 font-serif italic">N&L Studio</div>
             )}
             <span className="absolute top-4 left-4 px-3.5 py-1.5 bg-[var(--color-rose-600)] text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
-              Öne Çıkan Yazı
+              {t('featuredArticle')}
             </span>
           </div>
 
@@ -142,7 +144,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
                 href={`/${locale}/blog/${featuredPost.categorySlug}/${featuredPost.slug}`}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-950 hover:text-[var(--color-rose-700)] group/link transition-colors"
               >
-                Devamını Oku <ChevronRight size={14} className="group-hover/link:translate-x-0.5 transition-transform" />
+                {t('readMore')} <ChevronRight size={14} className="group-hover/link:translate-x-0.5 transition-transform" />
               </Link>
             </div>
           </div>
@@ -194,7 +196,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
                     href={`/${locale}/blog/${post.categorySlug}/${post.slug}`}
                     className="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-950 hover:text-[var(--color-rose-700)] group/link transition-colors"
                   >
-                    Devamını Oku <ChevronRight size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
+                    {t('readMore')} <ChevronRight size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
               </div>
@@ -203,7 +205,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
         </div>
       ) : (
         <div className="text-center py-20 bg-white border border-dashed border-gray-200 rounded-3xl text-gray-400 text-sm">
-          Arama kriterlerine veya filtreye uygun blog makalesi bulunamadı.
+          {t('noArticlesFound')}
         </div>
       )}
 

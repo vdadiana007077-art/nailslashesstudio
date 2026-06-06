@@ -46,13 +46,21 @@ export async function getAvailableTimeSlots(
       where: {
         locationId,
         dayOfWeek,
-        isClosed: false,
       },
     });
 
-    if (!shopHours) {
+    // Şube o gün kapalı olarak işaretlenmişse
+    if (shopHours && shopHours.isClosed) {
       return { success: true, slots: [] }; // Şube o gün kapalı
     }
+
+    // Çalışma saatleri tanımlanmamışsa varsayılan saatler (09:00 - 19:00)
+    const effectiveShopHours = shopHours || {
+      openTime: '09:00',
+      closeTime: '19:00',
+      breakStart: '13:00',
+      breakEnd: '14:00',
+    };
 
     // 3. Şubenin o gün resmi tatilde/kapalı olup olmadığını kontrol edelim
     const isHoliday = await prisma.holiday.findFirst({
@@ -67,7 +75,8 @@ export async function getAvailableTimeSlots(
     }
 
     // 4. Hizmeti verebilen aktif personelleri bulalım
-    const qualifiedStaff = await prisma.staff.findMany({
+    // Önce StaffService ataması olan personelleri ara
+    let qualifiedStaff = await prisma.staff.findMany({
       where: {
         locationId,
         isActive: true,
@@ -104,8 +113,43 @@ export async function getAvailableTimeSlots(
       },
     });
 
+    // StaffService ataması yapılmamışsa, şubedeki tüm aktif personelleri getir (fallback)
     if (qualifiedStaff.length === 0) {
-      return { success: true, slots: [] }; // O gün o şubede bu hizmeti verebilecek kimse yok
+      qualifiedStaff = await prisma.staff.findMany({
+        where: {
+          locationId,
+          isActive: true,
+          isDeleted: false,
+          ...(staffId && staffId !== 'ANY' ? { id: staffId } : {}),
+        },
+        include: {
+          workingHours: {
+            where: { dayOfWeek },
+          },
+          leaves: {
+            where: {
+              date: dateObj,
+            },
+          },
+          appointments: {
+            where: {
+              date: dateObj,
+              status: {
+                in: [ApptStatus.PENDING, ApptStatus.CONFIRMED, ApptStatus.RESCHEDULED],
+              },
+            },
+          },
+          timeBlocks: {
+            where: {
+              date: dateObj,
+            },
+          },
+        },
+      });
+    }
+
+    if (qualifiedStaff.length === 0) {
+      return { success: true, slots: [] }; // O gün o şubede müsait personel yok
     }
 
     // O gün için tanımlanmış kapasite / bloke slotları veritabanından çekelim (SaaS kapasite yönetimi)
@@ -120,10 +164,10 @@ export async function getAvailableTimeSlots(
     // Ortak müsait slotları toplayacağımız küme (Unique list)
     const allAvailableSlots = new Set<string>();
 
-    const shopOpenMin = timeToMinutes(shopHours.openTime);
-    const shopCloseMin = timeToMinutes(shopHours.closeTime);
-    const shopBreakStartMin = shopHours.breakStart ? timeToMinutes(shopHours.breakStart) : null;
-    const shopBreakEndMin = shopHours.breakEnd ? timeToMinutes(shopHours.breakEnd) : null;
+    const shopOpenMin = timeToMinutes(effectiveShopHours.openTime);
+    const shopCloseMin = timeToMinutes(effectiveShopHours.closeTime);
+    const shopBreakStartMin = effectiveShopHours.breakStart ? timeToMinutes(effectiveShopHours.breakStart) : null;
+    const shopBreakEndMin = effectiveShopHours.breakEnd ? timeToMinutes(effectiveShopHours.breakEnd) : null;
 
     // 5. Her personel için müsait aralıkları hesaplayalım
     for (const staff of qualifiedStaff) {

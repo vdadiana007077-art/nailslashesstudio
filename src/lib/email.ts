@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { prisma } from '@/lib/prisma';
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -8,83 +9,150 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Şablon değişkenlerini değiştiren yardımcı fonksiyon
+function replaceVariables(
+  template: string, 
+  vars: Record<string, string>
+): string {
+  let result = template;
+  for (const [key, value] of Object.entries(vars)) {
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+  }
+  return result;
+}
+
 export const sendBookingEmail = async (
   to: string, 
   customerName: string, 
   serviceName: string, 
   date: Date, 
-  time: string
+  time: string,
+  customerLanguage: string = 'TR'
 ) => {
-  const formattedDate = date.toLocaleDateString('tr-TR', {
+  const lang = customerLanguage.toUpperCase();
+  const localeMap: Record<string, string> = {
+    TR: 'tr-TR',
+    EN: 'en-US',
+    RU: 'ru-RU',
+    DE: 'de-DE'
+  };
+  const formatLocale = localeMap[lang] || 'tr-TR';
+  
+  const formattedDate = date.toLocaleDateString(formatLocale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 
-  // Müşteriye giden mail
-  const customerHtml = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
-      <div style="background-color: #fce7f3; padding: 24px; text-align: center;">
-        <h2 style="color: #be185d; margin: 0;">Randevunuz Onaylandı!</h2>
-      </div>
-      <div style="padding: 24px; color: #374151;">
-        <p>Merhaba <strong>${customerName}</strong>,</p>
-        <p>Nails & Lashes Studio'dan oluşturduğunuz randevunuz başarıyla kaydedilmiştir. Randevu detaylarınız aşağıdadır:</p>
-        
-        <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 4px 0;"><strong>Hizmet:</strong> ${serviceName}</p>
-          <p style="margin: 4px 0;"><strong>Tarih:</strong> ${formattedDate}</p>
-          <p style="margin: 4px 0;"><strong>Saat:</strong> ${time}</p>
-        </div>
-
-        <p>Randevu saatinizde sizi bekliyor olacağız. Gecikme veya iptal durumunda lütfen bizimle iletişime geçin.</p>
-        <br/>
-        <p>Sevgilerle,<br/><strong>Nails & Lashes Studio</strong></p>
-      </div>
-    </div>
-  `;
-
-  // Admibe giden mail
-  const adminHtml = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
-      <div style="background-color: #111827; padding: 24px; text-align: center;">
-        <h2 style="color: #ffffff; margin: 0;">Yeni Randevu Geldi!</h2>
-      </div>
-      <div style="padding: 24px; color: #374151;">
-        <p>Sistem üzerinden yeni bir randevu oluşturuldu.</p>
-        <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 4px 0;"><strong>Müşteri:</strong> ${customerName}</p>
-          <p style="margin: 4px 0;"><strong>Hizmet:</strong> ${serviceName}</p>
-          <p style="margin: 4px 0;"><strong>Tarih:</strong> ${formattedDate}</p>
-          <p style="margin: 4px 0;"><strong>Saat:</strong> ${time}</p>
-          <p style="margin: 4px 0;"><strong>Müşteri E-postası:</strong> ${to}</p>
-        </div>
-        <p>Detayları Admin panelinden görüntüleyebilirsiniz.</p>
-      </div>
-    </div>
-  `;
+  const vars = {
+    customerName,
+    serviceName,
+    date: formattedDate,
+    time,
+    customerEmail: to,
+  };
 
   try {
-    // 1. Müşteriye Gönder
-    await transporter.sendMail({
-      from: `"Nails & Lashes Studio" <${process.env.EMAIL_USER}>`,
-      to: to,
-      subject: `Randevu Onayı - ${serviceName}`,
-      html: customerHtml,
+    // Veritabanından birleşik şablonları çek
+    const customerTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: 'booking_received' },
     });
 
-    // 2. Kendimize (Admin) Gönder
-    await transporter.sendMail({
-      from: `"Sistem Bildirimi" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      subject: `Yeni Randevu: ${customerName} - ${formattedDate} ${time}`,
-      html: adminHtml,
+    const adminTemplate = await prisma.emailTemplate.findUnique({
+      where: { key: 'booking_admin_notification' },
     });
+
+    // Müşteri e-postası
+    if (customerTemplate && customerTemplate.isActive) {
+      let subject = customerTemplate.subject;
+      let html = customerTemplate.body;
+
+      try {
+        const parsedSubject = JSON.parse(customerTemplate.subject);
+        const parsedBody = JSON.parse(customerTemplate.body);
+        subject = parsedSubject[lang] || parsedSubject['TR'] || customerTemplate.subject;
+        html = parsedBody[lang] || parsedBody['TR'] || customerTemplate.body;
+      } catch (e) {
+        // JSON formatında değilse doğrudan kullanılır
+      }
+
+      const finalSubject = replaceVariables(subject, vars);
+      const finalHtml = replaceVariables(html, vars);
+
+      await transporter.sendMail({
+         from: `"Nails & Lashes Studio" <${process.env.EMAIL_USER}>`,
+         to: to,
+         subject: finalSubject,
+         html: finalHtml,
+      });
+    } else {
+      console.log(`Müşteri şablonu bulunamadı veya pasif: booking_received`);
+    }
+
+    // Admin e-postası
+    if (adminTemplate && adminTemplate.isActive) {
+      const subject = replaceVariables(adminTemplate.subject, vars);
+      const html = replaceVariables(adminTemplate.body, vars);
+
+      await transporter.sendMail({
+        from: `"Sistem Bildirimi" <${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER!,
+        subject,
+        html,
+      });
+    }
 
     return { success: true };
   } catch (error) {
     console.error("E-posta gönderme hatası:", error);
+    return { success: false };
+  }
+};
+
+// Genel amaçlı şablonla e-posta gönderme fonksiyonu
+export const sendTemplateEmail = async (
+  templateKey: string,
+  to: string,
+  vars: Record<string, string>,
+  customerLanguage: string = 'TR'
+) => {
+  try {
+    const template = await prisma.emailTemplate.findUnique({
+      where: { key: templateKey },
+    });
+
+    if (!template || !template.isActive) {
+      console.log(`E-posta şablonu "${templateKey}" bulunamadı veya pasif.`);
+      return { success: false };
+    }
+
+    const lang = customerLanguage.toUpperCase();
+    let subject = template.subject;
+    let html = template.body;
+
+    try {
+      const parsedSubject = JSON.parse(template.subject);
+      const parsedBody = JSON.parse(template.body);
+      subject = parsedSubject[lang] || parsedSubject['TR'] || template.subject;
+      html = parsedBody[lang] || parsedBody['TR'] || template.body;
+    } catch (e) {
+      // JSON formatında değilse doğrudan kullanılır
+    }
+
+    const finalSubject = replaceVariables(subject, vars);
+    const finalHtml = replaceVariables(html, vars);
+
+    await transporter.sendMail({
+      from: `"Nails & Lashes Studio" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: finalSubject,
+      html: finalHtml,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error(`E-posta gönderme hatası (${templateKey}):`, error);
     return { success: false };
   }
 };

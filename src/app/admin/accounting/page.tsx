@@ -1,0 +1,166 @@
+import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import AccountingClient from './AccountingClient';
+import { TrendingUp, Landmark } from 'lucide-react';
+
+export default async function AccountingPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('admin_token');
+  
+
+  // Güvenlik Kontrolü
+  if (!token || token.value !== 'authenticated') {
+    redirect(`/admin/login`);
+  }
+
+  // 1. İşlemleri çek (Kategori ve Staff ile)
+  let transactions: any[] = [];
+  let staffList: any[] = [];
+  let completedAppointments: any[] = [];
+  let locations: any[] = [];
+
+  try {
+    transactions = await prisma.transaction.findMany({
+      include: {
+        category: true,
+        staff: true,
+        location: true
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    });
+
+    // 2. Aktif personelleri çek
+    staffList = await prisma.staff.findMany({
+      where: { isDeleted: false },
+      orderBy: { name: 'asc' }
+    });
+
+    // 2.1. Aktif şubeleri çek
+    locations = await prisma.location.findMany({
+      where: { isDeleted: false, isActive: true },
+      orderBy: { name: 'asc' }
+    });
+
+    // 3. Tamamlanan randevuları çek (Ciro ve komisyon hesaplama için)
+    completedAppointments = await prisma.appointment.findMany({
+      where: { status: 'COMPLETED' },
+      include: {
+        service: true,
+        staff: true,
+        staffCommission: true
+      }
+    });
+  } catch (error) {
+    console.error("Muhasebe verileri çekilemedi:", error);
+  }
+
+  // Tipleri güvenli hale getirelim (Decimal -> String)
+  const formattedTransactions = transactions.map((t) => ({
+    id: t.id,
+    type: t.type,
+    amount: t.amount.toString(),
+    paymentMethod: t.paymentMethod,
+    date: t.date.toISOString(),
+    description: t.description,
+    locationId: t.locationId,
+    locationName: t.location ? (t.location.branchName || t.location.name) : 'Şube Belirtilmemiş',
+    category: {
+      name: t.category.name,
+    },
+    staff: t.staff ? { name: t.staff.name } : null
+  }));
+
+  const formattedStaffList = staffList.map((st) => ({
+    id: st.id,
+    name: st.name
+  }));
+
+  const formattedLocations = locations.map((l) => ({
+    id: l.id,
+    name: l.branchName || l.name
+  }));
+
+  // Personel hakediş ciro/komisyon hesaplaması
+  const staffPayoutsMap: Record<string, { staffId: string; name: string; appointmentCount: number; totalRevenue: number; commissionEarned: number }> = {};
+
+  // Başlangıçta tüm aktif personelleri ekle (cirosu olmasa da listelensinler)
+  staffList.forEach((st) => {
+    staffPayoutsMap[st.id] = {
+      staffId: st.id,
+      name: st.name,
+      appointmentCount: 0,
+      totalRevenue: 0,
+      commissionEarned: 0
+    };
+  });
+
+  // Tamamlanan randevuları tara ve hesapla
+  completedAppointments.forEach((appt) => {
+    if (!appt.staffId) return;
+
+    // Eğer haritada personel yoksa ekle (örneğin pasif yapılmış ama eski ciro kaydı varsa)
+    if (!staffPayoutsMap[appt.staffId]) {
+      staffPayoutsMap[appt.staffId] = {
+        staffId: appt.staffId,
+        name: appt.staff?.name || 'Bilinmeyen Çalışan',
+        appointmentCount: 0,
+        totalRevenue: 0,
+        commissionEarned: 0
+      };
+    }
+
+    const payout = staffPayoutsMap[appt.staffId];
+    payout.appointmentCount += 1;
+
+    const price = parseFloat(appt.priceAtBooking.toString());
+    payout.totalRevenue += price;
+
+    // Komisyon hesabı: Eğer veritabanında hazır komisyon kaydı varsa onu kullan, yoksa çalışan oranına göre hesapla
+    let commAmount = 0;
+    if (appt.staffCommission) {
+      commAmount = parseFloat(appt.staffCommission.amount.toString());
+    } else if (appt.staff?.commissionRate) {
+      const rate = parseFloat(appt.staff.commissionRate.toString());
+      commAmount = (price * rate) / 100;
+    }
+    payout.commissionEarned += commAmount;
+  });
+
+  const staffPayouts = Object.values(staffPayoutsMap).sort((a, b) => b.commissionEarned - a.commissionEarned);
+
+  return (
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar */}
+      <AdminSidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="text-[var(--color-rose-600)]" size={24} />
+            <h1 className="text-2xl font-bold text-gray-800">Muhasebe & Finansal Raporlama</h1>
+          </div>
+          <div className="px-4 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100 uppercase tracking-wider flex items-center gap-1">
+            <Landmark size={12} /> Kasa Durumu Aktif
+          </div>
+        </header>
+
+        {/* main view */}
+        <main className="flex-1 overflow-y-auto p-8">
+          <AccountingClient 
+            transactions={formattedTransactions} 
+            staffList={formattedStaffList} 
+            staffPayouts={staffPayouts} 
+            locations={formattedLocations}
+            
+          />
+        </main>
+      </div>
+    </div>
+  );
+}

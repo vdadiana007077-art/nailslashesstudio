@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Clock, ArrowRight, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Translation {
   name: string;
@@ -29,6 +30,8 @@ interface ServiceExplorerProps {
 }
 
 export default function ServiceExplorer({ categories, locale }: ServiceExplorerProps) {
+  const t = useTranslations("Index");
+
   const [activeCategoryId, setActiveCategoryId] = useState<string>(
     categories[0]?.id || ""
   );
@@ -42,7 +45,7 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
       {/* 🧭 Category Navigation Tabs */}
       <div className="flex overflow-x-auto pb-4 scrollbar-none gap-3 -mx-6 px-6 md:mx-0 md:px-0 justify-start md:justify-center">
         {categories.map((category) => {
-          const categoryName = category.translations[0]?.name || "Kategori";
+          const categoryName = category.translations[0]?.name || t('categoryFallback');
           const isActive = category.id === activeCategoryId;
 
           return (
@@ -67,21 +70,21 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
           {/* Category Description Info */}
           <div className="lg:col-span-1 lg:sticky lg:top-32 flex flex-col gap-6">
             <div className="inline-flex self-start items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-[var(--color-primary-300)]/30 text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest">
-              <Sparkles size={12} /> Seçkin Bakım
+              <Sparkles size={12} /> {t('premiumCare')}
             </div>
             <h3 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
               {activeCategoryName}
             </h3>
             <p className="text-[var(--color-text-muted)] font-light leading-relaxed text-base">
               {activeCategoryDesc.replace(/<[^>]*>?/gm, "") ||
-                `${activeCategoryName} alanında profesyonel uygulamalarımız ve uzman ekibimizle kendinizi şımartın.`}
+                `${activeCategoryName} ${t('serviceCategoryDescFallback')}`}
             </p>
             {activeCategory.translations[0]?.slug && (
               <Link
                 href={`/${locale}/services/${activeCategory.translations[0].slug}`}
                 className="inline-flex items-center gap-2 text-[var(--color-primary-600)] font-bold text-sm hover:text-[var(--color-text-main)] transition-colors group tracking-wide mt-2"
               >
-                Tüm Detayları Gör{" "}
+                {t('seeAllDetails')}{" "}
                 <ArrowRight
                   size={16}
                   className="group-hover:translate-x-1.5 transition-transform duration-300"
@@ -94,7 +97,7 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
             {activeCategory.services.length === 0 ? (
               <div className="col-span-2 text-center text-[var(--color-text-muted)] py-16 bg-white/40 border border-[var(--color-primary-300)]/25 rounded-3xl">
-                Bu kategoride henüz hizmet bulunmuyor.
+                {t('noServicesInCategory')}
               </div>
             ) : (
               activeCategory.services.map((service) => {
@@ -130,7 +133,7 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
                         href={`/${locale}/booking?serviceId=${service.id}`}
                         className="w-full py-3.5 bg-[var(--color-primary-300)]/30 hover:bg-[var(--color-primary-500)] text-[var(--color-primary-600)] hover:text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300 text-center cursor-pointer shadow-sm hover:shadow-md"
                       >
-                        Randevu Al
+                        {t('bookNow')}
                       </Link>
                     </div>
                   </div>

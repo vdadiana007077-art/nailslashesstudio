@@ -1,10 +1,12 @@
 import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
 import BlogClient from './BlogClient';
+import { getTranslations } from 'next-intl/server';
 
 export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
+  const t = await getTranslations({ locale: resolvedParams.locale, namespace: "Blog" });
 
   // 1. Aktif blog yazılarını çek (çevirileri ve bağlı kategorileri ile)
   const posts = await prisma.blogPost.findMany({
@@ -47,7 +49,7 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
   // Verileri formatlayıp temiz JSON olarak client component'e aktaralım
   const formattedCategories = categories.map(cat => ({
     id: cat.id,
-    name: cat.translations[0]?.name || 'Diğer',
+    name: cat.translations[0]?.name || t('other'),
     slug: cat.translations[0]?.slug || '',
   }));
 
@@ -59,13 +61,13 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
     return {
       id: post.id,
       image: post.image || '',
-      authorName: post.authorName || 'Yazar',
+      authorName: post.authorName || t('author'),
       isFeatured: post.isFeatured,
       publishedAt: post.publishedAt ? post.publishedAt.toISOString().split('T')[0] : post.createdAt.toISOString().split('T')[0],
-      title: translation?.title || 'Başlıksız Makale',
+      title: translation?.title || t('untitledArticle'),
       slug: translation?.slug || '',
       excerpt: translation?.excerpt || '',
-      categoryName: categoryTranslation?.name || 'Güzellik',
+      categoryName: categoryTranslation?.name || t('beauty'),
       categorySlug: categoryTranslation?.slug || 'beauty',
     };
   });
@@ -76,10 +78,10 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
       
       <div className="max-w-6xl mx-auto px-6 z-10">
         <div className="text-center mb-12">
-          <span className="text-[var(--color-rose-600)] text-xs font-bold uppercase tracking-widest block mb-3">Güzellik Sırları & Trendler</span>
-          <h1 className="text-4xl md:text-5xl font-serif italic font-bold text-gray-950 mb-4">Blog Köşemiz</h1>
+          <span className="text-[var(--color-rose-600)] text-xs font-bold uppercase tracking-widest block mb-3">{t('beautySecrets')}</span>
+          <h1 className="text-4xl md:text-5xl font-serif italic font-bold text-gray-950 mb-4">{t('blogCorner')}</h1>
           <p className="text-gray-500 max-w-2xl mx-auto text-sm leading-relaxed">
-            Uzman ekibimiz tarafından hazırlanan bakım önerileri, sezonun tırnak ve kirpik trendleri ile kurumsal ipuçlarını keşfedin.
+            {t('blogCornerDesc')}
           </p>
         </div>
 

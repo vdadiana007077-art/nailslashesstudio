@@ -33,8 +33,7 @@ import {
 import { logoutAdmin } from '@/app/actions/auth';
 
 interface AdminSidebarProps {
-  locale: string;
-}
+  }
 
 type MenuItem = {
   name: string;
@@ -48,7 +47,7 @@ type MenuSection = {
   items: MenuItem[];
 };
 
-export default function AdminSidebar({ locale }: AdminSidebarProps) {
+export default function AdminSidebar() {
   const pathname = usePathname();
 
   const menuSections: MenuSection[] = [
@@ -57,45 +56,45 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       items: [
         {
           name: 'Randevular',
-          href: `/${locale}/admin`,
+          href: `/admin`,
           icon: Calendar,
-          activePattern: new RegExp(`^/${locale}/admin$`)
+          activePattern: new RegExp(`^/admin$`)
         },
         {
           name: 'Müsaitlik & Saatler',
-          href: `/${locale}/admin/availability`,
+          href: `/admin/availability`,
           icon: Clock,
-          activePattern: new RegExp(`^/${locale}/admin/availability`)
+          activePattern: new RegExp(`^/admin/availability`)
         },
         {
           name: 'Hizmetler',
-          href: `/${locale}/admin/services`,
+          href: `/admin/services`,
           icon: Scissors,
-          activePattern: new RegExp(`^/${locale}/admin/services`)
+          activePattern: new RegExp(`^/admin/services`)
         },
         {
           name: 'Kategoriler',
-          href: `/${locale}/admin/categories`,
+          href: `/admin/categories`,
           icon: Tags,
-          activePattern: new RegExp(`^/${locale}/admin/categories`)
+          activePattern: new RegExp(`^/admin/categories`)
         },
         {
           name: 'Paketler',
-          href: `/${locale}/admin/packages`,
+          href: `/admin/packages`,
           icon: Package,
-          activePattern: new RegExp(`^/${locale}/admin/packages`)
+          activePattern: new RegExp(`^/admin/packages`)
         },
         {
           name: 'Şubeler',
-          href: `/${locale}/admin/locations`,
+          href: `/admin/locations`,
           icon: MapPin,
-          activePattern: new RegExp(`^/${locale}/admin/locations`)
+          activePattern: new RegExp(`^/admin/locations`)
         },
         {
           name: 'Personeller',
-          href: `/${locale}/admin/staff`,
+          href: `/admin/staff`,
           icon: Users,
-          activePattern: new RegExp(`^/${locale}/admin/staff`)
+          activePattern: new RegExp(`^/admin/staff`)
         },
       ]
     },
@@ -104,51 +103,51 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       items: [
         {
           name: 'Blog Yazıları',
-          href: `/${locale}/admin/blog`,
+          href: `/admin/blog`,
           icon: BookOpen,
-          activePattern: new RegExp(`^/${locale}/admin/blog(?!/categories|/tags)`)
+          activePattern: new RegExp(`^/admin/blog(?!/categories|/tags)`)
         },
         {
           name: 'Blog Kategorileri',
-          href: `/${locale}/admin/blog/categories`,
+          href: `/admin/blog/categories`,
           icon: Tags,
-          activePattern: new RegExp(`^/${locale}/admin/blog/categories`)
+          activePattern: new RegExp(`^/admin/blog/categories`)
         },
         {
           name: 'Blog Etiketleri',
-          href: `/${locale}/admin/blog/tags`,
+          href: `/admin/blog/tags`,
           icon: Hash,
-          activePattern: new RegExp(`^/${locale}/admin/blog/tags`)
+          activePattern: new RegExp(`^/admin/blog/tags`)
         },
         {
           name: 'Sayfalar',
-          href: `/${locale}/admin/pages`,
+          href: `/admin/pages`,
           icon: FileText,
-          activePattern: new RegExp(`^/${locale}/admin/pages`)
+          activePattern: new RegExp(`^/admin/pages`)
         },
         {
           name: 'SSS (FAQ)',
-          href: `/${locale}/admin/faq`,
+          href: `/admin/faq`,
           icon: HelpCircle,
-          activePattern: new RegExp(`^/${locale}/admin/faq`)
+          activePattern: new RegExp(`^/admin/faq`)
         },
         {
           name: 'Portföy',
-          href: `/${locale}/admin/portfolio`,
+          href: `/admin/portfolio`,
           icon: Briefcase,
-          activePattern: new RegExp(`^/${locale}/admin/portfolio`)
+          activePattern: new RegExp(`^/admin/portfolio`)
         },
         {
           name: 'Medya Kütüphanesi',
-          href: `/${locale}/admin/media`,
+          href: `/admin/media`,
           icon: Image,
-          activePattern: new RegExp(`^/${locale}/admin/media`)
+          activePattern: new RegExp(`^/admin/media`)
         },
         {
           name: 'Menü Yönetimi',
-          href: `/${locale}/admin/menus`,
+          href: `/admin/menus`,
           icon: Menu,
-          activePattern: new RegExp(`^/${locale}/admin/menus`)
+          activePattern: new RegExp(`^/admin/menus`)
         },
       ]
     },
@@ -157,51 +156,51 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       items: [
         {
           name: 'Müşteriler',
-          href: `/${locale}/admin/users`,
+          href: `/admin/users`,
           icon: Users,
-          activePattern: new RegExp(`^/${locale}/admin/users`)
+          activePattern: new RegExp(`^/admin/users`)
         },
         {
           name: 'İletişim Mesajları',
-          href: `/${locale}/admin/contact`,
+          href: `/admin/contact`,
           icon: MessageSquare,
-          activePattern: new RegExp(`^/${locale}/admin/contact`)
+          activePattern: new RegExp(`^/admin/contact`)
         },
         {
           name: 'CRM Talepleri',
-          href: `/${locale}/admin/leads`,
+          href: `/admin/leads`,
           icon: Inbox,
-          activePattern: new RegExp(`^/${locale}/admin/leads`)
+          activePattern: new RegExp(`^/admin/leads`)
         },
         {
           name: 'Bülten Aboneleri',
-          href: `/${locale}/admin/subscribers`,
+          href: `/admin/subscribers`,
           icon: Mail,
-          activePattern: new RegExp(`^/${locale}/admin/subscribers`)
+          activePattern: new RegExp(`^/admin/subscribers`)
         },
         {
           name: 'Kuponlar',
-          href: `/${locale}/admin/coupons`,
+          href: `/admin/coupons`,
           icon: Ticket,
-          activePattern: new RegExp(`^/${locale}/admin/coupons`)
+          activePattern: new RegExp(`^/admin/coupons`)
         },
         {
           name: 'Hediye Kartları',
-          href: `/${locale}/admin/giftcards`,
+          href: `/admin/giftcards`,
           icon: Gift,
-          activePattern: new RegExp(`^/${locale}/admin/giftcards`)
+          activePattern: new RegExp(`^/admin/giftcards`)
         },
         {
           name: 'SEO Sayfaları',
-          href: `/${locale}/admin/landing-pages`,
+          href: `/admin/landing-pages`,
           icon: Globe,
-          activePattern: new RegExp(`^/${locale}/admin/landing-pages`)
+          activePattern: new RegExp(`^/admin/landing-pages`)
         },
         {
           name: 'SEO & Yönlendirmeler',
-          href: `/${locale}/admin/seo`,
+          href: `/admin/seo`,
           icon: ArrowRightLeft,
-          activePattern: new RegExp(`^/${locale}/admin/seo`)
+          activePattern: new RegExp(`^/admin/seo`)
         },
       ]
     },
@@ -210,21 +209,33 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       items: [
         {
           name: 'Muhasebe & Finans',
-          href: `/${locale}/admin/accounting`,
+          href: `/admin/accounting`,
           icon: TrendingUp,
-          activePattern: new RegExp(`^/${locale}/admin/accounting`)
+          activePattern: new RegExp(`^/admin/accounting`)
+        },
+        {
+          name: 'Mail Şablonları',
+          href: `/admin/email-templates`,
+          icon: Mail,
+          activePattern: new RegExp(`^/admin/email-templates`)
+        },
+        {
+          name: 'Arayüz Çevirileri',
+          href: `/admin/translations`,
+          icon: Globe,
+          activePattern: new RegExp(`^/admin/translations`)
         },
         {
           name: 'İşlem Günlükleri',
-          href: `/${locale}/admin/audit-logs`,
+          href: `/admin/audit-logs`,
           icon: Activity,
-          activePattern: new RegExp(`^/${locale}/admin/audit-logs`)
+          activePattern: new RegExp(`^/admin/audit-logs`)
         },
         {
           name: 'Site Ayarları',
-          href: `/${locale}/admin/settings`,
+          href: `/admin/settings`,
           icon: Settings,
-          activePattern: new RegExp(`^/${locale}/admin/settings`)
+          activePattern: new RegExp(`^/admin/settings`)
         },
       ]
     }
