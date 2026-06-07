@@ -30,6 +30,8 @@ export const metadata = {
   description: 'Premium Beauty & Spa Services',
   manifest: '/manifest.json',
   icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
     apple: '/apple-touch-icon.png',
   },
   appleWebApp: {
