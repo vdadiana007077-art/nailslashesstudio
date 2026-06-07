@@ -45,6 +45,18 @@ export default function Navbar({ menus }: { menus: MenuItemProp[] }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Mobil menü açıkken arkadaki sayfanın kaydırılmasını (body scroll) engelle
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
+
   // Müşteri oturumunu yükle
   const loadCustomer = async () => {
     const data = await getCurrentCustomer();

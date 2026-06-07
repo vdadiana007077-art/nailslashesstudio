@@ -113,17 +113,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <Sparkles size={14} className="text-[var(--color-primary-500)]" /> {t('heroTag')}
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-8 leading-[1.1] animate-fade-up text-[var(--color-text-main)]" dangerouslySetInnerHTML={{ __html: heroTitle.replace(/(Yeniden Keşfedin|Studio)/gi, '<span class="text-[var(--color-primary-500)] italic">$1</span>') }} />
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold tracking-tight mb-8 leading-[1.1] animate-fade-up text-[var(--color-text-main)] break-words hyphens-auto" dangerouslySetInnerHTML={{ __html: heroTitle.replace(/(Yeniden Keşfedin|Studio)/gi, '<span class="text-[var(--color-primary-500)] italic">$1</span>') }} />
             
-            <p className="text-lg md:text-xl text-[var(--color-text-muted)] font-light max-w-2xl mb-12 animate-fade-up delay-100 leading-relaxed">
+            <p className="text-base md:text-xl text-[var(--color-text-muted)] font-light max-w-2xl mb-12 animate-fade-up delay-100 leading-relaxed">
               {introText}
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 animate-fade-up delay-200 w-full sm:w-auto">
-              <Link href={bookingHref} className="group flex items-center justify-center gap-3 px-10 py-5 bg-[var(--color-primary-500)] text-white font-bold rounded-full hover:bg-[var(--color-primary-600)] transition-all duration-300 shadow-[0_10px_35px_rgba(197,139,139,0.35)] hover:shadow-[0_15px_45px_rgba(197,139,139,0.5)] hover:-translate-y-0.5 cursor-pointer">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-fade-up delay-200 w-full sm:w-auto">
+              <Link href={bookingHref} className="group flex items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 bg-[var(--color-primary-500)] text-white font-bold rounded-full hover:bg-[var(--color-primary-600)] transition-all duration-300 shadow-[0_10px_35px_rgba(197,139,139,0.35)] hover:shadow-[0_15px_45px_rgba(197,139,139,0.5)] hover:-translate-y-0.5 cursor-pointer">
                 <CalendarIcon size={18} /> {t('bookNow')}
               </Link>
-              <Link href={servicesHref} className="flex items-center justify-center gap-3 px-10 py-5 glass-panel text-[var(--color-text-main)] font-bold rounded-full hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer border border-[var(--color-primary-300)]/25">
+              <Link href={servicesHref} className="flex items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 glass-panel text-[var(--color-text-main)] font-bold rounded-full hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer border border-[var(--color-primary-300)]/25">
                 {t('services')} <ArrowRight size={18} />
               </Link>
             </div>
@@ -157,12 +157,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* 🌟 USABILITY SECTION - HOW IT WORKS */}
-      <section className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10 border-t border-[var(--color-primary-300)]/20">
-        <div className="text-center mb-16">
+      <section className="w-full max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10 border-t border-[var(--color-primary-300)]/20">
+        <div className="text-center mb-12 md:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-white/70 text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
             {t('howItWorksTag')}
           </div>
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
             {t('howItWorksTitle')}
           </h2>
           <p className="text-[var(--color-text-muted)] mt-4 max-w-xl mx-auto font-light">
@@ -210,12 +210,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* 🌟 PREMIUM SERVICES SECTION */}
-      <section id="services" className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10 border-t border-[var(--color-primary-300)]/20">
-        <div className="text-center mb-16">
+      <section id="services" className="w-full max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10 border-t border-[var(--color-primary-300)]/20">
+        <div className="text-center mb-12 md:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-white/70 text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
             {t('servicesTag')}
           </div>
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
             {t('servicesTitle1')} <span className="text-[var(--color-primary-500)]">{t('servicesTitle2')}</span>
           </h2>
           <p className="text-[var(--color-text-muted)] mt-4 max-w-xl mx-auto font-light">
@@ -233,13 +233,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* 🌟 LUXURY GALLERY SECTION */}
-      <section id="gallery" className="w-full py-24 bg-white relative z-10 border-y border-[var(--color-primary-300)]/20 overflow-hidden">
+      <section id="gallery" className="w-full py-16 md:py-24 bg-white relative z-10 border-y border-[var(--color-primary-300)]/20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col items-center text-center mb-16">
+          <div className="flex flex-col items-center text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-[var(--color-light-200)] text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
               {t('galleryTag')}
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
               {t('galleryTitle1')} <span className="text-[var(--color-primary-500)]">{t('galleryTitle2')}</span>
             </h2>
             <p className="text-[var(--color-text-muted)] max-w-xl mt-4 font-light">
@@ -276,12 +276,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* 🌟 PREMIUM REVIEWS SECTION */}
-      <section id="reviews" className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10">
-        <div className="text-center mb-16">
+      <section id="reviews" className="w-full max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
+        <div className="text-center mb-12 md:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-primary-400)]/20 bg-white/75 text-xs font-bold text-[var(--color-primary-600)] uppercase tracking-widest mb-4">
             {t('reviewsTag')}
           </div>
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[var(--color-text-main)] italic tracking-tight">
             {t('reviewsTitle1')} <span className="text-[var(--color-primary-500)]">{t('reviewsTitle2')}</span>
           </h2>
           <div className="flex justify-center gap-1.5 text-[#FABB05] mt-6">
@@ -320,14 +320,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* 🌟 FOOTER CTA */}
-      <section className="w-full bg-[var(--color-primary-500)] py-24 relative overflow-hidden text-center px-6">
+      <section className="w-full bg-[var(--color-primary-500)] py-16 md:py-24 relative overflow-hidden text-center px-6">
         <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-[1px]"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/10 rounded-full blur-[120px] -z-10"></div>
         
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
-          <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">{t('ctaTitle')}</h2>
-          <p className="text-white/90 text-lg md:text-xl mb-12 font-light max-w-xl">{t('ctaDesc')}</p>
-          <Link href={bookingHref} className="inline-flex items-center gap-3 px-10 py-5 bg-white text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)] font-bold rounded-full hover:bg-[var(--color-light-100)] hover:-translate-y-0.5 transition-all duration-300 shadow-[0_10px_35px_rgba(0,0,0,0.1)]">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight">{t('ctaTitle')}</h2>
+          <p className="text-white/90 text-base md:text-xl mb-10 md:mb-12 font-light max-w-xl">{t('ctaDesc')}</p>
+          <Link href={bookingHref} className="inline-flex items-center gap-3 px-6 py-4 md:px-10 md:py-5 bg-white text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)] font-bold rounded-full hover:bg-[var(--color-light-100)] hover:-translate-y-0.5 transition-all duration-300 shadow-[0_10px_35px_rgba(0,0,0,0.1)]">
             <CalendarIcon size={18} /> {t('ctaButton')}
           </Link>
         </div>
