@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import {
   Image as ImageIcon, FolderOpen, Settings,
@@ -320,7 +321,7 @@ export default function GalleryAdminClient({ initialCategories, initialItems, lo
                 <div key={item.id} className={`bg-white rounded-2xl border overflow-hidden group relative transition-all ${!item.isActive ? 'opacity-50' : ''} ${item.isFeatured ? 'border-yellow-400 ring-1 ring-yellow-200' : 'border-gray-200'}`}>
                   {/* Thumbnail */}
                   <div className="aspect-square relative overflow-hidden bg-gray-100">
-                    <img src={item.imageUrl} alt={getTrans(item.translations, 'TR', 'altText') || ''} className="w-full h-full object-cover" />
+                    <Image width={800} height={800} src={item.imageUrl} alt={getTrans(item.translations, 'TR', 'altText') || ''} className="w-full h-full object-cover" />
                     {/* Overlay */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <button onClick={() => openEditItem(item)} className="p-2 bg-white/90 rounded-full hover:bg-white"><Edit size={14} /></button>
@@ -390,7 +391,7 @@ export default function GalleryAdminClient({ initialCategories, initialItems, lo
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        {cat.image ? <img src={cat.image} alt="" className="w-10 h-10 object-cover rounded-lg" /> : <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center"><ImageIcon size={14} className="text-gray-300" /></div>}
+                        {cat.image ? <Image width={800} height={800} src={cat.image} alt="" className="w-10 h-10 object-cover rounded-lg" /> : <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center"><ImageIcon size={14} className="text-gray-300" /></div>}
                       </td>
                       <td className="px-4 py-3 font-semibold text-gray-900">{getTrans(cat.translations, 'TR', 'name') || '-'}</td>
                       <td className="px-4 py-3 text-gray-500 font-mono text-xs">{getTrans(cat.translations, 'TR', 'slug') || '-'}</td>
@@ -554,7 +555,7 @@ export default function GalleryAdminClient({ initialCategories, initialItems, lo
                 </div>
                 {itemForm.imageUrl && (
                   <div className="mt-2 w-24 h-24 rounded-xl overflow-hidden border border-gray-200">
-                    <img src={itemForm.imageUrl} alt="" className="w-full h-full object-cover" />
+                    <Image width={800} height={800} src={itemForm.imageUrl} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { Sparkles, Calendar } from 'lucide-react';
 import Link from 'next/link';
@@ -132,7 +133,7 @@ function BeforeAfterSlider({ before, after }: { before: string; after: string })
       onMouseLeave={() => setIsSliding(false)}
     >
       {/* Before Image (Background) */}
-      <img 
+      <Image width={800} height={800} 
         src={before} 
         alt="Before" 
         className="w-full h-full object-cover absolute inset-0 pointer-events-none" 
@@ -146,7 +147,7 @@ function BeforeAfterSlider({ before, after }: { before: string; after: string })
         className="absolute inset-0 overflow-hidden pointer-events-none"
         style={{ width: `${sliderPosition}%` }}
       >
-        <img 
+        <Image width={800} height={800} 
           src={after} 
           alt="After" 
           className="w-full h-full object-cover absolute inset-0 max-w-none"

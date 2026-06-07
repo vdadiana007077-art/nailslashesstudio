@@ -1,5 +1,20 @@
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
+
+const fontSerif = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-serif',
+  display: 'swap',
+});
+
+const fontSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
 import Navbar from '@/components/layout/Navbar';
@@ -168,7 +183,7 @@ export default async function LocaleLayout({
   };
  
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${fontSerif.variable} ${fontSans.variable}`}>
       <body className="antialiased bg-background text-foreground">
         <NextIntlClientProvider messages={messages}>
           <Navbar menus={finalHeader} />

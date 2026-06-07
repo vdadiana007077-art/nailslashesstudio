@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { createCmsPage, updateCmsPage, deleteCmsPage } from '@/app/actions/cms-page';
 import { useRouter } from 'next/navigation';
@@ -252,7 +253,7 @@ export default function PageEditClient({ page, isNew }: PageEditClientProps) {
                     className="aspect-video w-full rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 bg-gray-50 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors group relative"
                   >
                     {t.headerImage ? (
-                      <img src={t.headerImage} alt="Header" className="w-full h-full object-cover" />
+                      <Image width={800} height={800} src={t.headerImage} alt="Header" className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-center p-4">
                         <ImageIcon size={24} className="mx-auto text-gray-400 group-hover:text-blue-500 mb-2" />
@@ -269,7 +270,7 @@ export default function PageEditClient({ page, isNew }: PageEditClientProps) {
                     className="aspect-[4/3] w-full rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 bg-gray-50 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors group relative"
                   >
                     {t.thumbnailImage ? (
-                      <img src={t.thumbnailImage} alt="Thumbnail" className="w-full h-full object-cover" />
+                      <Image width={800} height={800} src={t.thumbnailImage} alt="Thumbnail" className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-center p-4">
                         <ImageIcon size={24} className="mx-auto text-gray-400 group-hover:text-blue-500 mb-2" />

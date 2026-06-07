@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
@@ -140,7 +141,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <span className="text-[10px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Premium</span>
             </div>
 
-            <img 
+            <Image width={800} height={800} 
               src={heroImage} 
               alt="Lüks Nails & Lashes Studio" 
               className="w-full aspect-[4/5] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
@@ -258,7 +259,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 className={`group relative rounded-[2.5rem] overflow-hidden bg-[var(--color-light-200)] border border-[var(--color-primary-300)]/20 cursor-pointer ${img.offset ? 'md:-translate-y-6' : ''} transition-all duration-500 hover:shadow-[0_20px_40px_rgba(197,139,139,0.15)] aspect-[3/4]`}
               >
                 <div className="absolute inset-0 bg-[var(--color-text-main)]/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
-                <img 
+                <Image width={800} height={800} 
                   src={img.src} 
                   alt={img.title} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"

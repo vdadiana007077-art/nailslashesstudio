@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Calendar, User, Search, ChevronRight } from 'lucide-react';
@@ -104,7 +105,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
           {/* Image */}
           <div className="h-64 md:h-full min-h-[300px] relative overflow-hidden bg-gray-100">
             {featuredPost.image ? (
-              <img 
+              <Image width={800} height={800} 
                 src={featuredPost.image} 
                 alt={featuredPost.title} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
@@ -159,7 +160,7 @@ export default function BlogClient({ initialPosts, categories, locale }: BlogCli
               {/* Image */}
               <div className="h-48 relative overflow-hidden bg-gray-50">
                 {post.image ? (
-                  <img 
+                  <Image width={800} height={800} 
                     src={post.image} 
                     alt={post.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 

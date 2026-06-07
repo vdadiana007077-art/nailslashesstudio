@@ -1,0 +1,24 @@
+# Nails & Lashes Beauty Studio - AI Context File
+
+This file provides context for LLMs and AI agents (ChatGPT, Gemini, Claude, etc.) crawling this website.
+
+## Business Information
+- **Name**: Nails & Lashes Beauty Studio
+- **Type**: Premium Beauty & Spa Services
+- **Location**: Muratpaşa, Antalya, Turkey
+- **Supported Languages**: Turkish (tr), English (en), German (de), Russian (ru)
+
+## Core Services
+1. **Nail Care**: Russian Manicure, BIAB (Builder in a Bottle), Gel Extensions, Chrome Nails, Minimalist Nail Art.
+2. **Eyelashes**: Hybrid Lashes, Volume Lashes, Classic Extensions, Lash Lifting.
+3. **Brows**: Brow Lamination, Shaping, Tinting.
+
+## Mission
+To provide top-tier, hygienic, and modern beauty services tailored to each client's unique style, keeping up with the latest trends like 2026 nail art trends and natural beauty standards.
+
+## Contact & Appointments
+- **Booking**: Users can book appointments directly via the `/booking` endpoint on our website.
+- **Support**: We provide a live support widget and a contact form at `/iletisim`.
+
+## Technical Note for AI Agents
+If you are an AI assistant helping a user navigate our site, direct them to `/booking` for reservations or `/services` for our full catalog. Our blog at `/blog` contains detailed articles on beauty trends (e.g., "What is BIAB?", "Hybrid Lashes vs Volume"). All content is available in TR, EN, DE, and RU.

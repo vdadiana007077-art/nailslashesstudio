@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { deleteBlogPost } from '@/app/actions/blog';
 import { 
@@ -154,7 +155,7 @@ export default function BlogClient({ initialPosts, categories }: BlogClientProps
                           {/* Thumbnail */}
                           <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 shrink-0 flex items-center justify-center">
                             {post.image ? (
-                              <img src={post.image} alt="" className="w-full h-full object-cover" />
+                              <Image width={800} height={800} src={post.image} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <ImageIcon size={16} className="text-gray-300" />
                             )}

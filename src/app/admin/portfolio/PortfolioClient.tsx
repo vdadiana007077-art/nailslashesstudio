@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { createPortfolioItem, updatePortfolioItem, deletePortfolioItem } from '@/app/actions/portfolio';
 import { Language } from '@prisma/client';
@@ -225,13 +226,13 @@ export default function PortfolioClient({ initialItems }: PortfolioClientProps) 
               {/* Resimler (Before / After Karşılaştırmalı yan yana) */}
               <div className="grid grid-cols-2 h-40 bg-gray-50 border-b border-gray-100 relative">
                 <div className="relative overflow-hidden h-full">
-                  <img src={item.beforeImage} alt="Öncesi" className="w-full h-full object-cover" />
+                  <Image width={800} height={800} src={item.beforeImage} alt="Öncesi" className="w-full h-full object-cover" />
                   <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                     Öncesi
                   </span>
                 </div>
                 <div className="relative overflow-hidden h-full border-l border-white">
-                  <img src={item.afterImage} alt="Sonrası" className="w-full h-full object-cover" />
+                  <Image width={800} height={800} src={item.afterImage} alt="Sonrası" className="w-full h-full object-cover" />
                   <span className="absolute bottom-2 right-2 bg-[var(--color-rose-600)]/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                     Sonrası
                   </span>

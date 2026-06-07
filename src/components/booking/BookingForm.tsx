@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { 
@@ -254,7 +255,7 @@ export default function BookingForm({ initialLocations, initialCategories, initi
                   selectedCategory?.id === cat.id ? 'border-[var(--color-rose-500)] bg-[var(--color-rose-50)]/50 shadow-sm' : 'border-gray-100 bg-white hover:border-[var(--color-rose-200)] hover:bg-gray-50/50'
                 }`}>
                 <div className="w-16 h-16 rounded-full bg-[var(--color-rose-50)] border border-[var(--color-rose-200)] flex items-center justify-center mb-3 overflow-hidden">
-                  {cat.image ? <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" /> : <Layers size={24} className="text-[var(--color-rose-600)]" />}
+                  {cat.image ? <Image width={800} height={800} src={cat.image} alt={cat.name} className="w-full h-full object-cover" /> : <Layers size={24} className="text-[var(--color-rose-600)]" />}
                 </div>
                 <h3 className="font-bold text-gray-900 text-base">{cat.name}</h3>
                 <p className="text-xs text-gray-400 mt-1">
@@ -333,7 +334,7 @@ export default function BookingForm({ initialLocations, initialCategories, initi
                   selectedStaff !== 'ANY' && selectedStaff?.id === staff.id ? 'border-[var(--color-rose-500)] bg-[var(--color-rose-50)]/50 shadow-sm' : 'border-gray-100 bg-white hover:border-[var(--color-rose-200)] hover:bg-gray-50/50'
                 }`}>
                 <div className="w-16 h-16 rounded-full bg-[var(--color-rose-50)] border border-[var(--color-rose-200)] flex items-center justify-center font-bold text-[var(--color-rose-700)] mb-3 overflow-hidden">
-                  {staff.image ? <img src={staff.image} alt={staff.name} className="w-full h-full object-cover" /> : staff.name.charAt(0)}
+                  {staff.image ? <Image width={800} height={800} src={staff.image} alt={staff.name} className="w-full h-full object-cover" /> : staff.name.charAt(0)}
                 </div>
                 <h3 className="font-bold text-gray-900 text-base">{staff.name}</h3>
                 <p className="text-xs text-gray-400 mt-1">{staff.specialty || t('beautyExpert')}</p>

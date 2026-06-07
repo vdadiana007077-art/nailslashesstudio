@@ -8,11 +8,23 @@ const intlMiddleware = createMiddleware(routing);
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Admin rotası güvenlik kontrolü (en dış katman)
+  if (pathname.startsWith('/admin')) {
+    if (pathname === '/admin/login') {
+      return NextResponse.next();
+    }
+    const token = request.cookies.get('admin_token')?.value;
+    if (!token || token !== 'authenticated') {
+      const loginUrl = new URL('/admin/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
   // Statik dosyaları ve api rotalarını atla
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
-    pathname.startsWith('/admin') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();

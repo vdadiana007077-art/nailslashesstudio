@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -261,7 +262,7 @@ export default async function BlogPostDetailPage({ params }: Props) {
           {/* Main Image */}
           {post.image && (
             <div className="w-full h-[350px] relative bg-gray-50 border-b border-gray-100">
-              <img src={post.image} alt={translation.title} className="w-full h-full object-cover" />
+              <Image width={800} height={800} src={post.image} alt={translation.title} className="w-full h-full object-cover" />
             </div>
           )}
 
@@ -370,7 +371,7 @@ export default async function BlogPostDetailPage({ params }: Props) {
                   >
                     {rel.image && (
                       <div className="h-28 rounded-xl overflow-hidden bg-gray-50 mb-3">
-                        <img src={rel.image} alt={trans?.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Image width={800} height={800} src={rel.image} alt={trans?.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     )}
                     <h4 className="font-bold text-xs md:text-sm text-gray-950 group-hover:text-[var(--color-rose-700)] transition-colors line-clamp-2 leading-snug">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { 
   Plus, 
@@ -385,7 +386,7 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-[var(--color-rose-50)] border border-[var(--color-rose-200)] flex items-center justify-center font-bold text-[var(--color-rose-700)] overflow-hidden">
                         {staff.image ? (
-                          <img src={staff.image} alt={staff.name} className="w-full h-full object-cover" />
+                          <Image width={800} height={800} src={staff.image} alt={staff.name} className="w-full h-full object-cover" />
                         ) : (
                           staff.name.charAt(0)
                         )}

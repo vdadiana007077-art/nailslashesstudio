@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -148,7 +149,7 @@ export default async function GalleryCategoryPage({ params }: Props) {
         <div className="text-center mb-16">
           {cat.image && (
             <div className="w-full max-w-3xl mx-auto mb-8 rounded-3xl overflow-hidden shadow-lg border border-[var(--color-rose-100)]">
-              <img src={cat.image} alt={catName} className="w-full h-48 md:h-64 object-cover" />
+              <Image width={800} height={800} src={cat.image} alt={catName} className="w-full h-48 md:h-64 object-cover" />
             </div>
           )}
           <h1 className="text-4xl md:text-5xl font-serif italic font-bold text-gray-950 mb-4">{catName}</h1>
