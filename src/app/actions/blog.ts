@@ -9,41 +9,35 @@ export async function createBlogPost(formData: FormData) {
   const authorName = formData.get('authorName') as string || null;
   const isActive = formData.get('isActive') === 'true';
   const isFeatured = formData.get('isFeatured') === 'true';
-  const language = formData.get('language') as Language;
-  
-  const title = formData.get('title') as string;
-  const slug = (formData.get('slug') as string).toLowerCase().trim();
-  const excerpt = formData.get('excerpt') as string || null;
-  const content = formData.get('content') as string;
-
-  const seoTitle = formData.get('seoTitle') as string || null;
-  const seoDesc = formData.get('seoDesc') as string || null;
-  const canonical = formData.get('canonical') as string || null;
-  const ogTitle = formData.get('ogTitle') as string || null;
-  const ogDesc = formData.get('ogDesc') as string || null;
-  const ogImage = formData.get('ogImage') as string || null;
-  const index = formData.get('index') !== 'false';
-  const sitemap = formData.get('sitemap') !== 'false';
 
   const publishedAtStr = formData.get('publishedAt') as string;
   const publishedAt = publishedAtStr ? new Date(publishedAtStr) : (isActive ? new Date() : null);
 
-  // Kategori ve Etiket ilişkileri
   const categoryIds: string[] = formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds') as string) : [];
   const tagIds: string[] = formData.get('tagIds') ? JSON.parse(formData.get('tagIds') as string) : [];
+  const translationsRaw = formData.get('translations');
 
-  if (!title || !slug || !language) {
-    return { success: false, error: 'Başlık, slug ve dil alanları zorunludur!' };
+  if (!translationsRaw) {
+    return { success: false, error: 'Çeviri datası yok!' };
+  }
+
+  const translationsMap = JSON.parse(translationsRaw as string);
+  
+  if (!translationsMap['TR'] || !translationsMap['TR'].title || !translationsMap['TR'].slug) {
+    return { success: false, error: 'TR başlık ve slug zorunludur!' };
   }
 
   try {
-    // Dil bazında benzersiz slug kontrolü
-    const existingSlug = await prisma.blogPostTranslation.findFirst({
-      where: { slug, language },
-    });
-
-    if (existingSlug) {
-      return { success: false, error: 'Bu dilde bu slug zaten kullanılıyor!' };
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (tData.slug) {
+        const existingSlug = await prisma.blogPostTranslation.findFirst({
+          where: { slug: tData.slug, language: lang as Language },
+        });
+        if (existingSlug) {
+          return { success: false, error: `${lang} dilinde bu slug zaten kullanılıyor!` };
+        }
+      }
     }
 
     const newPost = await prisma.blogPost.create({
@@ -53,31 +47,37 @@ export async function createBlogPost(formData: FormData) {
         isActive,
         isFeatured,
         publishedAt,
-        translations: {
-          create: {
-            language,
-            slug,
-            title,
-            excerpt,
-            content,
-            seoTitle,
-            seoDesc,
-            canonical,
-            ogTitle,
-            ogDesc,
-            ogImage,
-            index,
-            sitemap,
-          },
-        },
       },
     });
+
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (tData.title && tData.slug) {
+        await prisma.blogPostTranslation.create({
+          data: {
+            blogPostId: newPost.id,
+            language: lang as Language,
+            slug: tData.slug,
+            title: tData.title,
+            excerpt: tData.excerpt || null,
+            content: tData.content || '',
+            seoTitle: tData.seoTitle || null,
+            seoDesc: tData.seoDesc || null,
+            canonical: tData.canonical || null,
+            ogTitle: tData.ogTitle || null,
+            ogDesc: tData.ogDesc || null,
+            ogImage: tData.ogImage || null,
+            index: tData.index !== false,
+            sitemap: tData.sitemap !== false,
+          }
+        });
+      }
+    }
 
     revalidatePath('/[locale]/admin/blog', 'page');
     revalidatePath('/[locale]/blog', 'page');
 
-    // Kategori ilişkilerini kaydet
-    if (categoryIds.length > 0 && newPost) {
+    if (categoryIds.length > 0) {
       await prisma.blogPostCategory.createMany({
         data: categoryIds.map((catId: string) => ({
           blogPostId: newPost.id,
@@ -86,8 +86,7 @@ export async function createBlogPost(formData: FormData) {
       });
     }
 
-    // Etiket ilişkilerini kaydet
-    if (tagIds.length > 0 && newPost) {
+    if (tagIds.length > 0) {
       await prisma.blogPostTag.createMany({
         data: tagIds.map((tagId: string) => ({
           blogPostId: newPost.id,
@@ -103,57 +102,54 @@ export async function createBlogPost(formData: FormData) {
   }
 }
 
-export async function updateBlogPost(
-  id: string,
-  translationId: string | null,
-  formData: FormData
-) {
+export async function updateBlogPost(id: string, formData: FormData) {
   const image = formData.get('image') as string || null;
   const authorName = formData.get('authorName') as string || null;
   const isActive = formData.get('isActive') === 'true';
   const isFeatured = formData.get('isFeatured') === 'true';
-  const language = formData.get('language') as Language;
-  
-  const title = formData.get('title') as string;
-  const slug = (formData.get('slug') as string).toLowerCase().trim();
-  const excerpt = formData.get('excerpt') as string || null;
-  const content = formData.get('content') as string;
-
-  const seoTitle = formData.get('seoTitle') as string || null;
-  const seoDesc = formData.get('seoDesc') as string || null;
-  const canonical = formData.get('canonical') as string || null;
-  const ogTitle = formData.get('ogTitle') as string || null;
-  const ogDesc = formData.get('ogDesc') as string || null;
-  const ogImage = formData.get('ogImage') as string || null;
-  const index = formData.get('index') !== 'false';
-  const sitemap = formData.get('sitemap') !== 'false';
 
   const publishedAtStr = formData.get('publishedAt') as string;
   const publishedAt = publishedAtStr ? new Date(publishedAtStr) : (isActive ? new Date() : null);
 
-  // Kategori ve Etiket ilişkileri
   const categoryIds: string[] = formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds') as string) : [];
   const tagIds: string[] = formData.get('tagIds') ? JSON.parse(formData.get('tagIds') as string) : [];
+  const translationsRaw = formData.get('translations');
 
-  if (!title || !slug || !language) {
-    return { success: false, error: 'Başlık, slug ve dil alanları zorunludur!' };
+  if (!translationsRaw) {
+    return { success: false, error: 'Çeviri datası yok!' };
+  }
+
+  const translationsMap = JSON.parse(translationsRaw as string);
+
+  if (!translationsMap['TR'] || !translationsMap['TR'].title || !translationsMap['TR'].slug) {
+    return { success: false, error: 'TR başlık ve slug zorunludur!' };
   }
 
   try {
-    // Dil bazında benzersiz slug kontrolü (kendisi hariç)
-    const existingSlug = await prisma.blogPostTranslation.findFirst({
-      where: {
-        slug,
-        language,
-        NOT: translationId ? { id: translationId } : undefined,
-      },
+    const existingPost = await prisma.blogPost.findUnique({
+      where: { id },
+      include: {
+        translations: true,
+        categories: { include: { category: { include: { translations: true } } } }
+      }
     });
 
-    if (existingSlug) {
-      return { success: false, error: 'Bu dilde bu slug başka bir blog yazısında kullanılıyor!' };
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (tData.slug) {
+        const existingSlug = await prisma.blogPostTranslation.findFirst({
+          where: {
+            slug: tData.slug,
+            language: lang as Language,
+            NOT: { blogPostId: id },
+          },
+        });
+        if (existingSlug) {
+          return { success: false, error: `${lang} dilinde bu slug başka bir blog yazısında kullanılıyor!` };
+        }
+      }
     }
 
-    // Ana kaydı güncelle
     await prisma.blogPost.update({
       where: { id },
       data: {
@@ -165,47 +161,67 @@ export async function updateBlogPost(
       },
     });
 
-    // Çeviri kaydını oluştur veya güncelle
-    if (translationId) {
-      await prisma.blogPostTranslation.update({
-        where: { id: translationId },
-        data: {
-          slug,
-          title,
-          excerpt,
-          content,
-          seoTitle,
-          seoDesc,
-          canonical,
-          ogTitle,
-          ogDesc,
-          ogImage,
-          index,
-          sitemap,
-        },
-      });
-    } else {
-      await prisma.blogPostTranslation.create({
-        data: {
-          blogPostId: id,
-          language,
-          slug,
-          title,
-          excerpt,
-          content,
-          seoTitle,
-          seoDesc,
-          canonical,
-          ogTitle,
-          ogDesc,
-          ogImage,
-          index,
-          sitemap,
-        },
-      });
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (!tData.title || !tData.slug) continue;
+
+      const oldT = existingPost?.translations.find(t => t.language === lang);
+
+      if (oldT && oldT.slug !== tData.slug) {
+        let catSlug = 'uncategorized';
+        if (existingPost?.categories && existingPost.categories.length > 0) {
+          const cTrans = existingPost.categories[0].category.translations.find(ct => ct.language === lang);
+          if (cTrans?.slug) catSlug = cTrans.slug;
+        }
+
+        const oldUrl = `/${lang.toLowerCase()}/blog/${catSlug}/${oldT.slug}`;
+        const newUrl = `/${lang.toLowerCase()}/blog/${catSlug}/${tData.slug}`;
+
+        await prisma.redirect.create({
+          data: { oldUrl, newUrl, statusCode: 301, isActive: true }
+        });
+      }
+
+      if (oldT) {
+        await prisma.blogPostTranslation.update({
+          where: { id: oldT.id },
+          data: {
+            slug: tData.slug,
+            title: tData.title,
+            excerpt: tData.excerpt || null,
+            content: tData.content || '',
+            seoTitle: tData.seoTitle || null,
+            seoDesc: tData.seoDesc || null,
+            canonical: tData.canonical || null,
+            ogTitle: tData.ogTitle || null,
+            ogDesc: tData.ogDesc || null,
+            ogImage: tData.ogImage || null,
+            index: tData.index !== false,
+            sitemap: tData.sitemap !== false,
+          }
+        });
+      } else {
+        await prisma.blogPostTranslation.create({
+          data: {
+            blogPostId: id,
+            language: lang as Language,
+            slug: tData.slug,
+            title: tData.title,
+            excerpt: tData.excerpt || null,
+            content: tData.content || '',
+            seoTitle: tData.seoTitle || null,
+            seoDesc: tData.seoDesc || null,
+            canonical: tData.canonical || null,
+            ogTitle: tData.ogTitle || null,
+            ogDesc: tData.ogDesc || null,
+            ogImage: tData.ogImage || null,
+            index: tData.index !== false,
+            sitemap: tData.sitemap !== false,
+          }
+        });
+      }
     }
 
-    // Kategori ilişkilerini güncelle
     await prisma.blogPostCategory.deleteMany({ where: { blogPostId: id } });
     if (categoryIds.length > 0) {
       await prisma.blogPostCategory.createMany({
@@ -216,7 +232,6 @@ export async function updateBlogPost(
       });
     }
 
-    // Etiket ilişkilerini güncelle
     await prisma.blogPostTag.deleteMany({ where: { blogPostId: id } });
     if (tagIds.length > 0) {
       await prisma.blogPostTag.createMany({
@@ -238,7 +253,6 @@ export async function updateBlogPost(
 
 export async function deleteBlogPost(id: string) {
   try {
-    // Kurallar gereği soft delete uyguluyoruz
     await prisma.blogPost.update({
       where: { id },
       data: {
@@ -258,45 +272,50 @@ export async function deleteBlogPost(id: string) {
 }
 
 export async function createBlogCategory(formData: FormData) {
-  const language = formData.get('language') as Language;
-  const name = formData.get('name') as string;
-  const slug = (formData.get('slug') as string || '').toLowerCase().trim();
-  const description = formData.get('description') as string || null;
+  const translationsRaw = formData.get('translations');
   const order = parseInt(formData.get('order') as string || '0');
   const isActive = formData.get('isActive') === 'true';
 
-  const seoTitle = formData.get('seoTitle') as string || null;
-  const seoDesc = formData.get('seoDesc') as string || null;
+  if (!translationsRaw) return { success: false, error: 'Çeviri datası yok!' };
+  const translationsMap = JSON.parse(translationsRaw as string);
 
-  if (!name || !slug || !language) {
-    return { success: false, error: 'Kategori adı, slug ve dil zorunludur!' };
+  if (!translationsMap['TR'] || !translationsMap['TR'].name || !translationsMap['TR'].slug) {
+    return { success: false, error: 'TR kategori adı ve slug zorunludur!' };
   }
 
   try {
-    const existingSlug = await prisma.blogCategoryTranslation.findFirst({
-      where: { slug, language }
-    });
-
-    if (existingSlug) {
-      return { success: false, error: 'Bu dilde bu slug zaten kullanılıyor!' };
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (tData.slug) {
+        const existingSlug = await prisma.blogCategoryTranslation.findFirst({
+          where: { slug: tData.slug, language: lang as Language }
+        });
+        if (existingSlug) {
+          return { success: false, error: `${lang} dilinde bu slug zaten kullanılıyor!` };
+        }
+      }
     }
 
     const newCategory = await prisma.blogCategory.create({
-      data: {
-        order,
-        isActive,
-        translations: {
-          create: {
-            language,
-            name,
-            slug,
-            description,
-            seoTitle,
-            seoDesc
-          }
-        }
-      }
+      data: { order, isActive }
     });
+
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (tData.name && tData.slug) {
+        await prisma.blogCategoryTranslation.create({
+          data: {
+            categoryId: newCategory.id,
+            language: lang as Language,
+            name: tData.name,
+            slug: tData.slug,
+            description: tData.description || null,
+            seoTitle: tData.seoTitle || null,
+            seoDesc: tData.seoDesc || null
+          }
+        });
+      }
+    }
 
     revalidatePath('/[locale]/admin/blog/categories', 'page');
     revalidatePath('/[locale]/blog', 'page');
@@ -307,62 +326,99 @@ export async function createBlogCategory(formData: FormData) {
   }
 }
 
-export async function updateBlogCategory(
-  id: string,
-  translationId: string | null,
-  formData: FormData
-) {
-  const language = formData.get('language') as Language;
-  const name = formData.get('name') as string;
-  const slug = (formData.get('slug') as string || '').toLowerCase().trim();
-  const description = formData.get('description') as string || null;
+export async function updateBlogCategory(id: string, formData: FormData) {
+  const translationsRaw = formData.get('translations');
   const order = parseInt(formData.get('order') as string || '0');
   const isActive = formData.get('isActive') === 'true';
 
-  const seoTitle = formData.get('seoTitle') as string || null;
-  const seoDesc = formData.get('seoDesc') as string || null;
+  if (!translationsRaw) return { success: false, error: 'Çeviri datası yok!' };
+  const translationsMap = JSON.parse(translationsRaw as string);
 
-  if (!name || !slug || !language) {
-    return { success: false, error: 'Kategori adı, slug ve dil zorunludur!' };
+  if (!translationsMap['TR'] || !translationsMap['TR'].name || !translationsMap['TR'].slug) {
+    return { success: false, error: 'TR kategori adı ve slug zorunludur!' };
   }
 
   try {
-    const existingSlug = await prisma.blogCategoryTranslation.findFirst({
-      where: {
-        slug,
-        language,
-        NOT: translationId ? { id: translationId } : undefined
-      }
+    const existingCat = await prisma.blogCategory.findUnique({
+      where: { id },
+      include: { translations: true, posts: { include: { post: { include: { translations: true } } } } }
     });
 
-    if (existingSlug) {
-      return { success: false, error: 'Bu dilde bu slug başka bir kategoride kullanılıyor!' };
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (tData.slug) {
+        const existingSlug = await prisma.blogCategoryTranslation.findFirst({
+          where: {
+            slug: tData.slug,
+            language: lang as Language,
+            NOT: { categoryId: id }
+          }
+        });
+        if (existingSlug) {
+          return { success: false, error: `${lang} dilinde bu slug başka bir kategoride kullanılıyor!` };
+        }
+      }
     }
 
-    // Ana kaydı güncelle
     await prisma.blogCategory.update({
       where: { id },
       data: { order, isActive }
     });
 
-    // Çeviri kaydını oluştur veya güncelle
-    if (translationId) {
-      await prisma.blogCategoryTranslation.update({
-        where: { id: translationId },
-        data: { name, slug, description, seoTitle, seoDesc }
-      });
-    } else {
-      await prisma.blogCategoryTranslation.create({
-        data: {
-          categoryId: id,
-          language,
-          name,
-          slug,
-          description,
-          seoTitle,
-          seoDesc
+    for (const lang of Object.keys(translationsMap)) {
+      const tData = translationsMap[lang as Language];
+      if (!tData.name || !tData.slug) continue;
+
+      const oldT = existingCat?.translations.find(t => t.language === lang);
+
+      // Add redirects if category slug changed
+      if (oldT && oldT.slug !== tData.slug) {
+        // Redirect the category list page
+        const oldCatUrl = `/${lang.toLowerCase()}/blog/${oldT.slug}`;
+        const newCatUrl = `/${lang.toLowerCase()}/blog/${tData.slug}`;
+        await prisma.redirect.create({
+          data: { oldUrl: oldCatUrl, newUrl: newCatUrl, statusCode: 301, isActive: true }
+        });
+
+        // Also redirect all blog posts inside this category
+        if (existingCat?.posts) {
+          for (const relation of existingCat.posts) {
+            const postT = relation.post.translations.find(t => t.language === lang);
+            if (postT) {
+              const oldPostUrl = `/${lang.toLowerCase()}/blog/${oldT.slug}/${postT.slug}`;
+              const newPostUrl = `/${lang.toLowerCase()}/blog/${tData.slug}/${postT.slug}`;
+              await prisma.redirect.create({
+                data: { oldUrl: oldPostUrl, newUrl: newPostUrl, statusCode: 301, isActive: true }
+              });
+            }
+          }
         }
-      });
+      }
+
+      if (oldT) {
+        await prisma.blogCategoryTranslation.update({
+          where: { id: oldT.id },
+          data: {
+            name: tData.name,
+            slug: tData.slug,
+            description: tData.description || null,
+            seoTitle: tData.seoTitle || null,
+            seoDesc: tData.seoDesc || null
+          }
+        });
+      } else {
+        await prisma.blogCategoryTranslation.create({
+          data: {
+            categoryId: id,
+            language: lang as Language,
+            name: tData.name,
+            slug: tData.slug,
+            description: tData.description || null,
+            seoTitle: tData.seoTitle || null,
+            seoDesc: tData.seoDesc || null
+          }
+        });
+      }
     }
 
     revalidatePath('/[locale]/admin/blog/categories', 'page');
@@ -376,7 +432,6 @@ export async function updateBlogCategory(
 
 export async function deleteBlogCategory(id: string) {
   try {
-    // Soft delete
     await prisma.blogCategory.update({
       where: { id },
       data: { isActive: false }
@@ -390,4 +445,3 @@ export async function deleteBlogCategory(id: string) {
     return { success: false, error: 'Kategori silinirken bir hata oluştu.' };
   }
 }
-

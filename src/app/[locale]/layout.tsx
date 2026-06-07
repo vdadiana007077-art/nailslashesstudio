@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
 import CookieConsentBanner from '@/components/layout/CookieConsentBanner';
+import SupportWidget from '@/components/widget/SupportWidget';
 import "../globals.css";
 
 export const metadata = {
@@ -174,6 +175,7 @@ export default async function LocaleLayout({
           {children}
           <Footer menus={finalFooter} legalMenus={finalLegal} contact={footerContact} />
           <CookieConsentBanner />
+          <SupportWidget />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { createBlogCategory, updateBlogCategory, deleteBlogCategory } from '@/app/actions/blog';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Save, Globe, Settings, Search as SearchIcon,
-  Trash2, ToggleLeft, ToggleRight, Check, X, Loader2
+  ArrowLeft, Save, Settings, Search as SearchIcon,
+  Trash2, ToggleLeft, ToggleRight, Check, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -13,6 +13,15 @@ interface BlogCategoryEditClientProps {
   category: any | null;
   isNew: boolean;
 }
+
+type TransData = {
+  id?: string;
+  name: string;
+  slug: string;
+  description: string;
+  seoTitle: string;
+  seoDesc: string;
+};
 
 export default function BlogCategoryEditClient({ category, isNew }: BlogCategoryEditClientProps) {
   const router = useRouter();
@@ -23,48 +32,66 @@ export default function BlogCategoryEditClient({ category, isNew }: BlogCategory
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const getTranslation = (lang: string) => category?.translations?.find((t: any) => t.language === lang);
-  const currentTrans = getTranslation(activeLang);
+  const initTrans = () => {
+    const langs: ('TR' | 'EN' | 'DE' | 'RU')[] = ['TR', 'EN', 'DE', 'RU'];
+    const map: Record<string, TransData> = {};
+    for (const l of langs) {
+      const t = category?.translations?.find((x: any) => x.language === l);
+      map[l] = {
+        id: t?.id,
+        name: t?.name || '',
+        slug: t?.slug || '',
+        description: t?.description || '',
+        seoTitle: t?.seoTitle || '',
+        seoDesc: t?.seoDesc || ''
+      };
+    }
+    return map;
+  };
 
-  const [name, setName] = useState(currentTrans?.name || '');
-  const [slug, setSlug] = useState(currentTrans?.slug || '');
-  const [description, setDescription] = useState(currentTrans?.description || '');
-  const [seoTitle, setSeoTitle] = useState(currentTrans?.seoTitle || '');
-  const [seoDesc, setSeoDesc] = useState(currentTrans?.seoDesc || '');
+  const [translations, setTranslations] = useState(initTrans());
 
   const handleLangChange = (lang: 'TR' | 'EN' | 'DE' | 'RU') => {
     setActiveLang(lang);
-    const t = getTranslation(lang);
-    setName(t?.name || '');
-    setSlug(t?.slug || '');
-    setDescription(t?.description || '');
-    setSeoTitle(t?.seoTitle || '');
-    setSeoDesc(t?.seoDesc || '');
+  };
+
+  const updateTrans = (key: keyof TransData, value: string) => {
+    setTranslations(prev => ({
+      ...prev,
+      [activeLang]: {
+        ...prev[activeLang],
+        [key]: value
+      }
+    }));
   };
 
   const autoSlug = (text: string) => text.toLowerCase()
     .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
     .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
 
+  const handleNameChange = (val: string) => {
+    updateTrans('name', val);
+    if (isNew || !translations[activeLang].id) {
+      updateTrans('slug', autoSlug(val));
+    }
+  };
+
   const handleSave = async () => {
-    if (!name || !slug) { alert('Kategori adı ve slug alanları zorunludur.'); return; }
+    if (!translations['TR'].name || !translations['TR'].slug) { 
+      alert('TR Kategori adı ve slug alanları zorunludur.'); return; 
+    }
     setLoading(true); setSaved(false);
 
     const formData = new FormData();
     formData.append('order', order.toString());
     formData.append('isActive', isActive.toString());
-    formData.append('language', activeLang);
-    formData.append('name', name);
-    formData.append('slug', slug);
-    formData.append('description', description);
-    formData.append('seoTitle', seoTitle);
-    formData.append('seoDesc', seoDesc);
+    formData.append('translations', JSON.stringify(translations));
 
     let result;
     if (isNew) {
       result = await createBlogCategory(formData);
     } else {
-      result = await updateBlogCategory(category.id, currentTrans?.id || null, formData);
+      result = await updateBlogCategory(category.id, formData);
     }
 
     setLoading(false);
@@ -84,6 +111,8 @@ export default function BlogCategoryEditClient({ category, isNew }: BlogCategory
       alert(res.error || 'İşlem gerçekleştirilemedi.');
     }
   };
+
+  const cur = translations[activeLang];
 
   return (
     <>
@@ -150,7 +179,7 @@ export default function BlogCategoryEditClient({ category, isNew }: BlogCategory
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Kategori Adı ({activeLang})</label>
-                    <input type="text" value={name} onChange={(e) => { setName(e.target.value); if (isNew || !currentTrans) setSlug(autoSlug(e.target.value)); }}
+                    <input type="text" value={cur.name} onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="Kategori Adı"
                       className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 focus:bg-white" />
                   </div>
@@ -158,7 +187,7 @@ export default function BlogCategoryEditClient({ category, isNew }: BlogCategory
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">URL Slug</label>
                     <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
                       <span className="text-[10px] text-gray-400 font-mono">/{activeLang.toLowerCase()}/blog/</span>
-                      <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="kategori-slug"
+                      <input type="text" value={cur.slug} onChange={(e) => updateTrans('slug', e.target.value)} placeholder="kategori-slug"
                         className="flex-1 bg-transparent text-sm focus:outline-none font-mono text-gray-700 font-semibold" />
                     </div>
                   </div>
@@ -166,7 +195,7 @@ export default function BlogCategoryEditClient({ category, isNew }: BlogCategory
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Açıklama ({activeLang})</label>
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Kategori açıklaması..."
+                  <textarea value={cur.description} onChange={(e) => updateTrans('description', e.target.value)} placeholder="Kategori açıklaması..."
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 h-24 resize-none" />
                 </div>
               </div>
@@ -180,12 +209,12 @@ export default function BlogCategoryEditClient({ category, isNew }: BlogCategory
               <div className="px-6 pb-6 space-y-4">
                 <div>
                   <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">SEO Başlığı</label>
-                  <input type="text" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="Google başlığı"
+                  <input type="text" value={cur.seoTitle} onChange={(e) => updateTrans('seoTitle', e.target.value)} placeholder="Google başlığı"
                     className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-300/30" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">SEO Açıklaması</label>
-                  <textarea value={seoDesc} onChange={(e) => setSeoDesc(e.target.value)} placeholder="Max 160 karakter"
+                  <textarea value={cur.seoDesc} onChange={(e) => updateTrans('seoDesc', e.target.value)} placeholder="Max 160 karakter"
                     className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none h-20 resize-none" />
                 </div>
               </div>

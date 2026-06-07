@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { createBlogPost, updateBlogPost, deleteBlogPost } from '@/app/actions/blog';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Save, Globe, Settings, Search as SearchIcon,
-  Trash2, ToggleLeft, ToggleRight, FileText, BookOpen,
-  Check, X, Loader2, Star, Tag
+  ArrowLeft, Save, Settings, Search as SearchIcon,
+  Trash2, ToggleLeft, ToggleRight, BookOpen,
+  Check, Loader2, Star, Tag
 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { Language } from '@prisma/client';
 
 const RichTextEditor = dynamic(() => import('@/components/admin/RichTextEditor'), { ssr: false });
 
@@ -19,6 +20,22 @@ interface BlogEditClientProps {
   categories: { id: string; name: string }[];
   tags: { id: string; name: string }[];
 }
+
+type TransData = {
+  id?: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  seoTitle: string;
+  seoDesc: string;
+  canonical: string;
+  ogTitle: string;
+  ogDesc: string;
+  ogImage: string;
+  index: boolean;
+  sitemap: boolean;
+};
 
 export default function BlogEditClient({ post, isNew, categories, tags }: BlogEditClientProps) {
   const router = useRouter();
@@ -34,37 +51,61 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const getTranslation = (lang: string) => post?.translations?.find((t: any) => t.language === lang);
-  const currentTrans = getTranslation(activeLang);
+  const initTrans = () => {
+    const langs: ('TR' | 'EN' | 'DE' | 'RU')[] = ['TR', 'EN', 'DE', 'RU'];
+    const map: Record<string, TransData> = {};
+    for (const l of langs) {
+      const t = post?.translations?.find((x: any) => x.language === l);
+      map[l] = {
+        id: t?.id,
+        title: t?.title || '',
+        slug: t?.slug || '',
+        excerpt: t?.excerpt || '',
+        content: t?.content || '',
+        seoTitle: t?.seoTitle || '',
+        seoDesc: t?.seoDesc || '',
+        canonical: t?.canonical || '',
+        ogTitle: t?.ogTitle || '',
+        ogDesc: t?.ogDesc || '',
+        ogImage: t?.ogImage || '',
+        index: t?.index ?? true,
+        sitemap: t?.sitemap ?? true,
+      };
+    }
+    return map;
+  };
 
-  const [title, setTitle] = useState(currentTrans?.title || '');
-  const [slug, setSlug] = useState(currentTrans?.slug || '');
-  const [excerpt, setExcerpt] = useState(currentTrans?.excerpt || '');
-  const [content, setContent] = useState(currentTrans?.content || '');
-  const [seoTitle, setSeoTitle] = useState(currentTrans?.seoTitle || '');
-  const [seoDesc, setSeoDesc] = useState(currentTrans?.seoDesc || '');
-  const [canonical, setCanonical] = useState(currentTrans?.canonical || '');
-  const [ogTitle, setOgTitle] = useState(currentTrans?.ogTitle || '');
-  const [ogDesc, setOgDesc] = useState(currentTrans?.ogDesc || '');
-  const [ogImage, setOgImage] = useState(currentTrans?.ogImage || '');
-  const [indexEnabled, setIndexEnabled] = useState(currentTrans?.index ?? true);
-  const [sitemapEnabled, setSitemapEnabled] = useState(currentTrans?.sitemap ?? true);
+  const [translations, setTranslations] = useState(initTrans());
 
   const handleLangChange = (lang: 'TR' | 'EN' | 'DE' | 'RU') => {
     setActiveLang(lang);
-    const t = getTranslation(lang);
-    setTitle(t?.title || ''); setSlug(t?.slug || ''); setExcerpt(t?.excerpt || '');
-    setContent(t?.content || ''); setSeoTitle(t?.seoTitle || ''); setSeoDesc(t?.seoDesc || '');
-    setCanonical(t?.canonical || ''); setOgTitle(t?.ogTitle || ''); setOgDesc(t?.ogDesc || '');
-    setOgImage(t?.ogImage || ''); setIndexEnabled(t?.index ?? true); setSitemapEnabled(t?.sitemap ?? true);
+  };
+
+  const updateTrans = (key: keyof TransData, value: any) => {
+    setTranslations(prev => ({
+      ...prev,
+      [activeLang]: {
+        ...prev[activeLang],
+        [key]: value
+      }
+    }));
   };
 
   const autoSlug = (text: string) => text.toLowerCase()
     .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
     .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
 
+  const handleTitleChange = (val: string) => {
+    updateTrans('title', val);
+    if (isNew || !translations[activeLang].id) {
+      updateTrans('slug', autoSlug(val));
+    }
+  };
+
   const handleSave = async () => {
-    if (!title || !slug) { alert('Başlık ve slug zorunludur.'); return; }
+    if (!translations['TR'].title || !translations['TR'].slug) { 
+      alert('TR Başlık ve slug zorunludur.'); return; 
+    }
     setLoading(true); setSaved(false);
 
     const formData = new FormData();
@@ -73,27 +114,17 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
     formData.append('image', image);
     formData.append('authorName', authorName);
     formData.append('publishedAt', publishedAt);
-    formData.append('language', activeLang);
-    formData.append('title', title);
-    formData.append('slug', slug);
-    formData.append('excerpt', excerpt);
-    formData.append('content', content);
-    formData.append('seoTitle', seoTitle);
-    formData.append('seoDesc', seoDesc);
-    formData.append('canonical', canonical);
-    formData.append('ogTitle', ogTitle);
-    formData.append('ogDesc', ogDesc);
-    formData.append('ogImage', ogImage);
-    formData.append('index', indexEnabled.toString());
-    formData.append('sitemap', sitemapEnabled.toString());
     formData.append('categoryIds', JSON.stringify(selectedCategoryIds));
     formData.append('tagIds', JSON.stringify(selectedTagIds));
+    
+    // Pass translations object as JSON
+    formData.append('translations', JSON.stringify(translations));
 
     let result;
     if (isNew) {
       result = await createBlogPost(formData);
     } else {
-      result = await updateBlogPost(post.id, currentTrans?.id || null, formData);
+      result = await updateBlogPost(post.id, formData);
     }
 
     setLoading(false);
@@ -109,6 +140,8 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
     await deleteBlogPost(post.id);
     router.push('/admin/blog');
   };
+
+  const cur = translations[activeLang];
 
   return (
     <>
@@ -175,15 +208,15 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
                 </button>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                <span className="text-xs font-semibold text-gray-600">Index</span>
-                <button type="button" onClick={() => setIndexEnabled(!indexEnabled)} className="cursor-pointer">
-                  {indexEnabled ? <ToggleRight size={24} className="text-[var(--color-rose-500)]" /> : <ToggleLeft size={24} className="text-gray-300" />}
+                <span className="text-xs font-semibold text-gray-600">Index ({activeLang})</span>
+                <button type="button" onClick={() => updateTrans('index', !cur.index)} className="cursor-pointer">
+                  {cur.index ? <ToggleRight size={24} className="text-[var(--color-rose-500)]" /> : <ToggleLeft size={24} className="text-gray-300" />}
                 </button>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-600">Sitemap</span>
-                <button type="button" onClick={() => setSitemapEnabled(!sitemapEnabled)} className="cursor-pointer">
-                  {sitemapEnabled ? <ToggleRight size={24} className="text-[var(--color-rose-500)]" /> : <ToggleLeft size={24} className="text-gray-300" />}
+                <span className="text-xs font-semibold text-gray-600">Sitemap ({activeLang})</span>
+                <button type="button" onClick={() => updateTrans('sitemap', !cur.sitemap)} className="cursor-pointer">
+                  {cur.sitemap ? <ToggleRight size={24} className="text-[var(--color-rose-500)]" /> : <ToggleLeft size={24} className="text-gray-300" />}
                 </button>
               </div>
             </div>
@@ -246,7 +279,7 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Makale Başlığı ({activeLang})</label>
-                    <input type="text" value={title} onChange={(e) => { setTitle(e.target.value); if (isNew || !currentTrans) setSlug(autoSlug(e.target.value)); }}
+                    <input type="text" value={cur.title} onChange={(e) => handleTitleChange(e.target.value)}
                       placeholder="Makale başlığı"
                       className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-500)]/20 focus:bg-white" />
                   </div>
@@ -254,7 +287,7 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">URL Slug</label>
                     <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
                       <span className="text-[10px] text-gray-400 font-mono">/{activeLang.toLowerCase()}/blog/</span>
-                      <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="makale-slug"
+                      <input type="text" value={cur.slug} onChange={(e) => updateTrans('slug', e.target.value)} placeholder="makale-slug"
                         className="flex-1 bg-transparent text-sm focus:outline-none font-mono text-gray-700 font-semibold" />
                     </div>
                   </div>
@@ -262,7 +295,7 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Kısa Özet / Giriş ({activeLang})</label>
-                  <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="Listede görünecek kısa açıklama..."
+                  <textarea value={cur.excerpt} onChange={(e) => updateTrans('excerpt', e.target.value)} placeholder="Listede görünecek kısa açıklama..."
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-500)]/20 h-16 resize-none" />
                 </div>
 
@@ -270,7 +303,7 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                     <BookOpen size={11} className="inline mr-1" /> Makale İçeriği ({activeLang})
                   </label>
-                  <RichTextEditor content={content} onChange={setContent} placeholder="Makale içeriğini yazın..." />
+                  <RichTextEditor content={cur.content} onChange={(v) => updateTrans('content', v)} placeholder="Makale içeriğini yazın..." />
                 </div>
               </div>
             </div>
@@ -284,30 +317,30 @@ export default function BlogEditClient({ post, isNew, categories, tags }: BlogEd
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-white/60 uppercase tracking-wider mb-2">SEO Başlığı</label>
-                    <input type="text" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="Google başlığı"
+                    <input type="text" value={cur.seoTitle} onChange={(e) => updateTrans('seoTitle', e.target.value)} placeholder="Google başlığı"
                       className="w-full px-3 py-2.5 bg-white/10 border border-white/10 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/20" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-white/60 uppercase tracking-wider mb-2">Canonical URL</label>
-                    <input type="url" value={canonical} onChange={(e) => setCanonical(e.target.value)} placeholder="https://..."
+                    <input type="url" value={cur.canonical} onChange={(e) => updateTrans('canonical', e.target.value)} placeholder="https://..."
                       className="w-full px-3 py-2.5 bg-white/10 border border-white/10 rounded-xl text-sm font-mono text-white placeholder-white/40 focus:outline-none" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-white/60 uppercase tracking-wider mb-2">Meta Description</label>
-                  <textarea value={seoDesc} onChange={(e) => setSeoDesc(e.target.value)} placeholder="Max 160 karakter"
+                  <textarea value={cur.seoDesc} onChange={(e) => updateTrans('seoDesc', e.target.value)} placeholder="Max 160 karakter"
                     className="w-full px-3 py-2.5 bg-white/10 border border-white/10 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none h-16 resize-none" />
-                  <div className="flex justify-end mt-1"><span className={`text-[10px] font-bold ${seoDesc.length > 160 ? 'text-red-300' : 'text-white/50'}`}>{seoDesc.length}/160</span></div>
+                  <div className="flex justify-end mt-1"><span className={`text-[10px] font-bold ${cur.seoDesc.length > 160 ? 'text-red-300' : 'text-white/50'}`}>{cur.seoDesc.length}/160</span></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/10">
                   <div>
                     <label className="block text-[10px] font-bold text-white/60 uppercase tracking-wider mb-2">OG Başlık</label>
-                    <input type="text" value={ogTitle} onChange={(e) => setOgTitle(e.target.value)}
+                    <input type="text" value={cur.ogTitle} onChange={(e) => updateTrans('ogTitle', e.target.value)}
                       className="w-full px-3 py-2.5 bg-white/10 border border-white/10 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-white/60 uppercase tracking-wider mb-2">OG Görsel URL</label>
-                    <input type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)}
+                    <input type="text" value={cur.ogImage} onChange={(e) => updateTrans('ogImage', e.target.value)}
                       className="w-full px-3 py-2.5 bg-white/10 border border-white/10 rounded-xl text-sm font-mono text-white placeholder-white/40 focus:outline-none" />
                   </div>
                 </div>

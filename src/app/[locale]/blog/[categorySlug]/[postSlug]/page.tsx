@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { Language } from '@prisma/client';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, User, HelpCircle, Sparkles, Scissors, Clock } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 
 type Props = {
   params: Promise<{ locale: string; categorySlug: string; postSlug: string }>;
@@ -294,9 +295,10 @@ export default async function BlogPostDetailPage({ params }: Props) {
             )}
 
             {/* Rich Content */}
-            <div className="prose max-w-none text-gray-700 leading-relaxed text-sm md:text-base whitespace-pre-line">
-              {translation.content}
-            </div>
+            <div 
+              className="prose max-w-none text-gray-700 leading-relaxed text-sm md:text-base"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(translation.content) }}
+            />
           </div>
         </article>
 
