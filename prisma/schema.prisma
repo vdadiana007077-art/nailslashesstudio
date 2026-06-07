@@ -1039,3 +1039,70 @@ model LocationService {
 
   @@id([locationId, serviceId])
 }
+
+// 🖼️ GALERİ YÖNETİM SİSTEMİ
+model GalleryCategory {
+  id          String    @id @default(uuid())
+  isActive    Boolean   @default(true)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  order       Int       @default(0)
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // SEO
+  ogImage     String?
+  canonical   String?
+  noIndex     Boolean   @default(false)
+
+  translations GalleryCategoryTranslation[]
+  items        GalleryItem[]
+}
+
+model GalleryCategoryTranslation {
+  id             String          @id @default(uuid())
+  categoryId     String
+  language       Language
+  name           String
+  slug           String
+  description    String?         @db.Text
+  seoTitle       String?
+  seoDescription String?         @db.Text
+
+  category       GalleryCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, language])
+}
+
+model GalleryItem {
+  id          String    @id @default(uuid())
+  imageUrl    String
+  order       Int       @default(0)
+  isActive    Boolean   @default(true)
+  isFeatured  Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  categoryId  String?
+  category    GalleryCategory? @relation(fields: [categoryId], references: [id])
+  locationId  String?
+  serviceId   String?
+
+  translations GalleryItemTranslation[]
+}
+
+model GalleryItemTranslation {
+  id          String      @id @default(uuid())
+  itemId      String
+  language    Language
+  title       String?
+  description String?     @db.Text
+  altText     String?
+
+  item        GalleryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, language])
+}

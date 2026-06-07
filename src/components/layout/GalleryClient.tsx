@@ -8,77 +8,77 @@ type GalleryImageItem = {
   url: string;
   alt: string;
   title: string;
+  description?: string;
+  categoryId?: string | null;
+  categoryName?: string | null;
+};
+
+type GalleryCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  itemCount: number;
 };
 
 type Props = {
   images: GalleryImageItem[];
+  categories: GalleryCategory[];
   locale: string;
 };
 
-export default function GalleryClient({ images, locale }: Props) {
+export default function GalleryClient({ images, categories, locale }: Props) {
   const [selectedImage, setSelectedImage] = useState<GalleryImageItem | null>(null);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  // Basit etiketleme mantığı (resim alt/title metinlerine göre)
-  const categories = [
-    { id: 'all', tr: 'Tümü', en: 'All', de: 'Alle', ru: 'Все' },
-    { id: 'nail', tr: 'Tırnak Bakımı', en: 'Nails', de: 'Nägel', ru: 'Ногти' },
-    { id: 'lash', tr: 'Kirpik & Kaş', en: 'Lashes & Brows', de: 'Wimpern & Brauen', ru: 'Ресницы' },
-    { id: 'salon', tr: 'Stüdyomuz', en: 'Our Studio', de: 'Unser Studio', ru: 'Студия' },
-  ];
+  // "Tümü" etiketi dil bazlı
+  const allLabel = locale === 'tr' ? 'Tümü' : locale === 'de' ? 'Alle' : locale === 'ru' ? 'Все' : 'All';
+  const noImageLabel = locale === 'tr' ? 'Görsel Bulunamadı' : locale === 'de' ? 'Kein Bild gefunden' : locale === 'ru' ? 'Изображение не найдено' : 'No images found';
+  const noImageDesc = locale === 'tr' ? 'Bu kategoriye ait uygulama görseli henüz yüklenmemiş.' : locale === 'de' ? 'Für diese Kategorie wurden noch keine Bilder hochgeladen.' : locale === 'ru' ? 'Для этой категории пока не загружены изображения.' : 'No images have been uploaded for this category yet.';
 
   const getFilteredImages = () => {
     if (activeFilter === 'all') return images;
-    return images.filter(img => {
-      const text = `${img.alt} ${img.title} ${img.url}`.toLowerCase();
-      if (activeFilter === 'nail') {
-        return text.includes('nail') || text.includes('tırnak') || text.includes('oje') || text.includes('manikür') || text.includes('nagel');
-      }
-      if (activeFilter === 'lash') {
-        return text.includes('lash') || text.includes('kirpik') || text.includes('kaş') || text.includes('lift') || text.includes('wimpern') || text.includes('brow');
-      }
-      if (activeFilter === 'salon') {
-        return text.includes('salon') || text.includes('studio') || text.includes('stüdyo');
-      }
-      return true;
-    });
-  };
-
-  const getTranslation = (cat: typeof categories[0]) => {
-    const lang = locale.toLowerCase();
-    if (lang === 'tr') return cat.tr;
-    if (lang === 'de') return cat.de;
-    if (lang === 'ru') return cat.ru;
-    return cat.en;
+    return images.filter(img => img.categoryId === activeFilter);
   };
 
   const filtered = getFilteredImages();
 
   return (
     <div className="space-y-12">
-      {/* Kategori Filtreleri */}
-      <div className="flex flex-wrap justify-center gap-3">
-        {categories.map((cat) => (
+      {/* Kategori Filtreleri — DB'den gelen dinamik veriler */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-3">
           <button
-            key={cat.id}
-            onClick={() => setActiveFilter(cat.id)}
+            onClick={() => setActiveFilter('all')}
             className={`px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-              activeFilter === cat.id
+              activeFilter === 'all'
                 ? 'bg-gray-950 text-white shadow-md -translate-y-0.5'
                 : 'bg-white border border-[var(--color-primary-300)]/30 text-[var(--color-text-muted)] hover:border-[var(--color-primary-400)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-light-300)]/20'
             }`}
           >
-            {getTranslation(cat)}
+            {allLabel}
           </button>
-        ))}
-      </div>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveFilter(cat.id)}
+              className={`px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                activeFilter === cat.id
+                  ? 'bg-gray-950 text-white shadow-md -translate-y-0.5'
+                  : 'bg-white border border-[var(--color-primary-300)]/30 text-[var(--color-text-muted)] hover:border-[var(--color-primary-400)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-light-300)]/20'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Görsel Masonry Grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-24 glass-panel rounded-[2rem] max-w-lg mx-auto">
           <ImageIcon className="mx-auto text-[var(--color-rose-300)] mb-4" size={48} />
-          <h3 className="text-lg font-serif font-bold text-gray-900 mb-1">Görsel Bulunamadı</h3>
-          <p className="text-gray-500 text-sm">Bu kategoriye ait uygulama görseli henüz yüklenmemiş.</p>
+          <h3 className="text-lg font-serif font-bold text-gray-900 mb-1">{noImageLabel}</h3>
+          <p className="text-gray-500 text-sm">{noImageDesc}</p>
         </div>
       ) : (
         <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6 space-y-6">
@@ -93,7 +93,7 @@ export default function GalleryClient({ images, locale }: Props) {
                 <div className="w-full text-white transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-between">
                   <div>
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary-300)] mb-1">
-                      <Sparkles size={10} /> Luxury Art
+                      <Sparkles size={10} /> {img.categoryName || 'Gallery'}
                     </span>
                     <p className="text-sm font-medium line-clamp-1">{img.title}</p>
                   </div>
@@ -117,19 +117,19 @@ export default function GalleryClient({ images, locale }: Props) {
 
       {/* Lightbox / Zoom Modal */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 animate-fade-in"
           onClick={() => setSelectedImage(null)}
         >
-          <button 
+          <button
             onClick={() => setSelectedImage(null)}
             className="absolute top-6 right-6 p-3 bg-white/10 text-white hover:bg-white/20 rounded-full transition-colors border border-white/10"
             aria-label="Kapat"
           >
             <X size={24} />
           </button>
-          
-          <div 
+
+          <div
             className="relative max-w-4xl w-full max-h-[85vh] flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
@@ -140,7 +140,7 @@ export default function GalleryClient({ images, locale }: Props) {
             />
             <div className="mt-6 text-center text-white max-w-xl">
               <h4 className="text-lg font-serif italic text-[var(--color-primary-300)] mb-1">{selectedImage.title}</h4>
-              <p className="text-sm text-gray-400 font-light">{selectedImage.alt}</p>
+              <p className="text-sm text-gray-400 font-light">{selectedImage.description || selectedImage.alt}</p>
             </div>
           </div>
         </div>

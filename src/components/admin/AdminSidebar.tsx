@@ -137,6 +137,12 @@ export default function AdminSidebar() {
           activePattern: new RegExp(`^/admin/portfolio`)
         },
         {
+          name: 'Galeri Yönetimi',
+          href: `/admin/gallery`,
+          icon: Image,
+          activePattern: new RegExp(`^/admin/gallery`)
+        },
+        {
           name: 'Medya Kütüphanesi',
           href: `/admin/media`,
           icon: Image,
