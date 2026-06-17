@@ -49,6 +49,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   const [instagramUrl, setInstagramUrl] = useState(getSettingValue('instagram_url'));
   const [facebookUrl, setFacebookUrl] = useState(getSettingValue('facebook_url'));
   const [youtubeUrl, setYoutubeUrl] = useState(getSettingValue('youtube_url'));
+  const [telegramUrl, setTelegramUrl] = useState(getSettingValue('telegram_url'));
 
   // Sistem
   const [bookingInterval, setBookingInterval] = useState(getSettingValue('booking_interval', '60'));
@@ -75,6 +76,7 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
       { key: 'instagram_url', value: instagramUrl },
       { key: 'facebook_url', value: facebookUrl },
       { key: 'youtube_url', value: youtubeUrl },
+      { key: 'telegram_url', value: telegramUrl },
       { key: 'booking_interval', value: bookingInterval },
       { key: 'currency', value: currency },
       { key: 'google_reviews_link', value: googleReviewsLink },
@@ -259,6 +261,21 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                     value={youtubeUrl}
                     onChange={(e) => setYoutubeUrl(e.target.value)}
                     placeholder="https://youtube.com/nailslashesstudio"
+                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[var(--color-rose-500)] focus:bg-white font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Telegram */}
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Telegram URL</label>
+                <div className="relative">
+                  <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                  <input
+                    type="url"
+                    value={telegramUrl}
+                    onChange={(e) => setTelegramUrl(e.target.value)}
+                    placeholder="https://t.me/nailslashesstudio"
                     className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[var(--color-rose-500)] focus:bg-white font-mono"
                   />
                 </div>

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "09b6a24d-b3c0-4c62-8aba-36143c4edf47",
+    "question": "Kalıcı oje ve protez tırnak abdest geçirir mi?",
+    "answer": "Geleneksel ojeler ve kalıcı ojeler tırnak yüzeyinde su geçirmez polimer bir tabaka oluşturur. Dini inançları gereği abdest ibadetini yerine getiren kadınlar için su geçirgen (halal) veya Japon manikürü yöntemlerini tavsiye ediyoruz.",
+    "language": "TR",
+    "isActive": true,
+    "order": 1,
+    "schemaActive": true,
+    "pageId": null,
+    "serviceId": null,
+    "blogPostId": "3b77bc72-470c-4071-a143-b70b99cc7c84"
+  },
+  {
+    "id": "f16d9be1-2879-4b9f-86ed-03bb841df03f",
+    "question": "Hamilelik döneminde kalıcı oje veya protez tırnak yaptırılabilir mi?",
+    "answer": "Modern kokusuz jel sistemleri ve kalıcı oje uygulamaları hamileler için büyük ölçüde güvenli kabul edilir. Ancak ilk 3 ayı geçirdikten sonra ve hekiminizin de onayıyla yaptırmanız en doğrusudur.",
+    "language": "TR",
+    "isActive": true,
+    "order": 2,
+    "schemaActive": true,
+    "pageId": null,
+    "serviceId": null,
+    "blogPostId": "3b77bc72-470c-4071-a143-b70b99cc7c84"
+  },
+  {
+    "id": "34852fb9-aa27-4db0-bba7-78b085805443",
+    "question": "Tırnağımda mantar enfeksiyonu varken kalıcı oje yaptırabilir miyim?",
+    "answer": "Kesinlikle hayır. Tırnak mantarı tedavi edilmesi gereken medikal bir durumdur. Mantarlı bir tırnağın üzeri jel veya kalıcı oje ile kapatıldığında enfeksiyon diğer tırnaklara sıçrayabilir.",
+    "language": "TR",
+    "isActive": true,
+    "order": 3,
+    "schemaActive": true,
+    "pageId": null,
+    "serviceId": null,
+    "blogPostId": "3b77bc72-470c-4071-a143-b70b99cc7c84"
+  },
+  {
+    "id": "047a9ecf-ec20-4d1f-aa73-be7d1f450f36",
+    "question": "Jel güçlendirme protez tırnak kadar sert midir?",
+    "answer": "Jel güçlendirme, özel formülü sayesinde doğal tırnak ile birlikte esneyebilen kauçuk yapılı bir sertliğe sahiptir. Darbelerde esner ve şoku emer. Protez tırnak ise daha sert ve rijit bir yapıdadır.",
+    "language": "TR",
+    "isActive": true,
+    "order": 1,
+    "schemaActive": true,
+    "pageId": null,
+    "serviceId": null,
+    "blogPostId": "acf84f6d-d4f7-46a8-b530-0c9f56505a00"
+  },
+  {
+    "id": "0fb61291-15a3-4b9c-8589-93bb82694bbf",
+    "question": "Kısa tırnaklara jel güçlendirme yapılır mı?",
+    "answer": "Kesinlikle! Tırnaklarınız etinizin hizasında, çok kısa olsa bile yapılabilir. Kısa ve form bozukluğu olan tırnaklar jel dolgusu ile anında pürüzsüz ve sağlıklı bir görünüme kavuşur.",
+    "language": "TR",
+    "isActive": true,
+    "order": 2,
+    "schemaActive": true,
+    "pageId": null,
+    "serviceId": null,
+    "blogPostId": "acf84f6d-d4f7-46a8-b530-0c9f56505a00"
+  },
+  {
+    "id": "fd42efbd-6fee-4a40-a8db-ec769b05c3b9",
+    "question": "Evde bulaşık yıkamak veya temizlik yapmak jeli bozar mı?",
+    "answer": "UV lambada kuruyan polimer jeller ev tipi deterjanlara ve suya karşı tamamen dirençlidir. Ancak tırnak ve cilt sağlığınız için kimyasal maddelerle temas ederken eldiven kullanmanız tavsiye edilir.",
+    "language": "TR",
+    "isActive": true,
+    "order": 3,
+    "schemaActive": true,
+    "pageId": null,
+    "serviceId": null,
+    "blogPostId": "acf84f6d-d4f7-46a8-b530-0c9f56505a00"
+  }
+]

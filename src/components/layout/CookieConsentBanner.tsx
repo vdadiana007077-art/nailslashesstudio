@@ -13,12 +13,20 @@ export default function CookieConsentBanner() {
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
     if (!consent) {
-      const timer = setTimeout(() => setIsVisible(true), 1500);
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+        document.documentElement.classList.add('has-cookie-banner');
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, []);
 
   if (!isVisible) return null;
+
+  const hideBanner = () => {
+    setIsVisible(false);
+    document.documentElement.classList.remove('has-cookie-banner');
+  };
 
   const handleAcceptAll = async () => {
     localStorage.setItem('cookie_consent', JSON.stringify({
@@ -28,7 +36,7 @@ export default function CookieConsentBanner() {
     }));
     
     await saveCookieConsent(true, true, true);
-    setIsVisible(false);
+    hideBanner();
   };
 
   const handleSaveSettings = async () => {
@@ -39,7 +47,7 @@ export default function CookieConsentBanner() {
     }));
 
     await saveCookieConsent(true, analytics, marketing);
-    setIsVisible(false);
+    hideBanner();
   };
 
   return (

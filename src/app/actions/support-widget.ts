@@ -17,7 +17,8 @@ export async function getWidgetSettings() {
     'widget_avatar_size',
     'widget_pulse_animation',
     'widget_sparkle',
-    'widget_tooltip'
+    'widget_tooltip',
+    'telegram_url'
   ];
 
   const dbSettings = await prisma.setting.findMany({
@@ -54,6 +55,7 @@ export async function getWidgetSettings() {
     pulseAnimation: settingsMap['widget_pulse_animation'] !== 'false',
     sparkleAnimation: settingsMap['widget_sparkle'] !== 'false',
     showTooltip: settingsMap['widget_tooltip'] !== 'false',
+    telegramUrl: settingsMap['telegram_url'] || 'https://t.me/nailslashesstudio',
     greetings
   };
 }
@@ -226,6 +228,7 @@ export async function getPublicWidgetData(lang: Language) {
     greeting,
     whatsappNumber: settingsDb.whatsappNumber,
     typingAnimation: settingsDb.typingAnimation,
+    telegramUrl: settingsDb.telegramUrl,
     questions: formattedQuestions
   };
 }

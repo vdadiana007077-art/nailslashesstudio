@@ -43,7 +43,7 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
   return (
     <div className="w-full flex flex-col gap-12">
       {/* 🧭 Category Navigation Tabs */}
-      <div className="flex overflow-x-auto pb-4 scrollbar-none gap-3 -mx-6 px-6 md:mx-0 md:px-0 justify-start md:justify-center">
+      <div className="flex flex-wrap pb-4 gap-2 sm:gap-3 justify-center">
         {categories.map((category) => {
           const categoryName = category.translations[0]?.name || t('categoryFallback');
           const isActive = category.id === activeCategoryId;
@@ -52,7 +52,7 @@ export default function ServiceExplorer({ categories, locale }: ServiceExplorerP
             <button
               key={category.id}
               onClick={() => setActiveCategoryId(category.id)}
-              className={`whitespace-nowrap px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide uppercase transition-all duration-300 cursor-pointer ${
+              className={`whitespace-nowrap px-5 py-3 sm:px-8 sm:py-3.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide uppercase transition-all duration-300 cursor-pointer ${
                 isActive
                   ? "bg-[var(--color-primary-500)] text-white shadow-[0_6px_20px_rgba(197,139,139,0.25)] hover:shadow-[0_8px_25px_rgba(197,139,139,0.4)]"
                   : "bg-white/75 text-[var(--color-text-main)] border border-[var(--color-primary-300)]/20 hover:bg-white hover:border-[var(--color-primary-400)]"

@@ -1,0 +1,510 @@
+[
+  {
+    "id": "0125fa4a-bcdd-465d-a7fa-1ce8e1f3855c",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "243257f2-a173-4b2c-ab92-eb82e3ac71da",
+        "categoryId": "0125fa4a-bcdd-465d-a7fa-1ce8e1f3855c",
+        "language": "DE",
+        "name": "Nagelpflege",
+        "slug": "nagelpflege",
+        "description": "Expertenratgeber rund um Nagelpflege, Maniküre, Pediküre, Gel-Lack und gesunde, gepflegte Nägel.",
+        "seoTitle": "Nagelpflege Ratgeber | Gesunde und Schöne Nägel",
+        "seoDesc": "Entdecken Sie professionelle Tipps zu Nagelpflege, Maniküre, Pediküre und modernen Nagelbehandlungen."
+      },
+      {
+        "id": "df5724b6-7193-4c9f-818a-498d87c0e2bd",
+        "categoryId": "0125fa4a-bcdd-465d-a7fa-1ce8e1f3855c",
+        "language": "RU",
+        "name": "Уход за ногтями",
+        "slug": "uhod-za-nogtyami",
+        "description": "Полезные статьи, советы специалистов и подробные руководства по уходу за ногтями, маникюру, педикюру и современным nail-процедурам.",
+        "seoTitle": "Уход за ногтями | Руководства и советы специалистов",
+        "seoDesc": "Узнайте всё о маникюре, педикюре, укреплении ногтей и профессиональном уходе для красивых и здоровых ногтей."
+      },
+      {
+        "id": "85015129-527b-4678-8c29-7aa39000f54e",
+        "categoryId": "0125fa4a-bcdd-465d-a7fa-1ce8e1f3855c",
+        "language": "TR",
+        "name": "Tırnak Bakımı",
+        "slug": "tirnak-bakimi",
+        "description": "Tırnak bakımı, manikür, pedikür, kalıcı oje ve profesyonel nail care hakkında uzman rehberleri, bakım önerileri ve güncel bilgiler.",
+        "seoTitle": "Tırnak Bakımı Rehberi | Sağlıklı ve Güzel Tırnaklar",
+        "seoDesc": "Tırnak bakımı, manikür, pedikür ve profesyonel tırnak uygulamaları hakkında kapsamlı rehberler ve uzman tavsiyeleri."
+      },
+      {
+        "id": "d847a02b-d269-40f3-90f8-7b8a7a26d1d4",
+        "categoryId": "0125fa4a-bcdd-465d-a7fa-1ce8e1f3855c",
+        "language": "EN",
+        "name": "Nail Care",
+        "slug": "nail-care",
+        "description": "Expert guides, tips, and professional advice about nail care, manicures, pedicures, gel polish, and healthy nails.",
+        "seoTitle": "Nail Care Guide | Healthy, Strong & Beautiful Nails",
+        "seoDesc": "Discover expert nail care guides, manicure tips, pedicure advice, and professional treatments for healthier and more beautiful nails."
+      }
+    ]
+  },
+  {
+    "id": "2499229a-6a37-41f0-b980-41768613610c",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "d8ecbb23-d4a6-4546-a611-c3a907aed164",
+        "categoryId": "2499229a-6a37-41f0-b980-41768613610c",
+        "language": "TR",
+        "name": "Manikür Rehberi",
+        "slug": "manikur-rehberi",
+        "description": "Manikür teknikleri, Rus manikürü, profesyonel el bakımı ve kusursuz tırnak görünümü hakkında detaylı rehberler.",
+        "seoTitle": "Manikür Rehberi | Profesyonel Manikür ve El Bakımı",
+        "seoDesc": "Rus manikürü, klasik manikür ve profesyonel el bakımı hakkında uzman içerikleri keşfedin."
+      },
+      {
+        "id": "97e79a5c-d91e-42e4-b188-773f63c31fd8",
+        "categoryId": "2499229a-6a37-41f0-b980-41768613610c",
+        "language": "EN",
+        "name": "Manicure Guide",
+        "slug": "manicure-guide",
+        "description": "Professional manicure techniques, Russian manicure methods, cuticle care, and expert hand care advice.",
+        "seoTitle": "Manicure Guide | Professional Nail & Hand Care",
+        "seoDesc": "Discover Russian manicure techniques, manicure trends, and professional hand care guides."
+      },
+      {
+        "id": "190f3da1-4874-42a2-b8da-8a727d8db594",
+        "categoryId": "2499229a-6a37-41f0-b980-41768613610c",
+        "language": "DE",
+        "name": "Maniküre Ratgeber",
+        "slug": "manikure-ratgeber",
+        "description": "Professionelle Maniküre-Techniken, Russische Maniküre und umfassende Handpflege-Ratgeber.",
+        "seoTitle": "Maniküre Ratgeber | Professionelle Nagelpflege",
+        "seoDesc": "Alles über Russische Maniküre, moderne Maniküre-Techniken und gepflegte Hände."
+      },
+      {
+        "id": "e938bc14-ed66-4297-842b-99d96dcf9ad5",
+        "categoryId": "2499229a-6a37-41f0-b980-41768613610c",
+        "language": "RU",
+        "name": "Руководство по маникюру",
+        "slug": "-rukovodstvo-po-manikyuru",
+        "description": "Подробные статьи о маникюре, русской технике маникюра, уходе за кутикулой и красоте рук.",
+        "seoTitle": "Руководство по маникюру | Советы и техники",
+        "seoDesc": "Лучшие советы по маникюру, уходу за руками и профессиональным техникам обработки ногтей."
+      }
+    ]
+  },
+  {
+    "id": "39b4332e-627e-4d72-b39e-9ac9d5254641",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "c3f890b9-09f5-4ce3-bf9d-5fcad987a12c",
+        "categoryId": "39b4332e-627e-4d72-b39e-9ac9d5254641",
+        "language": "TR",
+        "name": "Protez Tırnak",
+        "slug": "protez-tirnak",
+        "description": "Protez tırnak, jel tırnak, PolyGel ve Soft Gel Tips sistemleri hakkında kapsamlı bilgiler ve uzman önerileri.",
+        "seoTitle": "Protez Tırnak Rehberi | Jel Tırnak ve Modern Sistemler",
+        "seoDesc": "Protez tırnak sistemleri, bakım süreçleri ve profesyonel uygulamalar hakkında detaylı bilgiler."
+      },
+      {
+        "id": "15645315-cc12-4cca-9def-c054e81f4955",
+        "categoryId": "39b4332e-627e-4d72-b39e-9ac9d5254641",
+        "language": "EN",
+        "name": "Nail Extensions",
+        "slug": "nail-extensions",
+        "description": "Everything about nail extensions, builder gel, PolyGel, Soft Gel Tips, maintenance, and professional nail enhancement systems.",
+        "seoTitle": "Nail Extensions Guide | Modern Nail Enhancement Systems",
+        "seoDesc": "Discover nail extension types, maintenance tips, and professional solutions for longer, beautiful nails."
+      },
+      {
+        "id": "6992520f-63fb-4cb2-b277-d236b0c2440c",
+        "categoryId": "39b4332e-627e-4d72-b39e-9ac9d5254641",
+        "language": "DE",
+        "name": "Nagelverlängerung",
+        "slug": "nagelverlngerung",
+        "description": "Alles über Nagelverlängerungen, Gelnägel, PolyGel und moderne Verlängerungstechniken.",
+        "seoTitle": "Nagelverlängerung Ratgeber | Moderne Nagelsysteme",
+        "seoDesc": "Erfahren Sie alles über Nagelverlängerungen, Pflege und professionelle Nagelmodellage."
+      },
+      {
+        "id": "a56cf547-e0d6-49d5-987e-f37f0b9a324a",
+        "categoryId": "39b4332e-627e-4d72-b39e-9ac9d5254641",
+        "language": "RU",
+        "name": "Наращивание ногтей",
+        "slug": "-narashchivanie-nogtey",
+        "description": "Полное руководство по наращиванию ногтей, гелевым системам, PolyGel и современным технологиям моделирования.",
+        "seoTitle": "Наращивание ногтей | Виды и рекомендации",
+        "seoDesc": "Узнайте всё о наращивании ногтей, коррекции и современных технологиях моделирования."
+      }
+    ]
+  },
+  {
+    "id": "2c3f6c3e-e5f1-4f25-850a-240d56238d16",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "de4433a0-b137-413f-a825-35f3a09082c8",
+        "categoryId": "2c3f6c3e-e5f1-4f25-850a-240d56238d16",
+        "language": "TR",
+        "name": "Jel ve Kalıcı Oje",
+        "slug": "jel-ve-kalici-oje",
+        "description": "Kalıcı oje, jel güçlendirme, BIAB uygulamaları, jel sistemleri ve uzun ömürlü tırnak çözümleri hakkında kapsamlı rehberler, uzman önerileri ve profesyonel bakım tavsiyeleri.",
+        "seoTitle": "Jel ve Kalıcı Oje Rehberi | BIAB, Gel Sistemleri ve Uzun Süre Kalıcı Tırnaklar",
+        "seoDesc": "Kalıcı oje, BIAB, jel güçlendirme ve profesyonel jel sistemleri hakkında detaylı rehberler, bakım önerileri ve uzman tavsiyeleri."
+      },
+      {
+        "id": "453d9c40-4bab-41d8-b9b5-b5855826ce81",
+        "categoryId": "2c3f6c3e-e5f1-4f25-850a-240d56238d16",
+        "language": "EN",
+        "name": "Gel Polish & BIAB",
+        "slug": "gel-polish-biab",
+        "description": "Discover expert guides about gel polish, BIAB, gel strengthening systems, long-lasting manicures, and professional nail enhancement techniques.",
+        "seoTitle": "Gel Polish & BIAB Guide | Stronger, Longer-Lasting Nails",
+        "seoDesc": "Explore professional advice about gel polish, BIAB treatments, gel strengthening, maintenance, and healthy long-lasting nails."
+      },
+      {
+        "id": "9cf04cf3-e97e-4ad9-a172-781e5167581d",
+        "categoryId": "2c3f6c3e-e5f1-4f25-850a-240d56238d16",
+        "language": "DE",
+        "name": "Gel-Lack & BIAB",
+        "slug": "gel-lack-biab",
+        "description": "Professionelle Ratgeber zu Gel-Lack, BIAB-Systemen, Gelverstärkung und modernen Techniken für langlebige und gepflegte Nägel.",
+        "seoTitle": "Gel-Lack & BIAB Ratgeber | Starke und Langanhaltende Nägel",
+        "seoDesc": "Erfahren Sie alles über Gel-Lack, BIAB, Gelverstärkung und professionelle Nagelbehandlungen für perfekte Ergebnisse."
+      },
+      {
+        "id": "d6dfdce8-1d49-40d3-ae3b-025aa5f8d18c",
+        "categoryId": "2c3f6c3e-e5f1-4f25-850a-240d56238d16",
+        "language": "RU",
+        "name": "Гель-лак и укрепление",
+        "slug": "-gel-lak-i-ukreplenie",
+        "description": "Подробные статьи о гель-лаке, BIAB, укреплении ногтей, стойких покрытиях и современных технологиях ухода за ногтями.",
+        "seoTitle": "Гель-лак и укрепление ногтей | Руководства и советы мастеров",
+        "seoDesc": "Узнайте всё о гель-лаке, BIAB, укреплении ногтей и современных методах долговременного покрытия."
+      }
+    ]
+  },
+  {
+    "id": "d4c0a8ef-ffd7-44d3-b5cd-a30a17158e45",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "0be2bf98-2814-4e8a-a958-7d4c4e6ad0d8",
+        "categoryId": "d4c0a8ef-ffd7-44d3-b5cd-a30a17158e45",
+        "language": "TR",
+        "name": "Tırnak Sağlığı",
+        "slug": "tirnak-sagligi",
+        "description": "Tırnak kırılması, soyulması, zayıf tırnaklar, doğal bakım yöntemleri ve sağlıklı tırnak gelişimi hakkında uzman içerikler ve rehberler.",
+        "seoTitle": "Tırnak Sağlığı Rehberi | Güçlü, Sağlıklı ve Bakımlı Tırnaklar",
+        "seoDesc": "Tırnak kırılması, soyulması, bakım önerileri ve sağlıklı tırnak gelişimi hakkında uzman tavsiyelerini keşfedin."
+      },
+      {
+        "id": "184ff369-3644-4fc7-a3ad-a516d81d4595",
+        "categoryId": "d4c0a8ef-ffd7-44d3-b5cd-a30a17158e45",
+        "language": "EN",
+        "name": "Nail Health",
+        "slug": "nail-health",
+        "description": "Expert advice and practical guides on nail health, nail strengthening, nail growth, common nail problems, and healthy nail care routines.",
+        "seoTitle": "Nail Health Guide | Stronger, Healthier & Beautiful Nails",
+        "seoDesc": "Learn how to improve nail health, prevent breakage, strengthen weak nails, and maintain beautiful natural nails."
+      },
+      {
+        "id": "89467c50-1b66-4147-85db-7f602da00498",
+        "categoryId": "d4c0a8ef-ffd7-44d3-b5cd-a30a17158e45",
+        "language": "DE",
+        "name": "Nagelgesundheit",
+        "slug": "nagelgesundheit",
+        "description": "Fachartikel und Expertenwissen zu Nagelgesundheit, Nagelwachstum, Nagelstärkung und der Vorbeugung häufiger Nagelprobleme.",
+        "seoTitle": "Nagelgesundheit Ratgeber | Starke und Gesunde Nägel",
+        "seoDesc": "Entdecken Sie professionelle Tipps für gesunde Nägel, weniger Nagelbruch und langfristige Nagelpflege."
+      },
+      {
+        "id": "52e25285-8865-49bb-83f8-795222115723",
+        "categoryId": "d4c0a8ef-ffd7-44d3-b5cd-a30a17158e45",
+        "language": "RU",
+        "name": "Здоровье ногтей",
+        "slug": "-zdorove-nogtey",
+        "description": "Полезные статьи о здоровье ногтей, укреплении, росте ногтей, профилактике ломкости и правильном уходе за натуральными ногтями.",
+        "seoTitle": "Здоровье ногтей | Советы по укреплению и уходу",
+        "seoDesc": "Узнайте, как укрепить ногти, предотвратить ломкость и поддерживать здоровье натуральных ногтей."
+      }
+    ]
+  },
+  {
+    "id": "ebdcc2c1-467e-49fc-8bba-0597c9d0b9b5",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "9dda074d-467d-463d-94ab-56bc5e64bb13",
+        "categoryId": "ebdcc2c1-467e-49fc-8bba-0597c9d0b9b5",
+        "language": "TR",
+        "name": "Nail Art ve Trendler",
+        "slug": "nail-art-ve-trendler",
+        "description": "Nail art ve yeni trendler.",
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "5e166ad8-2c39-492f-b696-81b91ce3b3ac",
+        "categoryId": "ebdcc2c1-467e-49fc-8bba-0597c9d0b9b5",
+        "language": "EN",
+        "name": "Nail Art & Trends",
+        "slug": "nail-art-and-trends",
+        "description": "Nail art and new trends.",
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "a3d432e7-4864-4474-abfb-5ae17ba830c1",
+        "categoryId": "ebdcc2c1-467e-49fc-8bba-0597c9d0b9b5",
+        "language": "DE",
+        "name": "Nail Art & Trends",
+        "slug": "nail-art-und-trends",
+        "description": "Nail Art und neue Trends.",
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "b263055b-16cf-4fcc-858c-c824e5238b06",
+        "categoryId": "ebdcc2c1-467e-49fc-8bba-0597c9d0b9b5",
+        "language": "RU",
+        "name": "Нейл-арт и тренды",
+        "slug": "neyl-art-i-trendy",
+        "description": "Нейл-арт и новые тренды.",
+        "seoTitle": null,
+        "seoDesc": null
+      }
+    ]
+  },
+  {
+    "id": "a85d253f-9593-48ca-b35f-11efbd88059a",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "a6d1e120-0ebd-4156-9571-b81773aa1c02",
+        "categoryId": "a85d253f-9593-48ca-b35f-11efbd88059a",
+        "language": "TR",
+        "name": "Tırnak Bakımı ve BIAB",
+        "slug": "tirnak-bakimi-ve-biab",
+        "description": "Tırnak bakımı ve BIAB sistemleri.",
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "af2b15a7-72ca-4115-a3a4-938b6a84beda",
+        "categoryId": "a85d253f-9593-48ca-b35f-11efbd88059a",
+        "language": "EN",
+        "name": "Nail Care & BIAB",
+        "slug": "nail-care-and-biab",
+        "description": "Nail care and BIAB systems.",
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "a844e486-6711-4ce2-84bb-718324fde836",
+        "categoryId": "a85d253f-9593-48ca-b35f-11efbd88059a",
+        "language": "DE",
+        "name": "Nail Care & BIAB",
+        "slug": "nail-care-und-biab",
+        "description": "Nagelpflege und BIAB-Systeme.",
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "56388db8-b4e8-40c2-8ba2-d15e90a853e0",
+        "categoryId": "a85d253f-9593-48ca-b35f-11efbd88059a",
+        "language": "RU",
+        "name": "Уход за ногтями и BIAB",
+        "slug": "uhod-za-nogtyami-i-biab",
+        "description": "Уход за ногтями и системы BIAB.",
+        "seoTitle": null,
+        "seoDesc": null
+      }
+    ]
+  },
+  {
+    "id": "52703161-9052-4eec-a9ab-f5b57275ef79",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "0b20b0f4-895a-47f1-a9a4-e69928b38936",
+        "categoryId": "52703161-9052-4eec-a9ab-f5b57275ef79",
+        "language": "TR",
+        "name": "Kirpik Uzatma",
+        "slug": "kirpik-uzatma",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "34106e27-24e6-4d12-8dd7-ac45008739e3",
+        "categoryId": "52703161-9052-4eec-a9ab-f5b57275ef79",
+        "language": "EN",
+        "name": "Eyelash Extensions",
+        "slug": "eyelash-extensions",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "04565868-5ad9-4dba-8620-f4a91691c1e5",
+        "categoryId": "52703161-9052-4eec-a9ab-f5b57275ef79",
+        "language": "DE",
+        "name": "Wimpernverlängerung",
+        "slug": "wimpernverlaengerung",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "cff278a4-0c7c-4049-a17f-2cc9daf1060c",
+        "categoryId": "52703161-9052-4eec-a9ab-f5b57275ef79",
+        "language": "RU",
+        "name": "Наращивание ресниц",
+        "slug": "naraschivanie-resnic",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      }
+    ]
+  },
+  {
+    "id": "ca2c2553-4911-4050-904e-a7eeb86a367c",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "89cdce20-e0b5-46e0-b96e-eafef481ff9b",
+        "categoryId": "ca2c2553-4911-4050-904e-a7eeb86a367c",
+        "language": "TR",
+        "name": "Kaş ve Güzellik",
+        "slug": "kas-ve-guzellik",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "2e978572-23fc-47d2-83e0-182ddf73a650",
+        "categoryId": "ca2c2553-4911-4050-904e-a7eeb86a367c",
+        "language": "EN",
+        "name": "Brows & Beauty",
+        "slug": "brows-beauty",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "828c84f1-0725-4652-9fd3-1fa75a3df6f6",
+        "categoryId": "ca2c2553-4911-4050-904e-a7eeb86a367c",
+        "language": "DE",
+        "name": "Augenbrauen & Beauty",
+        "slug": "augenbrauen-beauty",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      },
+      {
+        "id": "bfe88f34-1378-43db-9d2b-5c07a768c2d3",
+        "categoryId": "ca2c2553-4911-4050-904e-a7eeb86a367c",
+        "language": "RU",
+        "name": "Брови и красота",
+        "slug": "brovi-krasota",
+        "description": null,
+        "seoTitle": null,
+        "seoDesc": null
+      }
+    ]
+  },
+  {
+    "id": "6b9198f9-8103-4527-b66e-29bd1a1681ee",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "cd41a091-870a-409e-a2a6-2d6af8d9c729",
+        "categoryId": "6b9198f9-8103-4527-b66e-29bd1a1681ee",
+        "language": "TR",
+        "name": "Beauty Tips & Guides",
+        "slug": "beauty-tips-guides",
+        "description": null,
+        "seoTitle": "Beauty Tips & Guides",
+        "seoDesc": "Beauty Tips & Guides"
+      }
+    ]
+  },
+  {
+    "id": "82af8617-61be-46a1-904b-1bd5d14250f3",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "0d6eea63-9cf7-4938-b17c-b38ad9a1fbe8",
+        "categoryId": "82af8617-61be-46a1-904b-1bd5d14250f3",
+        "language": "TR",
+        "name": "Eyelash Extensions",
+        "slug": "eyelash-extensions",
+        "description": null,
+        "seoTitle": "Eyelash Extensions",
+        "seoDesc": "Eyelash Extensions"
+      }
+    ]
+  },
+  {
+    "id": "6f8d7809-8148-4429-b622-74a67c785fcc",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "49cc6527-9d80-4229-8e1e-fe685e241b42",
+        "categoryId": "6f8d7809-8148-4429-b622-74a67c785fcc",
+        "language": "TR",
+        "name": "Nail Care & BIAB",
+        "slug": "nail-care-biab",
+        "description": null,
+        "seoTitle": "Nail Care & BIAB",
+        "seoDesc": "Nail Care & BIAB"
+      }
+    ]
+  },
+  {
+    "id": "a0f01943-577e-4088-92e1-16a047a7f2bc",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "91929270-d48f-4b4e-b817-80f4d117905a",
+        "categoryId": "a0f01943-577e-4088-92e1-16a047a7f2bc",
+        "language": "TR",
+        "name": "Brow Styling",
+        "slug": "brow-styling",
+        "description": null,
+        "seoTitle": "Brow Styling",
+        "seoDesc": "Brow Styling"
+      }
+    ]
+  },
+  {
+    "id": "448f45f4-9f9e-48bb-836e-4b10280e0d25",
+    "order": 0,
+    "isActive": true,
+    "translations": [
+      {
+        "id": "97276405-0574-456b-b1a3-aca843aca9e6",
+        "categoryId": "448f45f4-9f9e-48bb-836e-4b10280e0d25",
+        "language": "TR",
+        "name": "Brows & Beauty",
+        "slug": "brows-beauty",
+        "description": null,
+        "seoTitle": "Brows & Beauty",
+        "seoDesc": "Brows & Beauty"
+      }
+    ]
+  }
+]

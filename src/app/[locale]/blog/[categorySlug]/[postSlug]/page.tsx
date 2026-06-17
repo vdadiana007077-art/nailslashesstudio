@@ -5,7 +5,9 @@ import { Metadata } from 'next';
 import { Language } from '@prisma/client';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, User, HelpCircle, Sparkles, Scissors, Clock } from 'lucide-react';
-import DOMPurify from 'isomorphic-dompurify';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 type Props = {
   params: Promise<{ locale: string; categorySlug: string; postSlug: string }>;
@@ -106,7 +108,7 @@ export default async function BlogPostDetailPage({ params }: Props) {
             }
           },
           faqs: {
-            where: { isActive: true },
+            where: { isActive: true, language: languageEnum },
             orderBy: { order: 'asc' }
           },
           relatedServices: {
@@ -296,10 +298,24 @@ export default async function BlogPostDetailPage({ params }: Props) {
             )}
 
             {/* Rich Content */}
-            <div 
-              className="prose max-w-none text-gray-700 leading-relaxed text-sm md:text-base"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(translation.content) }}
-            />
+            <div className="text-gray-700 leading-relaxed text-sm md:text-base">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+                components={{
+                  h2: ({node, ...props}) => <h2 className="text-2xl font-serif font-bold text-gray-900 mt-10 mb-4" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3" {...props} />,
+                  p: ({node, ...props}) => <p className="mb-4 text-gray-600 leading-relaxed" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-6 text-gray-600 space-y-2" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-6 text-gray-600 space-y-2" {...props} />,
+                  li: ({node, ...props}) => <li {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
+                  blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-[var(--color-rose-300)] pl-4 italic text-gray-500 my-6" {...props} />,
+                }}
+              >
+                {translation.content}
+              </ReactMarkdown>
+            </div>
           </div>
         </article>
 
