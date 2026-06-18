@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { Language } from '@prisma/client';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Calendar, HelpCircle } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 type Props = {
   params: Promise<{ locale: string; categorySlug: string }>;
@@ -67,6 +68,7 @@ export default async function CategoryDetailPage({ params }: Props) {
 
   const { name, description } = categoryTranslation;
   const services = categoryTranslation.category.services;
+  const t = await getTranslations({ locale, namespace: 'CategoryDetail' });
 
   // Structured Data: Breadcrumb Schema
   const breadcrumbSchema = {
@@ -110,7 +112,7 @@ export default async function CategoryDetailPage({ params }: Props) {
           href={`/${locale}/services`} 
           className="inline-flex items-center gap-1.5 text-gray-500 hover:text-[var(--color-rose-700)] font-bold text-xs uppercase tracking-wider mb-8 transition-colors"
         >
-          <ArrowLeft size={16} /> Tüm Hizmetlere Dön
+          <ArrowLeft size={16} /> {t('backToAllServices')}
         </Link>
 
         {/* Category Info */}
@@ -123,7 +125,7 @@ export default async function CategoryDetailPage({ params }: Props) {
 
         {/* Services List */}
         <div className="space-y-6">
-          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6">Bu Kategoriye Ait İşlemler</h2>
+          <h2 className="text-xl font-serif font-bold text-gray-900 mb-6">{t('servicesInCategory')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {services.map((service) => (
               <div key={service.id} className="bg-white rounded-3xl p-6 border border-[var(--color-rose-100)] hover:border-[var(--color-rose-300)] shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
@@ -141,7 +143,7 @@ export default async function CategoryDetailPage({ params }: Props) {
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                    <Clock size={12} /> {service.duration} Dk
+                    <Clock size={12} /> {service.duration} {t('minutes')}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -149,13 +151,13 @@ export default async function CategoryDetailPage({ params }: Props) {
                       href={`/${locale}/services/${categorySlug}/${service.translations[0]?.slug}`}
                       className="py-2 rounded-xl text-center text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      Detaylar
+                      {t('examineDetails')}
                     </Link>
                     <Link
                       href={`/${locale}/booking?serviceId=${service.id}`}
                       className="py-2 rounded-xl text-center text-xs font-bold bg-gray-900 text-white hover:bg-black transition-colors flex items-center justify-center gap-1"
                     >
-                      <Calendar size={12} /> Randevu
+                      <Calendar size={12} /> {t('quickBooking')}
                     </Link>
                   </div>
                 </div>
@@ -165,7 +167,7 @@ export default async function CategoryDetailPage({ params }: Props) {
 
           {services.length === 0 && (
             <div className="text-center py-12 bg-white border border-dashed border-gray-200 rounded-2xl text-gray-400 text-sm">
-              Bu kategoride aktif bir hizmet bulunamadı.
+              {t('noServicesInCategory')}
             </div>
           )}
         </div>

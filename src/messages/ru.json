@@ -175,5 +175,13 @@
     "qualityText": "100% Гигиена и качество",
     "bookNow": "Записаться на эту процедуру",
     "faqTitle": "Часто задаваемые вопросы (FAQ)"
+  },
+  "CategoryDetail": {
+    "backToAllServices": "Вернуться ко всем услугам",
+    "servicesInCategory": "Услуги в этой категории",
+    "examineDetails": "Детали",
+    "quickBooking": "Записаться",
+    "noServicesInCategory": "В этой категории нет активных услуг.",
+    "minutes": "Мин"
   }
 }

@@ -190,5 +190,13 @@
     "qualityText": "%100 Hijyen & Kalite",
     "bookNow": "Bu İşlem İçin Randevu Al",
     "faqTitle": "Sıkça Sorulan Sorular (SSS)"
+  },
+  "CategoryDetail": {
+    "backToAllServices": "Tüm Hizmetlere Dön",
+    "servicesInCategory": "Bu Kategoriye Ait İşlemler",
+    "examineDetails": "Detaylar",
+    "quickBooking": "Randevu",
+    "noServicesInCategory": "Bu kategoride aktif bir hizmet bulunamadı.",
+    "minutes": "Dk"
   }
 }

@@ -190,5 +190,13 @@
     "qualityText": "100% Hygiene & Quality",
     "bookNow": "Book Appointment for this Service",
     "faqTitle": "Frequently Asked Questions (FAQ)"
+  },
+  "CategoryDetail": {
+    "backToAllServices": "Back to All Services",
+    "servicesInCategory": "Services in this Category",
+    "examineDetails": "Details",
+    "quickBooking": "Book Now",
+    "noServicesInCategory": "No active services found in this category.",
+    "minutes": "Min"
   }
 }

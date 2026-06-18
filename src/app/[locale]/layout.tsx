@@ -21,9 +21,14 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
+import { unstable_cache } from 'next/cache';
 import CookieConsentBanner from '@/components/layout/CookieConsentBanner';
 import SupportWidget from '@/components/widget/SupportWidget';
 import "../globals.css";
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 export const metadata = {
   title: 'Nails & Lashes Beauty Studio',
@@ -63,24 +68,32 @@ export default async function LocaleLayout({
   let menuItems: Array<{ id: string; menuType: any; title: string; url: string; order: number; isActive: boolean }> = [];
   let settings: Array<{ id: string; key: string; value: string; language: Language | null }> = [];
   try {
-    const rawMenuItems = await prisma.menuItem.findMany({
-      where: { 
-        isActive: true,
-        translations: {
-          some: {
-            language: languageEnum
-          }
-        }
+    const getCachedMenus = unstable_cache(
+      async () => {
+        return prisma.menuItem.findMany({
+          where: { 
+            isActive: true,
+            translations: {
+              some: {
+                language: languageEnum
+              }
+            }
+          },
+          include: {
+            translations: {
+              where: {
+                language: languageEnum
+              }
+            }
+          },
+          orderBy: { order: 'asc' }
+        });
       },
-      include: {
-        translations: {
-          where: {
-            language: languageEnum
-          }
-        }
-      },
-      orderBy: { order: 'asc' }
-    });
+      [`layout-menus-${languageEnum}`],
+      { revalidate: 3600, tags: ['menus'] }
+    );
+
+    const rawMenuItems = await getCachedMenus();
 
     menuItems = rawMenuItems.map(item => {
       const trans = item.translations[0];
@@ -94,14 +107,22 @@ export default async function LocaleLayout({
       };
     });
 
-    settings = await prisma.setting.findMany({
-      where: {
-        OR: [
-          { language: languageEnum },
-          { language: null }
-        ]
-      }
-    });
+    const getCachedSettings = unstable_cache(
+      async () => {
+        return prisma.setting.findMany({
+          where: {
+            OR: [
+              { language: languageEnum },
+              { language: null }
+            ]
+          }
+        });
+      },
+      [`layout-settings-${languageEnum}`],
+      { revalidate: 3600, tags: ['settings'] }
+    );
+
+    settings = await getCachedSettings();
   } catch (error) {
     console.error("Layout veri çekme hatası:", error);
   }
