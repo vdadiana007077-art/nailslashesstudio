@@ -137,7 +137,7 @@ export default function Navbar({ menus }: { menus: MenuItemProp[] }) {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           
           {/* Logo */}
-          <Link href="/" className="text-3xl font-serif italic font-bold text-[var(--color-primary-500)] tracking-widest hover:opacity-80 transition-opacity">
+          <Link href={locale === 'tr' ? '/' : `/${locale}`} className="text-3xl font-serif italic font-bold text-[var(--color-primary-500)] tracking-widest hover:opacity-80 transition-opacity">
             N&L
           </Link>
 

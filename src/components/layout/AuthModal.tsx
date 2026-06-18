@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { loginCustomer, registerCustomer } from '@/app/actions/customerAuth';
 import { X, Sparkles, Mail, Lock, User, Phone, CheckSquare, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const t = useTranslations('Auth');
 
   if (!isOpen) return null;
 
@@ -46,17 +48,17 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
     const passwordConfirm = formData.get('passwordConfirm') as string;
 
     if (password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır.');
+      setError(t('errPasswordLength'));
       return;
     }
 
     if (password !== passwordConfirm) {
-      setError('Şifreler uyuşmuyor, lütfen kontrol ediniz.');
+      setError(t('errPasswordMismatch'));
       return;
     }
 
     if (!kvkkConsent) {
-      setError('KVKK Aydınlatma Metnini onaylamanız gerekmektedir.');
+      setError(t('errKvkkRequired'));
       return;
     }
 
@@ -70,14 +72,14 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
     setLoading(false);
 
     if (res.success) {
-      setMsg('Kayıt başarılı! Oturum açılıyor...');
+      setMsg(t('msgRegisterSuccess'));
       if (onSuccess) onSuccess();
       setTimeout(() => {
         onClose();
         window.location.reload();
       }, 1500);
     } else {
-      setError(res.error || 'Bir hata oluştu.');
+      setError(res.error || t('msgDefaultError'));
     }
   };
 
@@ -92,14 +94,14 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
     setLoading(false);
 
     if (res.success) {
-      setMsg('Giriş başarılı! Yönlendiriliyorsunuz...');
+      setMsg(t('msgLoginSuccess'));
       if (onSuccess) onSuccess();
       setTimeout(() => {
         onClose();
         window.location.reload();
       }, 1500);
     } else {
-      setError(res.error || 'Bir hata oluştu.');
+      setError(res.error || t('msgDefaultError'));
     }
   };
 
@@ -155,7 +157,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
             Nails & Lashes Studio
           </h3>
           <p className="text-[11px] text-gray-400 mt-1.5 font-medium">
-            {activeTab === 'login' ? 'Hesabınıza giriş yapın' : activeTab === 'register' ? 'Yeni hesap oluşturun' : 'Şifrenizi sıfırlayın'}
+            {activeTab === 'login' ? t('loginSubtitle') : activeTab === 'register' ? t('registerSubtitle') : t('forgotSubtitle')}
           </p>
         </div>
 
@@ -172,8 +174,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                 <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
                 <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
                 <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-              </svg>
-              Google ile Devam Et
+              </svg>\n              {t('continueWithGoogle')}
             </button>
 
             {/* Apple ile giriş henüz yapılandırılmadığı için geçici olarak gizlenmiştir */}
@@ -196,7 +197,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative bg-white px-4 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                veya e-posta ile
+                {t('orWithEmail')}
               </div>
             </div>
           </div>
@@ -210,16 +211,14 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 activeTab === 'login' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400 hover:text-gray-600'
               }`}
-            >
-              Giriş Yap
+            >\n              {t('loginTab')}
             </button>
             <button
               onClick={() => switchTab('register')}
               className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 activeTab === 'register' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400 hover:text-gray-600'
               }`}
-            >
-              Üye Ol
+            >\n              {t('registerTab')}
             </button>
           </div>
         )}
@@ -242,7 +241,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
           {activeTab === 'login' && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">E-Posta Adresi</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">{t('emailLabel')}</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Mail size={16} />
@@ -251,7 +250,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                     type="email"
                     name="email"
                     required
-                    placeholder="ornek@mail.com"
+                    placeholder={t('emailPlaceholder')}
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-300)] focus:border-transparent focus:bg-white transition-all text-sm text-gray-800"
                   />
                 </div>
@@ -259,7 +258,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Şifre</label>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('passwordLabel')}</label>
                   <button 
                     type="button" 
                     onClick={() => switchTab('forgot')}
@@ -295,9 +294,9 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                 className="w-full py-3.5 bg-gradient-to-r from-[var(--color-rose-500)] to-[var(--color-rose-600)] hover:from-[var(--color-rose-600)] hover:to-[var(--color-rose-700)] disabled:from-gray-300 disabled:to-gray-400 text-white text-xs font-bold uppercase tracking-widest rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
                 {loading ? (
-                  <><Loader2 size={16} className="animate-spin" /> GİRİŞ YAPILIYOR...</>
+                  <><Loader2 size={16} className="animate-spin" /> {t('loginLoading')}</>
                 ) : (
-                  <>GİRİŞ YAP <ArrowRight size={14} /></>
+                  <>{t('loginButton')} <ArrowRight size={14} /></>
                 )}
               </button>
             </form>
@@ -316,7 +315,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                     type="text"
                     name="name"
                     required
-                    placeholder="Adınız Soyadınız"
+                    placeholder={t('fullNamePlaceholder')}
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-300)] focus:border-transparent focus:bg-white transition-all text-sm text-gray-800"
                   />
                 </div>
@@ -332,14 +331,14 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                     type="email"
                     name="email"
                     required
-                    placeholder="ornek@mail.com"
+                    placeholder={t('emailPlaceholder')}
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-300)] focus:border-transparent focus:bg-white transition-all text-sm text-gray-800"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Telefon</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">{t('phoneLabel')}</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Phone size={16} />
@@ -361,7 +360,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                       type={showPassword ? 'text' : 'password'}
                       name="password"
                       required
-                      placeholder="Min. 6 karakter"
+                      placeholder={t('passwordMin')}
                       className="w-full px-3.5 pr-9 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-300)] focus:border-transparent focus:bg-white transition-all text-sm text-gray-800"
                     />
                     <button 
@@ -380,7 +379,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                       type={showPasswordConfirm ? 'text' : 'password'}
                       name="passwordConfirm"
                       required
-                      placeholder="Şifre tekrar"
+                      placeholder={t('passwordConfirmPlaceholder')}
                       className="w-full px-3.5 pr-9 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-300)] focus:border-transparent focus:bg-white transition-all text-sm text-gray-800"
                     />
                     <button 
@@ -403,7 +402,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                   {kvkkConsent && <CheckSquare size={12} className="text-white stroke-[3]" />}
                 </div>
                 <span className="leading-relaxed" onClick={(e) => e.stopPropagation()}>
-                  <Link href={`/${locale}/kvkk`} target="_blank" className="text-[var(--color-rose-600)] hover:text-[var(--color-rose-700)] hover:underline font-bold transition-colors">KVKK Aydınlatma Metnini</Link> okudum ve onaylıyorum. <span className="text-rose-500">*</span>
+                  <Link href={`/${locale}/kvkk`} target="_blank" className="text-[var(--color-rose-600)] hover:text-[var(--color-rose-700)] hover:underline font-bold transition-colors">{t('kvkkLink')}</Link>{t('kvkkConsent')} <span className="text-rose-500">*</span>
                 </span>
               </div>
 
@@ -415,7 +414,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                 <div className={`shrink-0 flex items-center justify-center w-[18px] h-[18px] rounded-md transition-all border-2 mt-0.5 ${newsletterConsent ? 'bg-[var(--color-rose-600)] border-[var(--color-rose-600)]' : 'bg-white border-gray-300'}`}>
                   {newsletterConsent && <CheckSquare size={12} className="text-white stroke-[3]" />}
                 </div>
-                <span className="leading-relaxed">Kampanyalardan, indirimlerden ve özel tekliflerden haberdar olmak istiyorum.</span>
+                <span className="leading-relaxed">{t('newsletterConsent')}</span>
               </div>
 
               <button
@@ -424,9 +423,9 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                 className="w-full py-3.5 bg-gradient-to-r from-[var(--color-rose-500)] to-[var(--color-rose-600)] hover:from-[var(--color-rose-600)] hover:to-[var(--color-rose-700)] disabled:from-gray-300 disabled:to-gray-400 text-white text-xs font-bold uppercase tracking-widest rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
                 {loading ? (
-                  <><Loader2 size={16} className="animate-spin" /> KAYIT YAPILIYOR...</>
+                  <><Loader2 size={16} className="animate-spin" /> {t('registerLoading')}</>
                 ) : (
-                  <>ÜYE OL <ArrowRight size={14} /></>
+                  <>{t('registerButton')} <ArrowRight size={14} /></>
                 )}
               </button>
             </form>
@@ -440,11 +439,11 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                   <Lock size={22} className="text-amber-500" />
                 </div>
                 <h4 className="font-bold text-gray-900 text-base">Şifrenizi mi Unuttunuz?</h4>
-                <p className="text-[11px] text-gray-400 mt-1.5">E-posta adresinizi girin, şifre sıfırlama bağlantısı göndereceğiz.</p>
+                <p className="text-[11px] text-gray-400 mt-1.5">{t('forgotDesc')}</p>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">E-Posta Adresiniz</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">{t('emailLabelForgot')}</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Mail size={16} />
@@ -453,7 +452,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                     type="email"
                     name="email"
                     required
-                    placeholder="ornek@mail.com"
+                    placeholder={t('emailPlaceholder')}
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--color-rose-300)] focus:border-transparent focus:bg-white transition-all text-sm text-gray-800"
                   />
                 </div>
@@ -464,8 +463,7 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
                   type="button"
                   onClick={() => switchTab('login')}
                   className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-2xl transition-colors cursor-pointer text-center bg-white uppercase tracking-widest"
-                >
-                  Geri Dön
+                >\n                  {t('goBack')}
                 </button>
                 <button
                   type="submit"
