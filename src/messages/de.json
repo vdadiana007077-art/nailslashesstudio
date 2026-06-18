@@ -180,5 +180,15 @@
     "msgLoginSuccess": "Erfolgreich angemeldet! Weiterleitung...",
     "msgDefaultError": "Ein Fehler ist aufgetreten.",
     "msgResetSent": "Link zum Zurücksetzen wurde an {email} gesendet."
+  },
+  "ServiceDetail": {
+    "backToServices": "Zurück zu den Dienstleistungen",
+    "duration": "Dauer",
+    "minutes": "Minuten",
+    "price": "Servicegebühr",
+    "quality": "Qualitätssicherung",
+    "qualityText": "100% Hygiene & Qualität",
+    "bookNow": "Termin für diesen Service buchen",
+    "faqTitle": "Häufig gestellte Fragen (FAQ)"
   }
 }

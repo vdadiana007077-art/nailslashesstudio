@@ -180,5 +180,15 @@
     "msgLoginSuccess": "Login successful! Redirecting...",
     "msgDefaultError": "An error occurred.",
     "msgResetSent": "Password reset link has been sent to {email}."
+  },
+  "ServiceDetail": {
+    "backToServices": "Back to Services",
+    "duration": "Duration",
+    "minutes": "Minutes",
+    "price": "Service Fee",
+    "quality": "Quality Assurance",
+    "qualityText": "100% Hygiene & Quality",
+    "bookNow": "Book Appointment for this Service",
+    "faqTitle": "Frequently Asked Questions (FAQ)"
   }
 }

@@ -180,5 +180,15 @@
     "msgLoginSuccess": "Giriş başarılı! Yönlendiriliyorsunuz...",
     "msgDefaultError": "Bir hata oluştu.",
     "msgResetSent": "Şifre sıfırlama bağlantısı {email} adresine gönderildi."
+  },
+  "ServiceDetail": {
+    "backToServices": "Hizmetlere Geri Dön",
+    "duration": "İşlem Süresi",
+    "minutes": "Dakika",
+    "price": "Hizmet Ücreti",
+    "quality": "Kalite Güvencesi",
+    "qualityText": "%100 Hijyen & Kalite",
+    "bookNow": "Bu İşlem İçin Randevu Al",
+    "faqTitle": "Sıkça Sorulan Sorular (SSS)"
   }
 }
