@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { Language } from '@prisma/client';
@@ -38,9 +38,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+export const revalidate = 3600;
+
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
+
+  setRequestLocale(resolvedParams.locale);
 
   const t = await getTranslations('Index');
 

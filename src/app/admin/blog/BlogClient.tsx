@@ -72,11 +72,12 @@ export default function BlogClient({ initialPosts, categories }: BlogClientProps
   const getSeoScore = (post: BlogPostItem) => {
     let total = 0, filled = 0;
     post.translations.forEach((t: any) => {
-      total += 4;
+      total += 5;
       if (t.seoTitle) filled++;
       if (t.seoDesc) filled++;
       if (t.canonical) filled++;
       if (t.ogImage) filled++;
+      if (t.excerpt) filled++;
     });
     return total > 0 ? Math.round((filled / total) * 100) : 0;
   };

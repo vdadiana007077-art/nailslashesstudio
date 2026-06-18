@@ -54,3 +54,4 @@ Bu dosya proje ile ilgili önemli gelişmeleri, planlamaları ve güncellemeleri
 
 ## Kurallar ve Kararlar
 - **Kritik:** Bu proje her zaman ve sadece `1000` portu üzerinden çalıştırılacaktır (`localhost:1000`). Çakışmaları önlemek için `package.json` dosyası kalıcı olarak bu şekilde güncellenmiştir.
+- **Kritik:** Kullanıcının Vercel build (derleme) kontörlerinin tükenmemesi için AI asistanı HİÇBİR ZAMAN otomatik olarak `git push` komutunu çalıştırmamalıdır. Kod değişiklikleri sadece yerelde (local) bırakılmalı ve canlıya gönderme kararı tamamen kullanıcıya (manuel olarak yapması için) bırakılmalıdır.
