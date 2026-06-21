@@ -322,7 +322,7 @@ export async function cancelAppointment(appointmentId: string) {
     }
 
     // Randevuyu iptal et
-    const updatedAppt = await prisma.appointment.update({
+    const _updatedAppt = await prisma.appointment.update({
       where: { id: appointmentId },
       data: { status: 'CANCELLED' }
     });

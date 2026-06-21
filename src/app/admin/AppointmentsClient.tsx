@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import {
-  Clock, Eye, X, CheckCircle, AlertCircle,
-  XCircle, RotateCcw, MessageSquare, ChevronDown, Trash2
-} from 'lucide-react';
+import { Clock, Eye, X, CheckCircle, AlertCircle, XCircle, RotateCcw, Trash2 } from 'lucide-react';
 import { updateAppointmentStatus, updateAppointmentNotes, rescheduleAppointment, deleteAppointment } from '@/app/actions/appointment';
 
 interface AppointmentItem {

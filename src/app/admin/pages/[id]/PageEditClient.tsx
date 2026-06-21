@@ -4,11 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { createCmsPage, updateCmsPage, deleteCmsPage } from '@/app/actions/cms-page';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft, Save, Globe, Settings, Search as SearchIcon,
-  Eye, Trash2, ToggleLeft, ToggleRight, FileText,
-  Check, X, Loader2, Image as ImageIcon, Type, Link as LinkIcon, Layout
-} from 'lucide-react';
+import { ArrowLeft, Save, Globe, Settings, Search as SearchIcon, Trash2, ToggleLeft, ToggleRight, FileText, Check, Loader2, Image as ImageIcon, Type, Layout } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import MediaPickerModal from '@/components/admin/MediaPickerModal';

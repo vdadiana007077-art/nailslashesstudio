@@ -3,18 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { 
-  Calendar as CalendarIcon, 
-  Clock, 
-  User, 
-  CheckCircle2, 
-  ChevronRight, 
-  ChevronLeft, 
-  Loader2,
-  MapPin,
-  Scissors,
-  Layers
-} from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, CheckCircle2, ChevronRight, ChevronLeft, Loader2, MapPin, Scissors, Layers } from 'lucide-react';
 import { createBooking } from '@/app/actions/booking';
 import { getAvailableTimeSlots } from '@/app/actions/availability';
 import type { SlotInfo } from '@/app/actions/availability';

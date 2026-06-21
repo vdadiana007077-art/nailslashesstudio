@@ -3,22 +3,7 @@
 import { useState } from 'react';
 import { createCoupon, updateCoupon, deleteCoupon } from '@/app/actions/coupon';
 import { DiscountType } from '@prisma/client';
-import { 
-  Plus, 
-  Search, 
-  Calendar, 
-  Ticket, 
-  Percent, 
-  DollarSign, 
-  CheckCircle, 
-  AlertCircle,
-  X,
-  Edit,
-  Trash2,
-  Lock,
-  Unlock,
-  Check
-} from 'lucide-react';
+import { Plus, Search, Calendar, Ticket, Percent, DollarSign, CheckCircle, AlertCircle, X, Edit, Trash2, Lock, Unlock } from 'lucide-react';
 
 interface CouponItem {
   id: string;

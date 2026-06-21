@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Upload, Copy, Check, FileText, Image as ImageIcon } from 'lucide-react';
+import { Upload, Copy, Check, FileText } from 'lucide-react';
 
 interface MediaItem {
   id: string;

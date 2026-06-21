@@ -115,6 +115,7 @@ export default function AvailabilityClient({ locations, staffList, services: _se
     if (activeTab === 'slots') { loadDashboard(); loadSlots(); }
     if (activeTab === 'hours') loadHours();
     if (activeTab === 'leaves') { loadHolidays(); loadTimeBlocks(); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, selectedLocationId, selectedDate, selectedStaffId]);
 
   // ═══════ SLOT İŞLEMLERİ ═══════
@@ -253,10 +254,10 @@ export default function AvailabilityClient({ locations, staffList, services: _se
 
   // ═══════ TABS ═══════
   const tabs = [
-    { key: 'slots' as const, label: 'Günlük Slotlar', icon: Clock },
-    { key: 'hours' as const, label: 'Çalışma Saatleri', icon: Settings },
-    { key: 'leaves' as const, label: 'İzin & Tatil', icon: CalendarDays },
-    { key: 'bulk' as const, label: 'Toplu İşlemler', icon: Layers },
+    { key: 'slots' as const, label: 'Günlük Slotlar', shortLabel: 'Slotlar', icon: Clock },
+    { key: 'hours' as const, label: 'Çalışma Saatleri', shortLabel: 'Saatler', icon: Settings },
+    { key: 'leaves' as const, label: 'İzin & Tatil', shortLabel: 'İzin', icon: CalendarDays },
+    { key: 'bulk' as const, label: 'Toplu İşlemler', shortLabel: 'Toplu', icon: Layers },
   ];
 
   return (
@@ -286,13 +287,13 @@ export default function AvailabilityClient({ locations, staffList, services: _se
       </div>
 
       {/* ═══════ SEKMELER ═══════ */}
-      <div className="flex gap-2 bg-white p-2 rounded-2xl border border-gray-150 shadow-sm">
+      <div className="flex gap-2 bg-white p-2 rounded-2xl border border-gray-150 shadow-sm overflow-x-auto">
         {tabs.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+            className={`flex-shrink-0 flex-1 min-w-0 flex items-center justify-center gap-1.5 px-3 md:px-4 py-3 rounded-xl font-semibold text-xs md:text-sm transition-all whitespace-nowrap ${
               activeTab === tab.key ? 'bg-gray-900 text-white shadow-md' : 'bg-transparent text-gray-500 hover:bg-gray-50'
             }`}>
-            <tab.icon size={16} /> {tab.label}
+            <tab.icon size={14} className="flex-shrink-0" /> <span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.shortLabel || tab.label}</span>
           </button>
         ))}
       </div>

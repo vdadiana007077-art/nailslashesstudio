@@ -2,34 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Calendar, 
-  Settings, 
-  Tags, 
-  MapPin, 
-  Image, 
-  Inbox, 
-  Mail, 
-  Ticket, 
-  Gift, 
-  Globe, 
-  LogOut,
-  Sparkles,
-  Scissors,
-  Users,
-  TrendingUp,
-  Activity,
-  Menu,
-  FileText,
-  BookOpen,
-  HelpCircle,
-  Clock,
-  ArrowRightLeft,
-  Briefcase,
-  Package,
-  MessageSquare,
-  Hash
-} from 'lucide-react';
+import { Calendar, Settings, Tags, MapPin, Image, Inbox, Mail, Ticket, Gift, Globe, LogOut, Sparkles, Scissors, Users, TrendingUp, Activity, FileText, BookOpen, HelpCircle, Clock, ArrowRightLeft, Briefcase, Package, MessageSquare, Hash } from 'lucide-react';
 import { logoutAdmin } from '@/app/actions/auth';
 
 

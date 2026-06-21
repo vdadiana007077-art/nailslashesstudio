@@ -73,7 +73,7 @@ export const sendBookingEmail = async (
         const parsedBody = JSON.parse(customerTemplate.body);
         subject = parsedSubject[lang] || parsedSubject['TR'] || customerTemplate.subject;
         html = parsedBody[lang] || parsedBody['TR'] || customerTemplate.body;
-      } catch (e) {
+      } catch (_) {
         // JSON formatında değilse doğrudan kullanılır
       }
 
@@ -136,7 +136,7 @@ export const sendTemplateEmail = async (
       const parsedBody = JSON.parse(template.body);
       subject = parsedSubject[lang] || parsedSubject['TR'] || template.subject;
       html = parsedBody[lang] || parsedBody['TR'] || template.body;
-    } catch (e) {
+    } catch (_) {
       // JSON formatında değilse doğrudan kullanılır
     }
 

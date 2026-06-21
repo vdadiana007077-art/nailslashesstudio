@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import AdminShell from '@/components/admin/AdminShell';
-import { Activity, Mail, User, ShieldAlert, Calendar } from 'lucide-react';
+import { ShieldAlert, Calendar } from 'lucide-react';
 
 export default async function AuditLogsPage() {
   const cookieStore = await cookies();

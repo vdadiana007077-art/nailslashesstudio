@@ -1,17 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { 
-  Calendar, 
-  Clock, 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  Scissors, 
-  DollarSign, 
-  CalendarDays,
-  Sparkles
-} from 'lucide-react';
+import { Calendar, Users, Scissors, DollarSign, CalendarDays } from 'lucide-react';
 import AdminShell from '@/components/admin/AdminShell';
 import AppointmentsClient from './AppointmentsClient';
 

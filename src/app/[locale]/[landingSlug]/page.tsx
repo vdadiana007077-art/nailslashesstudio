@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { Language } from '@prisma/client';

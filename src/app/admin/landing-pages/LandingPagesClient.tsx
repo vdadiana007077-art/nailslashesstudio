@@ -3,21 +3,7 @@
 import { useState } from 'react';
 import { createLandingPage, updateLandingPage, deleteLandingPage } from '@/app/actions/landing-page';
 import { Language } from '@prisma/client';
-import { 
-  Plus, 
-  Search, 
-  Globe, 
-  FileText, 
-  Settings, 
-  CheckCircle, 
-  AlertCircle,
-  X,
-  Edit,
-  Trash2,
-  Check,
-  Eye,
-  Info
-} from 'lucide-react';
+import { Plus, Search, Globe, Settings, CheckCircle, AlertCircle, X, Edit, Trash2, Info } from 'lucide-react';
 
 interface PageTranslation {
   id: string;
@@ -47,7 +33,7 @@ interface LandingPagesClientProps {
   currentLocale: string;
 }
 
-export default function LandingPagesClient({ initialPages, currentLocale }: LandingPagesClientProps) {
+export default function LandingPagesClient({ initialPages, currentLocale: _currentLocale }: LandingPagesClientProps) {
   const [pages, setPages] = useState<LandingPageItem[]>(initialPages);
   const [searchTerm, setSearchTerm] = useState<string>('');
   

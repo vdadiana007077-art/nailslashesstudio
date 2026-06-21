@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import AdminShell from '@/components/admin/AdminShell';
 import AccountingClient from './AccountingClient';
-import { TrendingUp, Landmark } from 'lucide-react';
 
 export default async function AccountingPage() {
   const cookieStore = await cookies();

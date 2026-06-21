@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { Language } from '@prisma/client';
 import Link from 'next/link';
-import { ArrowLeft, Clock, Calendar, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 type Props = {

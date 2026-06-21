@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import { deleteCmsPage, togglePageMenuStatus } from '@/app/actions/cms-page';
-import { 
-  Plus, Edit2, Trash2, Search, FileText, Eye, ToggleLeft, ToggleRight
-} from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface PageTranslation {
@@ -87,7 +85,7 @@ export default function PagesClient({ initialPages }: PagesClientProps) {
     return tr?.title || page.translations[0]?.title || 'Başlıksız';
   };
 
-  const getSlug = (page: CmsPageItem) => {
+  const _getSlug = (page: CmsPageItem) => {
     const tr = page.translations.find(t => t.language === 'TR');
     return tr?.slug || page.translations[0]?.slug || '';
   };
@@ -158,7 +156,7 @@ export default function PagesClient({ initialPages }: PagesClientProps) {
                   </td>
                 </tr>
               ) : (
-                sortedPages.map((page, idx) => {
+                sortedPages.map((page, _idx) => {
                   return (
                     <tr key={page.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors group">
                       {/* Sıra */}

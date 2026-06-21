@@ -2,23 +2,7 @@
 
 import { useState } from 'react';
 import { createRedirect, updateRedirect, deleteRedirect } from '@/app/actions/seo';
-import { 
-  Plus, 
-  Search, 
-  Settings, 
-  CheckCircle, 
-  AlertCircle,
-  X,
-  Edit,
-  Trash2,
-  Check,
-  Link2,
-  Globe,
-  ArrowRight,
-  ShieldAlert,
-  FileText,
-  RefreshCw
-} from 'lucide-react';
+import { Plus, Search, CheckCircle, AlertCircle, X, Edit, Trash2, Link2, Globe, ArrowRight, ShieldAlert, FileText } from 'lucide-react';
 
 interface RedirectItem {
   id: string;

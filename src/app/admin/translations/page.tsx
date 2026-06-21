@@ -11,7 +11,7 @@ export default async function AdminTranslationsPage() {
     try {
       const messages = (await import(`@/messages/${locale}.json`)).default;
       defaultMessages[locale] = messages;
-    } catch (e) {
+    } catch (_) {
       console.warn(`Could not load default messages for locale: ${locale}`);
       defaultMessages[locale] = {};
     }

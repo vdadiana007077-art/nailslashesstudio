@@ -56,7 +56,7 @@ export default async function GalleryPageContent({ params }: { params: Promise<{
       });
 
       dbItems = legacyItems;
-    } catch (_e) { /* ignore */ }
+    } catch (_) { /* ignore */ }
   }
 
   // Fallback görseller (hiç veri yoksa)

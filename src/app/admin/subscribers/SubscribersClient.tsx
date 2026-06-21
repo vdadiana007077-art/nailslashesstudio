@@ -3,19 +3,7 @@
 import { useState } from 'react';
 import { createSubscriber, toggleSubscriberStatus } from '@/app/actions/subscriber';
 import { Language } from '@prisma/client';
-import { 
-  Search, 
-  Plus, 
-  Mail, 
-  Calendar, 
-  Globe, 
-  CheckCircle, 
-  AlertCircle,
-  Download,
-  Trash2,
-  Check,
-  XCircle
-} from 'lucide-react';
+import { Search, Plus, Mail, Calendar, Globe, CheckCircle, AlertCircle, Download, Check, XCircle } from 'lucide-react';
 
 interface SubscriberItem {
   id: string;

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 
-const LANGUAGES: Language[] = ['TR', 'EN', 'DE', 'RU'];
+const _LANGUAGES: Language[] = ['TR', 'EN', 'DE', 'RU'];
 
 // ═══════════════════════════════════════════════════
 // GALERİ KATEGORİ İŞLEMLERİ
@@ -152,7 +152,7 @@ export async function reorderGalleryCategories(items: Array<{ id: string; order:
     }
     revalidatePath('/admin/gallery');
     return { success: true };
-  } catch (_e) {
+  } catch (_) {
     return { success: false };
   }
 }
@@ -296,7 +296,7 @@ export async function reorderGalleryItems(items: Array<{ id: string; order: numb
     }
     revalidatePath('/admin/gallery');
     return { success: true };
-  } catch (_e) {
+  } catch (_) {
     return { success: false };
   }
 }
@@ -311,7 +311,7 @@ export async function toggleGalleryItemFeatured(id: string) {
     });
     revalidatePath('/admin/gallery');
     return { success: true, isFeatured: !item.isFeatured };
-  } catch (_e) {
+  } catch (_) {
     return { success: false };
   }
 }

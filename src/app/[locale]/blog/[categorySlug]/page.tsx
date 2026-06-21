@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { Language } from '@prisma/client';
 import Link from 'next/link';
-import { ArrowLeft, Clock, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 
 type Props = {
   params: Promise<{ locale: string; categorySlug: string }>;

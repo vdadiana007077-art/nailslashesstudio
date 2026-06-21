@@ -9,7 +9,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
     return NextResponse.json({ success: true, media: mediaItems });
-  } catch (error) {
+  } catch (_) {
     return NextResponse.json({ success: false, error: 'Medya kütüphanesi yüklenemedi.' }, { status: 500 });
   }
 }
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const uploadDir = join(process.cwd(), 'public', 'uploads');
     try {
       await mkdir(uploadDir, { recursive: true });
-    } catch (err) {}
+    } catch (_) {}
 
     // Benzersiz dosya ismi oluştur
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);

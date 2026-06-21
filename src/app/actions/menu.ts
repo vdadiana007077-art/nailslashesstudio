@@ -90,7 +90,7 @@ export async function createMenuItem(formData: FormData) {
   let translations: Array<{ language: Language; title: string; url: string; seoTitle?: string; seoDesc?: string; ogImage?: string; headerImage?: string; }> = [];
   try {
     translations = JSON.parse(translationsRaw);
-  } catch (e) {
+  } catch (_) {
     return { success: false, error: 'Çeviri verileri geçersiz!' };
   }
 
@@ -157,7 +157,7 @@ export async function updateMenuItem(id: string, translationsRaw: string, formDa
   let translations: Array<{ language: Language; title: string; url: string; seoTitle?: string; seoDesc?: string; ogImage?: string; headerImage?: string; }> = [];
   try {
     translations = JSON.parse(translationsRaw);
-  } catch (e) {
+  } catch (_) {
     return { success: false, error: 'Çeviri verileri geçersiz!' };
   }
 

@@ -68,7 +68,7 @@ export default function TranslationsClient({ defaultMessages, dbTranslations, lo
         }
       }
       showSuccess('Çeviri başarıyla kaydedildi.');
-    } catch (e) {
+    } catch (_) {
       alert('Bir hata oluştu.');
     }
     
@@ -92,7 +92,7 @@ export default function TranslationsClient({ defaultMessages, dbTranslations, lo
         return updated;
       });
       showSuccess('Çeviri varsayılan haline sıfırlandı.');
-    } catch (e) {
+    } catch (_) {
       alert('Bir hata oluştu.');
     }
     setSavingKeys(prev => ({ ...prev, [`${ns}-${key}`]: false }));

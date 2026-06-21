@@ -4,23 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { createPortfolioItem, updatePortfolioItem, deletePortfolioItem } from '@/app/actions/portfolio';
 import { Language } from '@prisma/client';
-import { 
-  Plus, 
-  Search, 
-  Globe, 
-  Settings, 
-  CheckCircle, 
-  AlertCircle,
-  X,
-  Edit,
-  Trash2,
-  Check,
-  Eye,
-  Info,
-  Calendar,
-  Image as ImageIcon,
-  ArrowRight
-} from 'lucide-react';
+import { Plus, Search, CheckCircle, AlertCircle, X, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 
 interface ItemTranslation {
   id: string;

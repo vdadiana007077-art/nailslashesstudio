@@ -385,7 +385,7 @@ export async function getLocationHolidays(locationId: string) {
       orderBy: { date: 'asc' },
     });
     return { success: true, data: JSON.parse(JSON.stringify(holidays)) };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Tatil günleri getirilemedi.' };
   }
 }
@@ -404,7 +404,7 @@ export async function addLocationHoliday(locationId: string, dateStr: string, de
     revalidatePath('/admin/availability');
     await logAction('Şube Tatil Günü Eklendi', `Şube ID: ${locationId}, Tarih: ${dateStr}`);
     return { success: true, data: JSON.parse(JSON.stringify(holiday)) };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Tatil günü eklenirken hata oluştu.' };
   }
 }
@@ -415,7 +415,7 @@ export async function deleteLocationHoliday(holidayId: string) {
     revalidatePath('/admin/availability');
     await logAction('Şube Tatil Günü Silindi', `Tatil ID: ${holidayId}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Tatil günü silinirken hata oluştu.' };
   }
 }
@@ -435,7 +435,7 @@ export async function getSlots(locationId: string, dateStr: string) {
       include: { staff: true },
     });
     return { success: true, slots: JSON.parse(JSON.stringify(slots)) };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Slotlar getirilemedi.' };
   }
 }
@@ -474,7 +474,7 @@ export async function blockSlot(
     }
     revalidatePath('/admin/availability');
     return { success: true, slot: JSON.parse(JSON.stringify(slot)) };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Slot güncellenirken hata oluştu.' };
   }
 }
@@ -512,7 +512,7 @@ export async function updateSlotCapacity(
     }
     revalidatePath('/admin/availability');
     return { success: true, slot: JSON.parse(JSON.stringify(slot)) };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Slot kapasitesi güncellenirken hata oluştu.' };
   }
 }
@@ -534,7 +534,7 @@ export async function getTimeBlocks(locationId: string, dateStr: string, staffId
       orderBy: { startTime: 'asc' },
     });
     return { success: true, data: JSON.parse(JSON.stringify(blocks)) };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Blokeler getirilemedi.' };
   }
 }
@@ -558,7 +558,7 @@ export async function addTimeBlock(
     revalidatePath('/admin/availability');
     await logAction('TimeBlock Eklendi', `Şube: ${locationId}, Tarih: ${dateStr}, ${startTime}-${endTime}`);
     return { success: true, data: JSON.parse(JSON.stringify(block)) };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Bloke oluşturulurken hata oluştu.' };
   }
 }
@@ -569,7 +569,7 @@ export async function deleteTimeBlock(blockId: string) {
     revalidatePath('/admin/availability');
     await logAction('TimeBlock Silindi', `Bloke ID: ${blockId}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Bloke silinirken hata oluştu.' };
   }
 }
@@ -614,7 +614,7 @@ export async function createBulkSlots(
     revalidatePath('/admin/availability');
     await logAction('Toplu Slot Oluşturma', `Şube: ${locationId}, Tarih: ${dateStr}, Oluşturulan: ${created}, Güncellenen: ${updated}`);
     return { success: true, created, updated };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Toplu slot oluşturulurken hata oluştu.' };
   }
 }
@@ -655,7 +655,7 @@ export async function applyWeeklyTemplate(
 
     await logAction('Haftalık Şablon Uygulandı', `Şube: ${locationId}, ${weekCount} hafta, Oluşturulan: ${totalCreated}, Güncellenen: ${totalUpdated}`);
     return { success: true, created: totalCreated, updated: totalUpdated };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Haftalık şablon uygulanırken hata oluştu.' };
   }
 }

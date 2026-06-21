@@ -3,22 +3,7 @@
 import { useState } from 'react';
 import { createGiftCard, updateGiftCard, deleteGiftCard } from '@/app/actions/giftcard';
 import { GiftCardStatus } from '@prisma/client';
-import { 
-  Plus, 
-  Search, 
-  Calendar, 
-  Gift, 
-  DollarSign, 
-  CheckCircle, 
-  AlertCircle,
-  X,
-  Edit,
-  Trash2,
-  Lock,
-  Unlock,
-  Check,
-  CreditCard
-} from 'lucide-react';
+import { Plus, Search, Calendar, CheckCircle, AlertCircle, X, Edit, Trash2, CreditCard } from 'lucide-react';
 
 interface GiftCardItem {
   id: string;

@@ -2,10 +2,7 @@
 
 import { useState } from 'react';
 import { updateLeadStatus, updateLeadNotes } from '@/app/actions/lead';
-import { 
-  Search, Mail, Phone, User, Calendar, MessageSquare, 
-  CheckCircle, AlertCircle, Clock, X, Eye, ChevronDown
-} from 'lucide-react';
+import { Search, Mail, Phone, Calendar, MessageSquare, CheckCircle, AlertCircle, Clock, X, Eye } from 'lucide-react';
 
 interface ContactMessage {
   id: string;

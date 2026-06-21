@@ -3,22 +3,7 @@
 import { useState } from 'react';
 import { createFaq, updateFaq, deleteFaq } from '@/app/actions/faq';
 import { Language } from '@prisma/client';
-import { 
-  Plus, 
-  Search, 
-  Globe, 
-  Settings, 
-  CheckCircle, 
-  AlertCircle,
-  X,
-  Edit,
-  Trash2,
-  Check,
-  Eye,
-  Info,
-  HelpCircle,
-  Link2
-} from 'lucide-react';
+import { Plus, Search, Globe, CheckCircle, AlertCircle, X, Edit, Trash2, HelpCircle, Link2 } from 'lucide-react';
 
 interface FaqItem {
   id: string;

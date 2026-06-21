@@ -2,21 +2,7 @@
 
 import { useState } from 'react';
 import { saveMultipleSettings } from '@/app/actions/setting';
-import { 
-  CheckCircle, 
-  AlertCircle,
-  Phone,
-  Mail,
-  MapPin,
-  Camera,
-  Link as LinkIcon,
-  Play,
-  Clock,
-  DollarSign,
-  Star,
-  Settings,
-  MessageSquare
-} from 'lucide-react';
+import { CheckCircle, AlertCircle, Phone, Mail, MapPin, Camera, Link as LinkIcon, Play, Clock, Star, Settings, MessageSquare } from 'lucide-react';
 import { Language } from '@prisma/client';
 
 interface SettingItem {
@@ -31,7 +17,7 @@ interface SettingsClientProps {
 }
 
 export default function SettingsClient({ initialSettings }: SettingsClientProps) {
-  const [settings, setSettings] = useState<SettingItem[]>(initialSettings);
+  const [settings, _setSettings] = useState<SettingItem[]>(initialSettings);
   const [activeTab, setActiveTab] = useState<'contact' | 'social' | 'system'>('contact');
   
   // Form State'leri (mevcut verileri yükle)

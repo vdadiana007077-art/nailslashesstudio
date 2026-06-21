@@ -3,18 +3,7 @@
 import { useState } from 'react';
 import { updateLeadStatus, updateLeadNotes } from '@/app/actions/lead';
 import { LeadStatus } from '@prisma/client';
-import { 
-  Phone, 
-  Mail, 
-  Calendar, 
-  MessageSquare, 
-  Tag, 
-  Clock, 
-  CheckCircle, 
-  FileText, 
-  Check, 
-  AlertCircle 
-} from 'lucide-react';
+import { Phone, Mail, Calendar, MessageSquare, Clock, CheckCircle, FileText, Check, AlertCircle } from 'lucide-react';
 
 interface LeadItem {
   id: string;

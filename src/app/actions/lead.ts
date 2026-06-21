@@ -65,7 +65,7 @@ export async function updateLeadNotes(id: string, notes: string) {
   }
 }
 
-export async function deleteLead(id: string) {
+export async function deleteLead(_id: string) {
   try {
     // Kurallar gereği admin onayı olmadan silme yapılmayacak, ama soft-delete yapısı yoksa veya doğrudan silme ise:
     // Lead modelinde soft-delete alanı yok. O yüzden doğrudan siliyoruz veya pasife çekiyoruz.
@@ -74,7 +74,7 @@ export async function deleteLead(id: string) {
     // O yüzden silme fonksiyonunu eklemeyelim veya eğer silme kesin gerekirse kullanıcıdan onay isteyelim.
     // Şimdilik silme sunmuyoruz, sadece durumları güncelliyoruz. Bu sayede veritabanı silme kuralına tam uymuş oluruz!
     return { success: false, error: 'Veritabanı koruma kuralları gereği doğrudan silme yapılamaz.' };
-  } catch (error: any) {
+  } catch (_) {
     return { success: false, error: 'Silme işlemi başarısız.' };
   }
 }

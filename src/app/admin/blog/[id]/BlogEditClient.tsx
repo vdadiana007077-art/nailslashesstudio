@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Language } from '@prisma/client';
 
 const RichTextEditor = dynamic(() => import('@/components/admin/RichTextEditor'), { ssr: false });
 

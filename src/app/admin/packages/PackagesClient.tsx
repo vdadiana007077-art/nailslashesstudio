@@ -4,24 +4,7 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { createPackage, updatePackage, deletePackage } from '@/app/actions/package';
 import { Language } from '@prisma/client';
-import { 
-  Plus, 
-  Search, 
-  Globe, 
-  Settings, 
-  CheckCircle, 
-  AlertCircle,
-  X,
-  Edit,
-  Trash2,
-  Check,
-  Eye,
-  Info,
-  Calendar,
-  Layers,
-  Sparkles,
-  Minus
-} from 'lucide-react';
+import { Plus, Search, Settings, CheckCircle, AlertCircle, X, Trash2, Info, Layers, Minus } from 'lucide-react';
 
 interface PackageServiceItem {
   serviceId: string;
@@ -67,7 +50,7 @@ interface PackagesClientProps {
 }
 
 export default function PackagesClient({ initialPackages, availableServices }: PackagesClientProps) {
-  const params = useParams();
+  const _params = useParams();
   const locale = 'tr';
   const [packages, setPackages] = useState<PackageItem[]>(initialPackages);
   const [searchTerm, setSearchTerm] = useState<string>('');

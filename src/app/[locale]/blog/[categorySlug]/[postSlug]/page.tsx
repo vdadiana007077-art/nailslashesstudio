@@ -303,14 +303,14 @@ export default async function BlogPostDetailPage({ params }: Props) {
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
                 components={{
-                  h2: ({node, ...props}) => <h2 className="text-2xl font-serif font-bold text-gray-900 mt-10 mb-4" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3" {...props} />,
-                  p: ({node, ...props}) => <p className="mb-4 text-gray-600 leading-relaxed" {...props} />,
-                  ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-6 text-gray-600 space-y-2" {...props} />,
-                  ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-6 text-gray-600 space-y-2" {...props} />,
-                  li: ({node, ...props}) => <li {...props} />,
-                  strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
-                  blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-[var(--color-rose-300)] pl-4 italic text-gray-500 my-6" {...props} />,
+                  h2: ({node: _node, ...props}) => <h2 className="text-2xl font-serif font-bold text-gray-900 mt-10 mb-4" {...props} />,
+                  h3: ({node: _node, ...props}) => <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3" {...props} />,
+                  p: ({node: _node, ...props}) => <p className="mb-4 text-gray-600 leading-relaxed" {...props} />,
+                  ul: ({node: _node, ...props}) => <ul className="list-disc pl-6 mb-6 text-gray-600 space-y-2" {...props} />,
+                  ol: ({node: _node, ...props}) => <ol className="list-decimal pl-6 mb-6 text-gray-600 space-y-2" {...props} />,
+                  li: ({node: _node, ...props}) => <li {...props} />,
+                  strong: ({node: _node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
+                  blockquote: ({node: _node, ...props}) => <blockquote className="border-l-4 border-[var(--color-rose-300)] pl-4 italic text-gray-500 my-6" {...props} />,
                 }}
               >
                 {translation.content}

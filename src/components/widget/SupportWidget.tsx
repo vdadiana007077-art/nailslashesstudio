@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
 import { getPublicWidgetData } from '@/app/actions/support-widget';
 import { Language, ActionType } from '@prisma/client';
 import { X, ChevronRight, ChevronDown } from 'lucide-react';
@@ -61,7 +60,7 @@ export default function SupportWidget() {
   const pathname = usePathname();
   const locale = (pathname?.split('/')[1]?.toUpperCase() as Language) || Language.TR;
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const _messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadData() {

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { Sparkles, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 type PortfolioItem = {

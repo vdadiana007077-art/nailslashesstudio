@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from 'react';
-import { Search, Mail, Phone, Calendar, Clock, Check, X, Eye, FileText } from 'lucide-react';
+import { Search, Mail, Phone, Calendar, Check, X, Eye, FileText } from 'lucide-react';
 
 interface UsersClientProps {
   initialUsers: any[];
   }
 
 export default function UsersClient({ initialUsers }: UsersClientProps) {
-  const [users, setUsers] = useState<any[]>(initialUsers);
+  const [users, _setUsers] = useState<any[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 

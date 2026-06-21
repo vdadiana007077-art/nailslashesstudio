@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Clock, Tag, MapPin, ChevronRight, Calendar } from 'lucide-react';
+import { Clock, Tag, MapPin, Calendar } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 type Location = {

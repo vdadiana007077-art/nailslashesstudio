@@ -2,22 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Clock, 
-  Calendar, 
-  Check, 
-  X, 
-  UserPlus, 
-  Award, 
-  MapPin, 
-  DollarSign,
-  ToggleLeft,
-  ToggleRight,
-  Loader2
-} from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, Calendar, X, UserPlus, Award, MapPin, DollarSign, ToggleLeft, ToggleRight, Loader2 } from 'lucide-react';
 import { 
   createStaff, 
   updateStaff, 

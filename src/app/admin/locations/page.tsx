@@ -1,9 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { ArrowLeft } from 'lucide-react';
-import { logoutAdmin } from '@/app/actions/auth';
-import Link from 'next/link';
 import LocationsClient from './LocationsClient';
 import AdminShell from '@/components/admin/AdminShell';
 

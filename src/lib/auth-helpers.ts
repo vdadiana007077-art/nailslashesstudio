@@ -22,7 +22,7 @@ export function verifyPassword(password: string, storedHash: string): boolean {
     if (!salt || !hash) return false;
     const verifyHash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
     return hash === verifyHash;
-  } catch (error) {
+  } catch (_) {
     return false;
   }
 }
@@ -50,7 +50,7 @@ export function decryptSession(text: string): any | null {
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return JSON.parse(decrypted.toString());
-  } catch (error) {
+  } catch (_) {
     return null;
   }
 }

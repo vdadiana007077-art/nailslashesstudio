@@ -2,10 +2,7 @@
  
 import { useState } from 'react';
 import { deleteMenuItem, mergeDuplicateMenuItems } from '@/app/actions/menu';
-import { 
-  Plus, Edit2, Trash2, Globe, Check, X, ExternalLink, 
-  Eye, GripVertical, Search, RefreshCw
-} from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, ExternalLink, Eye, GripVertical, Search, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 interface MenuItemTranslation {

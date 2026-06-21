@@ -2,7 +2,6 @@
 
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
 import { hashPassword, verifyPassword, encryptSession, decryptSession } from '@/lib/auth-helpers';
 import { LoginType, Language } from '@prisma/client';
 import { logAction } from './audit';

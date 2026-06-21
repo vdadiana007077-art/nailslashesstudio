@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { saveWidgetSettings, saveWidgetQuestion, deleteWidgetQuestion } from '@/app/actions/support-widget';
-import { ActionType, Language } from '@prisma/client';
-import { Plus, Trash, GripVertical, Settings, MessageSquare, Phone, Palette } from 'lucide-react';
+import { saveWidgetSettings } from '@/app/actions/support-widget';
+import { Language } from '@prisma/client';
+import { Settings, MessageSquare, Phone, Palette } from 'lucide-react';
 
 export default function WidgetManager({ initialSettings, initialQuestions }: any) {
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState(initialSettings);
-  const [questions, setQuestions] = useState(initialQuestions);
+  const [questions, _setQuestions] = useState(initialQuestions);
   const [loading, setLoading] = useState(false);
   const [activeLang, setActiveLang] = useState<Language>(Language.TR);
 
@@ -17,7 +17,7 @@ export default function WidgetManager({ initialSettings, initialQuestions }: any
     try {
       await saveWidgetSettings(settings);
       alert('Ayarlar kaydedildi.');
-    } catch (e) {
+    } catch (_) {
       alert('Hata oluştu.');
     } finally {
       setLoading(false);

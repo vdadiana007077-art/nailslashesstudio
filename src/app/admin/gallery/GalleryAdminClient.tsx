@@ -2,11 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import {
-  Image as ImageIcon, FolderOpen, Settings,
-  Plus, Trash2, Save, Edit, Eye, EyeOff, Star, StarOff,
-  ChevronUp, ChevronDown, Search, Loader2, X
-} from 'lucide-react';
+import { Image as ImageIcon, FolderOpen, Plus, Trash2, Save, Edit, Star, StarOff, ChevronUp, ChevronDown, Search, Loader2, X } from 'lucide-react';
 import {
   createGalleryCategory, updateGalleryCategory, deleteGalleryCategory,
   createGalleryItem, updateGalleryItem, deleteGalleryItem,

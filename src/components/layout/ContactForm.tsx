@@ -36,7 +36,7 @@ export default function ContactForm({ locale }: Props) {
           message: res.error || (locale === 'tr' ? 'Bir hata oluştu, lütfen tekrar deneyin.' : 'An error occurred, please try again.')
         });
       }
-    } catch (err) {
+    } catch (_) {
       setStatus({
         type: 'error',
         message: locale === 'tr' ? 'Bağlantı hatası oluştu.' : 'Connection error occurred.'

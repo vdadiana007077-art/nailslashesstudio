@@ -2,22 +2,7 @@
 
 import { useState } from 'react';
 import { createTransaction } from '@/app/actions/transaction';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Plus, 
-  DollarSign, 
-  Calendar, 
-  User, 
-  FileText,
-  CreditCard,
-  Wallet,
-  Landmark,
-  X,
-  Sparkles,
-  Users,
-  MapPin
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Plus, DollarSign, User, CreditCard, Wallet, Landmark, X, Sparkles, Users, MapPin } from 'lucide-react';
 
 type TransactionItem = {
   id: string;
@@ -127,7 +112,7 @@ export default function AccountingClient({ transactions, staffList, staffPayouts
       } else {
         setError(res.error || 'İşlem kaydedilemedi.');
       }
-    } catch (err) {
+    } catch (_) {
       setError('Bağlantı hatası oluştu.');
     } finally {
       setLoading(false);

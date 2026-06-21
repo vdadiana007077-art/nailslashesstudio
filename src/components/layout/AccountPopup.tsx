@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getCurrentCustomer, logoutCustomer, addPasswordToSocialAccount, updateCustomerMarketing } from '@/app/actions/customerAuth';
 import { cancelAppointment, rescheduleAppointment } from '@/app/actions/booking';
 import { getAvailableTimeSlots } from '@/app/actions/availability';
-import { X, User, Phone, Mail, Calendar, Clock, LogOut, CheckCircle, AlertTriangle, Play, Settings, BellRing, ChevronRight } from 'lucide-react';
+import { X, User, Phone, Calendar, LogOut, CheckCircle, AlertTriangle, Play, BellRing } from 'lucide-react';
 import Link from 'next/link';
 
 interface AccountPopupProps {

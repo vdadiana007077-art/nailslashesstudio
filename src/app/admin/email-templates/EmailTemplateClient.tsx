@@ -69,7 +69,7 @@ export default function EmailTemplateClient({ templates }: Props) {
       if (parsedSubject && typeof parsedSubject === 'object' && parsedBody && typeof parsedBody === 'object') {
         isJson = true;
       }
-    } catch (e) {
+    } catch (_) {
       // JSON değil
     }
 
@@ -186,7 +186,7 @@ export default function EmailTemplateClient({ templates }: Props) {
           if (s && typeof s === 'object' && b && typeof b === 'object') {
             isTmplMulti = true;
           }
-        } catch(e) {}
+        } catch (_) {}
 
         return (
           <div key={template.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -424,7 +424,7 @@ export default function EmailTemplateClient({ templates }: Props) {
                         try {
                           const s = JSON.parse(template.subject);
                           return renderPreview(s[previewLang] || s['TR'] || template.subject);
-                        } catch(e) {}
+                        } catch (_) {}
                       }
                       return renderPreview(template.subject);
                     })()}
@@ -439,7 +439,7 @@ export default function EmailTemplateClient({ templates }: Props) {
                           try {
                             const b = JSON.parse(template.body);
                             return renderPreview(b[previewLang] || b['TR'] || template.body);
-                          } catch(e) {}
+                          } catch (_) {}
                         }
                         return renderPreview(template.body);
                       })()

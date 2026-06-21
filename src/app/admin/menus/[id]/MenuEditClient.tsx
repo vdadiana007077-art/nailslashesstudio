@@ -166,6 +166,7 @@ export default function MenuEditClient({ menuItem, isNew, pages, serviceCategori
     } else {
       setSeoStatus(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkType, pageId, serviceCategoryId, serviceId, blogCategoryId, blogPostId, landingPageId, activeLang]);
 
   const handleSave = async () => {

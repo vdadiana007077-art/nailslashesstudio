@@ -59,6 +59,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'İçe
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content || '');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content]);
 
   const addLink = useCallback(() => {

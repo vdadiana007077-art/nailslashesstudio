@@ -1,8 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { LogOut, Calendar, Settings, Users, Scissors, Tags, MapPin } from 'lucide-react';
-import { logoutAdmin } from '@/app/actions/auth';
 import Link from 'next/link';
 import CategoryList from '@/components/admin/CategoryList';
 import AdminShell from '@/components/admin/AdminShell';
