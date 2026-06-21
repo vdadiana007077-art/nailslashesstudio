@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
           'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
-        next: { revalidate: 60 } // Performans için 60 saniye boyunca ara belleğe al
+        next: { revalidate: 3600 } // Performans için 3600 saniye (1 saat) boyunca ara belleğe al
       });
 
       if (res.ok) {

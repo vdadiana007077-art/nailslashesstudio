@@ -149,6 +149,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               src={heroImage} 
               alt="Lüks Nails & Lashes Studio" 
               className="w-full aspect-[4/5] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
+              priority={true}
+              fetchPriority="high"
             />
           </div>
         </div>
