@@ -448,8 +448,8 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
       {/* CREATE / EDIT MODAL */}
       {(activeModal === 'create' || activeModal === 'edit') && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="bg-[var(--color-rose-50)] p-6 border-b border-[var(--color-rose-100)] flex justify-between items-center">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-[var(--color-rose-50)] p-6 border-b border-[var(--color-rose-100)] flex justify-between items-center shrink-0">
               <h3 className="text-lg font-bold text-gray-800">
                 {activeModal === 'create' ? 'Yeni Personel Ekle' : 'Personel Düzenle'}
               </h3>
@@ -458,7 +458,7 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
               </button>
             </div>
 
-            <form onSubmit={activeModal === 'create' ? handleCreateSubmit : handleEditSubmit} className="p-6">
+            <form onSubmit={activeModal === 'create' ? handleCreateSubmit : handleEditSubmit} className="p-6 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Ad Soyad</label>
