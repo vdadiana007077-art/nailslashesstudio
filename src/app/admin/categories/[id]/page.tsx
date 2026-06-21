@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import CategoryEditClient from './CategoryEditClient';
 
 export default async function CategoryEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,14 +49,11 @@ export default async function CategoryEditPage({ params }: { params: Promise<{ i
   } : null;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+    <AdminShell title="Kategori Düzenleme">
         <CategoryEditClient
           category={serializedCategory}
           isNew={isNew}
         />
-      </div>
-    </div>
+    </AdminShell>
   );
 }

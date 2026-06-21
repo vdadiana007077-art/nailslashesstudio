@@ -189,101 +189,168 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
         ))}
       </div>
 
-      {/* Tablo */}
+      {/* Randevu Listesi */}
       {filtered.length === 0 ? (
         <div className="p-12 text-center text-gray-400 text-sm">Randevu bulunamadı.</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                <th className="p-3 pl-5">Müşteri</th>
-                <th className="p-3">Tarih & Saat</th>
-                <th className="p-3">Hizmet</th>
-                <th className="p-3">Uzman</th>
-                <th className="p-3">Ücret</th>
-                <th className="p-3">Durum</th>
-                <th className="p-3">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((appt) => {
-                const st = statusMap[appt.status] || statusMap.PENDING;
-                return (
-                  <tr key={appt.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors text-sm">
-                    <td className="p-3 pl-5">
-                      <div>
-                        <p className="font-semibold text-gray-800">{appt.customerName}</p>
-                        <p className="text-[10px] text-gray-400">{appt.customerEmail}</p>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <span className="font-medium text-gray-800">{new Date(appt.date).toLocaleDateString('tr-TR')}</span>
-                      <span className="text-xs text-gray-500 ml-1.5">{appt.startTime}</span>
-                    </td>
-                    <td className="p-3">
-                      <span className="px-2.5 py-1 bg-[var(--color-rose-50)] text-[var(--color-rose-600)] rounded-full text-xs font-semibold">
-                        {appt.serviceName}
-                      </span>
-                    </td>
-                    <td className="p-3 text-gray-700 text-xs font-medium">{appt.staffName || 'Atanmadı'}</td>
-                    <td className="p-3 font-bold text-gray-800">₺{appt.priceAtBooking}</td>
-                    <td className="p-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-xl text-[10px] font-semibold border ${st.color}`}>
-                        {st.icon}{st.label}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center justify-start gap-2 flex-wrap">
-                        {appt.status === 'PENDING' && (
+        <>
+          {/* ═══════ MOBİL KART GÖRÜNÜMÜ (<md) ═══════ */}
+          <div className="md:hidden space-y-3">
+            {filtered.map((appt) => {
+              const st = statusMap[appt.status] || statusMap.PENDING;
+              return (
+                <div key={appt.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+                  {/* Üst satır: Durum + Saat */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-xl text-[10px] font-semibold border ${st.color}`}>
+                      {st.icon}{st.label}
+                    </span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {new Date(appt.date).toLocaleDateString('tr-TR')} • {appt.startTime}
+                    </span>
+                  </div>
+                  {/* Müşteri + Hizmet */}
+                  <p className="font-semibold text-gray-800 text-sm">{appt.customerName}</p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="px-2 py-0.5 bg-[var(--color-rose-50)] text-[var(--color-rose-600)] rounded-full text-[10px] font-semibold truncate max-w-[60%]">
+                      {appt.serviceName}
+                    </span>
+                    <span className="font-bold text-gray-800 text-sm">₺{appt.priceAtBooking}</span>
+                  </div>
+                  {appt.staffName && (
+                    <p className="text-[10px] text-gray-400 mt-1">Uzman: {appt.staffName}</p>
+                  )}
+                  {/* Aksiyon Butonları */}
+                  <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-gray-50">
+                    {appt.status === 'PENDING' && (
+                      <button
+                        onClick={() => handleStatusChange(appt.id, 'CONFIRMED')}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-xl text-[10px] font-bold transition-all border border-green-200"
+                      >
+                        <CheckCircle size={13} /> Onayla
+                      </button>
+                    )}
+                    {(appt.status === 'PENDING' || appt.status === 'CONFIRMED') && (
+                      <button
+                        onClick={() => handleStatusChange(appt.id, 'CANCELLED')}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-xl text-[10px] font-bold transition-all border border-red-200"
+                      >
+                        <XCircle size={13} /> İptal
+                      </button>
+                    )}
+                    {appt.status === 'CONFIRMED' && (
+                      <button
+                        onClick={() => handleStatusChange(appt.id, 'COMPLETED')}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-[10px] font-bold transition-all border border-blue-200"
+                      >
+                        <CheckCircle size={13} /> Tamamla
+                      </button>
+                    )}
+                    <button
+                      onClick={() => openDetail(appt)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-xl text-[10px] font-bold transition-all border border-gray-200 ml-auto"
+                    >
+                      <Eye size={13} /> Detay
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ═══════ DESKTOP TABLO GÖRÜNÜMÜ (md+) ═══════ */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                  <th className="p-3 pl-5">Müşteri</th>
+                  <th className="p-3">Tarih & Saat</th>
+                  <th className="p-3">Hizmet</th>
+                  <th className="p-3">Uzman</th>
+                  <th className="p-3">Ücret</th>
+                  <th className="p-3">Durum</th>
+                  <th className="p-3">İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((appt) => {
+                  const st = statusMap[appt.status] || statusMap.PENDING;
+                  return (
+                    <tr key={appt.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors text-sm">
+                      <td className="p-3 pl-5">
+                        <div>
+                          <p className="font-semibold text-gray-800">{appt.customerName}</p>
+                          <p className="text-[10px] text-gray-400">{appt.customerEmail}</p>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <span className="font-medium text-gray-800">{new Date(appt.date).toLocaleDateString('tr-TR')}</span>
+                        <span className="text-xs text-gray-500 ml-1.5">{appt.startTime}</span>
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2.5 py-1 bg-[var(--color-rose-50)] text-[var(--color-rose-600)] rounded-full text-xs font-semibold">
+                          {appt.serviceName}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-700 text-xs font-medium">{appt.staffName || 'Atanmadı'}</td>
+                      <td className="p-3 font-bold text-gray-800">₺{appt.priceAtBooking}</td>
+                      <td className="p-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-xl text-[10px] font-semibold border ${st.color}`}>
+                          {st.icon}{st.label}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center justify-start gap-2 flex-wrap">
+                          {appt.status === 'PENDING' && (
+                            <button
+                              onClick={() => handleStatusChange(appt.id, 'CONFIRMED')}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-xl text-xs font-bold transition-all border border-green-200"
+                              title="Onayla"
+                            >
+                              <CheckCircle size={15} /> Onayla
+                            </button>
+                          )}
+                          {(appt.status === 'PENDING' || appt.status === 'CONFIRMED') && (
+                            <button
+                              onClick={() => handleStatusChange(appt.id, 'CANCELLED')}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-xl text-xs font-bold transition-all border border-red-200"
+                              title="İptal Et"
+                            >
+                              <XCircle size={15} /> İptal
+                            </button>
+                          )}
+                          {appt.status === 'CONFIRMED' && (
+                            <button
+                              onClick={() => handleStatusChange(appt.id, 'COMPLETED')}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all border border-blue-200"
+                              title="Tamamlandı"
+                            >
+                              <CheckCircle size={15} /> Tamamla
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleStatusChange(appt.id, 'CONFIRMED')}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-xl text-xs font-bold transition-all border border-green-200"
-                            title="Onayla"
+                            onClick={() => openDetail(appt)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-bold transition-all border border-gray-200"
+                            title="Detay"
                           >
-                            <CheckCircle size={15} /> Onayla
+                            <Eye size={15} /> Detay
                           </button>
-                        )}
-                        {(appt.status === 'PENDING' || appt.status === 'CONFIRMED') && (
                           <button
-                            onClick={() => handleStatusChange(appt.id, 'CANCELLED')}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-xl text-xs font-bold transition-all border border-red-200"
-                            title="İptal Et"
+                            onClick={() => handleDelete(appt.id)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-xl text-xs font-bold transition-all border border-rose-200"
+                            title="Kalıcı Olarak Sil"
                           >
-                            <XCircle size={15} /> İptal
+                            <Trash2 size={15} /> Sil
                           </button>
-                        )}
-                        {appt.status === 'CONFIRMED' && (
-                          <button
-                            onClick={() => handleStatusChange(appt.id, 'COMPLETED')}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all border border-blue-200"
-                            title="Tamamlandı"
-                          >
-                            <CheckCircle size={15} /> Tamamla
-                          </button>
-                        )}
-                        <button
-                          onClick={() => openDetail(appt)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-bold transition-all border border-gray-200"
-                          title="Detay"
-                        >
-                          <Eye size={15} /> Detay
-                        </button>
-                        <button
-                          onClick={() => handleDelete(appt.id)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-xl text-xs font-bold transition-all border border-rose-200"
-                          title="Kalıcı Olarak Sil"
-                        >
-                          <Trash2 size={15} /> Sil
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Detay Modal */}

@@ -5,7 +5,7 @@ import { LogOut, Calendar, Settings, Users, Scissors, Tags, MapPin } from 'lucid
 import { logoutAdmin } from '@/app/actions/auth';
 import Link from 'next/link';
 import CategoryList from '@/components/admin/CategoryList';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 
 export default async function AdminCategoriesPage() {
   const cookieStore = await cookies();
@@ -49,22 +49,7 @@ export default async function AdminCategoriesPage() {
   }));
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Ortak Sidebar */}
-      <AdminSidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Kategoriler</h1>
-          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
-            A
-          </div>
-        </header>
-
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-8">
+    <AdminShell title="Kategoriler">
           <div className="max-w-5xl mx-auto">
             <div className="mb-6 flex justify-between items-end">
               <div>
@@ -81,8 +66,6 @@ export default async function AdminCategoriesPage() {
 
             <CategoryList categories={formattedCategories} />
           </div>
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

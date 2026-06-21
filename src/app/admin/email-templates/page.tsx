@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import EmailTemplateClient from './EmailTemplateClient';
 import { seedEmailTemplates } from '@/app/actions/email-template';
 
@@ -32,17 +32,10 @@ export default async function EmailTemplatesPage() {
   }));
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="bg-white border-b border-gray-200 p-6">
-          <h1 className="text-2xl font-bold text-gray-800">📧 Mail Şablonları</h1>
-          <p className="text-sm text-gray-500 mt-1">E-posta şablonlarını düzenleyin. Değişkenler: {`{{customerName}}, {{serviceName}}, {{date}}, {{time}}, {{customerEmail}}`}</p>
-        </header>
-        <main className="flex-1 overflow-y-auto p-8">
+    <AdminShell title="📧 Mail Şablonları">
+      <div className="max-w-7xl mx-auto">
           <EmailTemplateClient templates={serialized} />
-        </main>
       </div>
-    </div>
+    </AdminShell>
   );
 }

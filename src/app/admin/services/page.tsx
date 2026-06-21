@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import ServiceList from '@/components/admin/ServiceList';
 import Link from 'next/link';
 
@@ -100,22 +100,7 @@ export default async function AdminServicesPage() {
   }));
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Ortak Sidebar */}
-      <AdminSidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Hizmet Yönetimi</h1>
-          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
-            A
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-8">
+    <AdminShell title="Hizmet Yönetimi">
           <div className="mb-6 flex justify-between items-end">
             <div>
               <h2 className="text-lg font-bold text-gray-800">Tüm Hizmetler</h2>
@@ -135,8 +120,6 @@ export default async function AdminServicesPage() {
             blogPosts={formattedBlogs}
             staffList={formattedStaff}
           />
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

@@ -12,7 +12,7 @@ import {
   CalendarDays,
   Sparkles
 } from 'lucide-react';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import AppointmentsClient from './AppointmentsClient';
 
 export default async function AdminDashboard() {
@@ -176,108 +176,88 @@ export default async function AdminDashboard() {
   }));
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Ortak Sidebar */}
-      <AdminSidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Sparkles className="text-[var(--color-rose-600)] animate-pulse" size={24} />
-            <h1 className="text-2xl font-bold text-gray-800">Yönetici Kontrol Paneli</h1>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
-            A
-          </div>
-        </header>
-
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-8">
+    <AdminShell title="Yönetici Kontrol Paneli">
           
           {/* KPI Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6 mb-6 md:mb-8">
             {/* Bugünün Randevuları */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
+            <div className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
               <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-full blur-xl -z-10"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Bugün</span>
-                <Calendar size={18} className="text-blue-500" />
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <span className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Bugün</span>
+                <Calendar size={16} className="text-blue-500 md:w-[18px] md:h-[18px]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-800">{todayApptsCount}</p>
-                <p className="text-xs text-gray-500 font-medium mt-1">Bugünkü Randevular</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-800">{todayApptsCount}</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Bugünkü Randevular</p>
               </div>
             </div>
 
             {/* Bu Haftaki Randevular */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
+            <div className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
               <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-full blur-xl -z-10"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Bu Hafta</span>
-                <CalendarDays size={18} className="text-indigo-500" />
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <span className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Bu Hafta</span>
+                <CalendarDays size={16} className="text-indigo-500 md:w-[18px] md:h-[18px]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-800">{weekApptsCount}</p>
-                <p className="text-xs text-gray-500 font-medium mt-1">Haftalık Randevular</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-800">{weekApptsCount}</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Haftalık Randevular</p>
               </div>
             </div>
 
             {/* Popüler Hizmet */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
+            <div className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
               <div className="absolute top-0 right-0 w-16 h-16 bg-purple-50 rounded-full blur-xl -z-10"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Popüler Hizmet</span>
-                <Scissors size={18} className="text-purple-500" />
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <span className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Popüler Hizmet</span>
+                <Scissors size={16} className="text-purple-500 md:w-[18px] md:h-[18px]" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-800 truncate" title={popularService}>{popularService}</p>
-                <p className="text-xs text-gray-500 font-medium mt-1">En Çok Tercih Edilen</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800 truncate" title={popularService}>{popularService}</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">En Çok Tercih Edilen</p>
               </div>
             </div>
 
             {/* Yoğun Personel */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
+            <div className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
               <div className="absolute top-0 right-0 w-16 h-16 bg-amber-50 rounded-full blur-xl -z-10"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Yoğun Personel</span>
-                <Users size={18} className="text-amber-500" />
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <span className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Yoğun Personel</span>
+                <Users size={16} className="text-amber-500 md:w-[18px] md:h-[18px]" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-800 truncate" title={busyStaff}>{busyStaff}</p>
-                <p className="text-xs text-gray-500 font-medium mt-1">En Çok Randevu Alan</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800 truncate" title={busyStaff}>{busyStaff}</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">En Çok Randevu Alan</p>
               </div>
             </div>
 
             {/* Toplam Kar */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden">
+            <div className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden col-span-2 md:col-span-1">
               <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-50 rounded-full blur-xl -z-10"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Finansal Kar</span>
-                <DollarSign size={18} className="text-emerald-500" />
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <span className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">Finansal Kar</span>
+                <DollarSign size={16} className="text-emerald-500 md:w-[18px] md:h-[18px]" />
               </div>
               <div>
-                <p className={`text-xl font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <p className={`text-lg md:text-xl font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                   ₺{totalProfit.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-xs text-gray-500 font-medium mt-1">Toplam Kasa Durumu</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Toplam Kasa Durumu</p>
               </div>
             </div>
           </div>
 
           {/* Appointments Section */}
-          <div className="bg-white rounded-3xl border border-gray-150 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="font-bold text-lg text-gray-800">Randevu Yönetimi</h3>
-              <p className="text-xs text-gray-400 mt-1">Randevuları listele, durumlarını güncelle ve detaylarını gör.</p>
+          <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-150 shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100">
+              <h3 className="font-bold text-base md:text-lg text-gray-800">Randevu Yönetimi</h3>
+              <p className="text-[10px] md:text-xs text-gray-400 mt-1">Randevuları listele, durumlarını güncelle ve detaylarını gör.</p>
             </div>
-            <div className="p-6">
+            <div className="p-3 md:p-6">
               <AppointmentsClient appointments={appointmentItems} />
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

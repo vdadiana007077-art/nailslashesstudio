@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import PortfolioClient from './PortfolioClient';
 
 export default async function AdminPortfolioPage() {
@@ -40,22 +40,7 @@ export default async function AdminPortfolioPage() {
   }));
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Ortak Sidebar */}
-      <AdminSidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-serif font-bold text-gray-900 tracking-wide">Öncesi / Sonrası Portföyü</h1>
-          <div className="w-10 h-10 rounded-full bg-[var(--color-rose-100)] text-[var(--color-rose-700)] flex items-center justify-center font-bold">
-            A
-          </div>
-        </header>
-
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-8">
+    <AdminShell title="Öncesi / Sonrası Portföyü">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
               <h2 className="text-xl font-bold text-gray-800">Before / After Çalışma Portföyü</h2>
@@ -64,8 +49,6 @@ export default async function AdminPortfolioPage() {
             
             <PortfolioClient initialItems={formattedItems} />
           </div>
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

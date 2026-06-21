@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import StaffClient from './StaffClient';
 import { Language } from '@prisma/client';
 
@@ -91,32 +91,22 @@ export default async function AdminStaffPage() {
   }));
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Personel Yönetimi</h1>
-          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
-            A
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-800">Uzman ve Çalışan Yönetimi</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Çalışanlarınızı ekleyin, şubelere atayın, yetkin oldukları hizmetleri belirleyin, haftalık çalışma ve mola saatleri ile izin takvimlerini yönetin.
-              </p>
-            </div>
-            <StaffClient 
-              initialStaff={formattedStaff} 
-              locations={formattedLocations} 
-              services={formattedServices} 
-              
-            />
-          </div>
-        </main>
+    <AdminShell title="Personel Yönetimi">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-lg md:text-xl font-bold text-gray-800">Uzman ve Çalışan Yönetimi</h2>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            Çalışanlarınızı ekleyin, şubelere atayın, yetkin oldukları hizmetleri belirleyin, haftalık çalışma ve mola saatleri ile izin takvimlerini yönetin.
+          </p>
+        </div>
+        <StaffClient 
+          initialStaff={formattedStaff} 
+          locations={formattedLocations} 
+          services={formattedServices} 
+          
+        />
       </div>
-    </div>
+    </AdminShell>
   );
 }
+

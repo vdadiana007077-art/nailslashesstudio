@@ -1,3 +1,4 @@
+import AdminShell from '@/components/admin/AdminShell';
 import WidgetManager from './WidgetManager';
 import { getWidgetSettings, getWidgetQuestions } from '@/app/actions/support-widget';
 
@@ -10,12 +11,8 @@ export default async function SupportWidgetPage() {
   const questions = await getWidgetQuestions();
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">N&L Studio AI Yönetimi</h1>
-      </div>
-      
+    <AdminShell title="N&L Studio AI Yönetimi">
       <WidgetManager initialSettings={settings} initialQuestions={questions} />
-    </div>
+    </AdminShell>
   );
 }

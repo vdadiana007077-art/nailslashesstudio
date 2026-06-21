@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import PageEditClient from './PageEditClient';
 
 export default async function PageEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -55,11 +55,8 @@ export default async function PageEditPage({ params }: { params: Promise<{ id: s
   } : null;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <PageEditClient page={serializedPage} isNew={isNew} />
-      </div>
-    </div>
+    <AdminShell title="Sayfa Düzenleme">
+      <PageEditClient page={serializedPage} isNew={isNew} />
+    </AdminShell>
   );
 }

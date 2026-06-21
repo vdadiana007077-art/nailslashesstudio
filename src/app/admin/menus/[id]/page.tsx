@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import MenuEditClient from './MenuEditClient';
 
 export default async function MenuEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -65,9 +65,7 @@ export default async function MenuEditPage({ params }: { params: Promise<{ id: s
   } : null;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+    <AdminShell title="Menü Düzenleme">
         <MenuEditClient
           menuItem={serializedMenuItem}
           isNew={isNew}
@@ -78,7 +76,6 @@ export default async function MenuEditPage({ params }: { params: Promise<{ id: s
           blogPosts={blogPosts}
           landingPages={landingPages}
         />
-      </div>
-    </div>
+    </AdminShell>
   );
 }

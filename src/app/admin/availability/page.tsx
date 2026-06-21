@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import AvailabilityClient from './AvailabilityClient';
 
 export default async function AdminAvailabilityPage() {
@@ -49,26 +49,14 @@ export default async function AdminAvailabilityPage() {
   const serializedServices = JSON.parse(JSON.stringify(services));
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Müsaitlik & Slot Yönetimi</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Şube çalışma saatleri, personel izinleri, slot kapasiteleri ve toplu işlemler</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">A</div>
-        </header>
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-7xl mx-auto">
-            <AvailabilityClient
-              locations={serializedLocations}
-              staffList={serializedStaff}
-              services={serializedServices}
-            />
-          </div>
-        </main>
+    <AdminShell title="Müsaitlik & Slot Yönetimi" subtitle="Şube çalışma saatleri, personel izinleri, slot kapasiteleri ve toplu işlemler">
+      <div className="max-w-7xl mx-auto">
+        <AvailabilityClient
+          locations={serializedLocations}
+          staffList={serializedStaff}
+          services={serializedServices}
+        />
       </div>
-    </div>
+    </AdminShell>
   );
 }

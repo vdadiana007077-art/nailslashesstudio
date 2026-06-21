@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import GalleryAdminClient from './GalleryAdminClient';
 
 export const dynamic = 'force-dynamic';
@@ -44,16 +44,13 @@ export default async function GalleryAdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto">
-        <GalleryAdminClient
-          initialCategories={categories}
-          initialItems={items}
-          locations={locations}
-          services={services}
-        />
-      </main>
-    </div>
+    <AdminShell title="Galeri Yönetimi">
+      <GalleryAdminClient
+        initialCategories={categories}
+        initialItems={items}
+        locations={locations}
+        services={services}
+      />
+    </AdminShell>
   );
 }

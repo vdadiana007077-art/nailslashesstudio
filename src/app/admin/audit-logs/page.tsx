@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import { Activity, Mail, User, ShieldAlert, Calendar } from 'lucide-react';
 
 export default async function AuditLogsPage() {
@@ -26,25 +26,7 @@ export default async function AuditLogsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar */}
-      <AdminSidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Activity className="text-[var(--color-rose-600)]" size={24} />
-            <h1 className="text-2xl font-bold text-gray-800">İşlem Günlükleri (Audit Log)</h1>
-          </div>
-          <div className="px-4 py-1.5 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-100 uppercase tracking-wider">
-            Sistem Güvenlik Günlüğü
-          </div>
-        </header>
-
-        {/* Dashboard main */}
-        <main className="flex-1 overflow-y-auto p-8">
+    <AdminShell title="İşlem Günlükleri (Audit Log)">
           <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
               <div>
@@ -116,8 +98,6 @@ export default async function AuditLogsPage() {
               </div>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

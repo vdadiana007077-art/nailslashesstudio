@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import BlogCategoryEditClient from './BlogCategoryEditClient';
 
 export default async function BlogCategoryEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -42,14 +42,11 @@ export default async function BlogCategoryEditPage({ params }: { params: Promise
   } : null;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+    <AdminShell title="Blog Düzenleme">
         <BlogCategoryEditClient
           category={serializedCategory}
           isNew={isNew}
         />
-      </div>
-    </div>
+    </AdminShell>
   );
 }

@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import AccountingClient from './AccountingClient';
 import { TrendingUp, Landmark } from 'lucide-react';
 
@@ -133,25 +133,7 @@ export default async function AccountingPage() {
   const staffPayouts = Object.values(staffPayoutsMap).sort((a, b) => b.commissionEarned - a.commissionEarned);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar */}
-      <AdminSidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="text-[var(--color-rose-600)]" size={24} />
-            <h1 className="text-2xl font-bold text-gray-800">Muhasebe & Finansal Raporlama</h1>
-          </div>
-          <div className="px-4 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100 uppercase tracking-wider flex items-center gap-1">
-            <Landmark size={12} /> Kasa Durumu Aktif
-          </div>
-        </header>
-
-        {/* main view */}
-        <main className="flex-1 overflow-y-auto p-8">
+    <AdminShell title="Muhasebe & Finansal Raporlama">
           <AccountingClient 
             transactions={formattedTransactions} 
             staffList={formattedStaffList} 
@@ -159,8 +141,6 @@ export default async function AccountingPage() {
             locations={formattedLocations}
             
           />
-        </main>
-      </div>
-    </div>
+    </AdminShell>
   );
 }
