@@ -431,6 +431,269 @@ export async function seedEmailTemplates() {
   </div>
 </div>`,
       },
+      // ==================== PERSONEL HATIRLATMA ====================
+      {
+        key: 'staff_reminder',
+        name: 'Personel Hatırlatma E-postası',
+        subject: 'Hatırlatma: Yaklaşan Randevunuz - {{time}} | {{customerName}}',
+        body: `<div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06);">
+  <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 32px; text-align: center;">
+    <h1 style="color: #ffffff; margin: 0; font-size: 22px;">⏰ Randevu Hatırlatması</h1>
+    <p style="color: rgba(255,255,255,0.85); font-size: 13px; margin: 8px 0 0;">Yaklaşan randevunuz hakkında bilgilendirme</p>
+  </div>
+  <div style="padding: 28px; color: #374151;">
+    <p style="font-size: 15px;">Merhaba <strong>{{staffName}}</strong>,</p>
+    <p style="font-size: 14px;">Yaklaşan randevunuzu hatırlatmak isteriz:</p>
+    <div style="background-color: #f5f3ff; padding: 20px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #7c3aed;">
+      <p style="margin: 6px 0; font-size: 14px;"><strong>👤 Müşteri:</strong> {{customerName}}</p>
+      <p style="margin: 6px 0; font-size: 14px;"><strong>📋 Hizmet:</strong> {{serviceName}}</p>
+      <p style="margin: 6px 0; font-size: 14px;"><strong>📅 Tarih:</strong> {{date}}</p>
+      <p style="margin: 6px 0; font-size: 14px;"><strong>🕐 Saat:</strong> {{time}}</p>
+    </div>
+    <p style="font-size: 14px;">Lütfen randevunuza zamanında hazır olun.</p>
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+    <p style="font-size: 13px; color: #9ca3af; text-align: center;">Nails & Lashes Studio Yönetim Sistemi</p>
+  </div>
+</div>`,
+      },
+      // ==================== WHATSAPP ŞABLONLARI ====================
+      {
+        key: 'wa_booking_received',
+        name: 'WhatsApp: Randevu Alındı',
+        subject: 'Randevu Alındı',
+        body: JSON.stringify({
+          TR: `Merhaba {{customerName}} 👋
+
+✨ Randevu talebiniz alınmıştır!
+
+📋 Hizmet: {{serviceName}}
+📅 Tarih: {{date}}
+🕐 Saat: {{time}}
+
+Randevunuz henüz onaylanmamıştır. En kısa sürede onay bilginiz gönderilecektir.
+
+Sevgilerle,
+Nails & Lashes Studio 💅`,
+          EN: `Hello {{customerName}} 👋
+
+✨ Your appointment request has been received!
+
+📋 Service: {{serviceName}}
+📅 Date: {{date}}
+🕐 Time: {{time}}
+
+Your appointment is not confirmed yet. Confirmation will be sent shortly.
+
+Warm regards,
+Nails & Lashes Studio 💅`,
+          RU: `Здравствуйте, {{customerName}} 👋
+
+✨ Ваш запрос на запись получен!
+
+📋 Услуга: {{serviceName}}
+📅 Дата: {{date}}
+🕐 Время: {{time}}
+
+Запись еще не подтверждена. Подтверждение будет отправлено в ближайшее время.
+
+С наилучшими пожеланиями,
+Nails & Lashes Studio 💅`,
+          DE: `Hallo {{customerName}} 👋
+
+✨ Ihre Terminanfrage ist eingegangen!
+
+📋 Service: {{serviceName}}
+📅 Datum: {{date}}
+🕐 Uhrzeit: {{time}}
+
+Ihr Termin ist noch nicht bestätigt. Die Bestätigung wird in Kürze versendet.
+
+Mit freundlichen Grüßen,
+Nails & Lashes Studio 💅`
+        }),
+      },
+      {
+        key: 'wa_booking_confirmation',
+        name: 'WhatsApp: Randevu Onaylandı',
+        subject: 'Randevu Onaylandı',
+        body: JSON.stringify({
+          TR: `Merhaba {{customerName}} 👋
+
+✅ Randevunuz onaylanmıştır!
+
+📋 Hizmet: {{serviceName}}
+📅 Tarih: {{date}}
+🕐 Saat: {{time}}
+
+Belirtilen tarih ve saatte sizi bekliyoruz. Gecikme veya iptal durumunda lütfen en az 24 saat öncesinden bize ulaşın.
+
+Sevgilerle,
+Nails & Lashes Studio 💅`,
+          EN: `Hello {{customerName}} 👋
+
+✅ Your appointment has been confirmed!
+
+📋 Service: {{serviceName}}
+📅 Date: {{date}}
+🕐 Time: {{time}}
+
+We look forward to seeing you. In case of delay or cancellation, please contact us at least 24 hours in advance.
+
+Warm regards,
+Nails & Lashes Studio 💅`,
+          RU: `Здравствуйте, {{customerName}} 👋
+
+✅ Ваша запись подтверждена!
+
+📋 Услуга: {{serviceName}}
+📅 Дата: {{date}}
+🕐 Время: {{time}}
+
+Мы ждем вас. В случае задержки или отмены сообщите нам не менее чем за 24 часа.
+
+С наилучшими пожеланиями,
+Nails & Lashes Studio 💅`,
+          DE: `Hallo {{customerName}} 👋
+
+✅ Ihr Termin wurde bestätigt!
+
+📋 Service: {{serviceName}}
+📅 Datum: {{date}}
+🕐 Uhrzeit: {{time}}
+
+Wir freuen uns auf Sie. Bei Verzögerungen oder Stornierungen kontaktieren Sie uns bitte mindestens 24 Stunden im Voraus.
+
+Mit freundlichen Grüßen,
+Nails & Lashes Studio 💅`
+        }),
+      },
+      {
+        key: 'wa_booking_reminder',
+        name: 'WhatsApp: Hatırlatma',
+        subject: 'Randevu Hatırlatma',
+        body: JSON.stringify({
+          TR: `Merhaba {{customerName}} 👋
+
+⏰ Randevunuza az kaldı!
+
+📋 Hizmet: {{serviceName}}
+📅 Tarih: {{date}}
+🕐 Saat: {{time}}
+
+Sizi bekliyor olacağız. Herhangi bir değişiklik için lütfen bizimle iletişime geçin.
+
+Sevgilerle,
+Nails & Lashes Studio 💅`,
+          EN: `Hello {{customerName}} 👋
+
+⏰ Your appointment is coming up soon!
+
+📋 Service: {{serviceName}}
+📅 Date: {{date}}
+🕐 Time: {{time}}
+
+We look forward to seeing you. Please let us know if you need to make any changes.
+
+Warm regards,
+Nails & Lashes Studio 💅`,
+          RU: `Здравствуйте, {{customerName}} 👋
+
+⏰ Напоминаем о вашей записи!
+
+📋 Услуга: {{serviceName}}
+📅 Дата: {{date}}
+🕐 Время: {{time}}
+
+Мы ждем вас. Сообщите нам, если нужно внести изменения.
+
+С наилучшими пожеланиями,
+Nails & Lashes Studio 💅`,
+          DE: `Hallo {{customerName}} 👋
+
+⏰ Ihr Termin steht bevor!
+
+📋 Service: {{serviceName}}
+📅 Datum: {{date}}
+🕐 Uhrzeit: {{time}}
+
+Wir freuen uns auf Sie. Bitte lassen Sie uns wissen, wenn Sie Änderungen vornehmen müssen.
+
+Mit freundlichen Grüßen,
+Nails & Lashes Studio 💅`
+        }),
+      },
+      {
+        key: 'wa_booking_cancellation',
+        name: 'WhatsApp: Randevu İptal',
+        subject: 'Randevu İptal',
+        body: JSON.stringify({
+          TR: `Merhaba {{customerName}} 👋
+
+❌ Aşağıdaki randevunuz iptal edilmiştir:
+
+📋 Hizmet: {{serviceName}}
+📅 Tarih: {{date}}
+🕐 Saat: {{time}}
+
+Yeni bir randevu oluşturmak için sitemizi ziyaret edebilirsiniz.
+
+Sevgilerle,
+Nails & Lashes Studio 💅`,
+          EN: `Hello {{customerName}} 👋
+
+❌ Your appointment below has been cancelled:
+
+📋 Service: {{serviceName}}
+📅 Date: {{date}}
+🕐 Time: {{time}}
+
+You can visit our website to make a new booking.
+
+Warm regards,
+Nails & Lashes Studio 💅`,
+          RU: `Здравствуйте, {{customerName}} 👋
+
+❌ Ваша запись была отменена:
+
+📋 Услуга: {{serviceName}}
+📅 Дата: {{date}}
+🕐 Время: {{time}}
+
+Вы можете посетить наш сайт, чтобы создать новую запись.
+
+С наилучшими пожеланиями,
+Nails & Lashes Studio 💅`,
+          DE: `Hallo {{customerName}} 👋
+
+❌ Ihr Termin wurde storniert:
+
+📋 Service: {{serviceName}}
+📅 Datum: {{date}}
+🕐 Uhrzeit: {{time}}
+
+Sie können unsere Website besuchen, um einen neuen Termin zu buchen.
+
+Mit freundlichen Grüßen,
+Nails & Lashes Studio 💅`
+        }),
+      },
+      {
+        key: 'wa_staff_reminder',
+        name: 'WhatsApp: Personel Hatırlatma',
+        subject: 'Personel Hatırlatma',
+        body: `Merhaba {{staffName}} 👋
+
+⏰ Yaklaşan randevunuz hakkında hatırlatma:
+
+👤 Müşteri: {{customerName}}
+📋 Hizmet: {{serviceName}}
+📅 Tarih: {{date}}
+🕐 Saat: {{time}}
+
+Lütfen randevunuza zamanında hazır olun.
+
+Nails & Lashes Studio Yönetim 🏢`,
+      },
     ];
 
     // Şablonları ekle veya güncelle

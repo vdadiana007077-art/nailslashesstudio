@@ -310,6 +310,7 @@ model ServiceTranslation {
 model Staff {
   id        String    @id @default(uuid())
   name      String
+  email     String?
   image     String?
   specialty String?
   isActive  Boolean   @default(true)

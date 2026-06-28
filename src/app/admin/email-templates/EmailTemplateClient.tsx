@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Mail, Save, Eye, EyeOff, Edit3, Check, AlertCircle, Code, X, MonitorSmartphone } from 'lucide-react';
+import { Mail, Save, Eye, EyeOff, Edit3, Check, AlertCircle, Code, X, MonitorSmartphone, MessageCircle } from 'lucide-react';
 import { updateEmailTemplate } from '@/app/actions/email-template';
 
 interface Template {
@@ -48,6 +48,13 @@ export default function EmailTemplateClient({ templates }: Props) {
   const [previewLang, setPreviewLang] = useState<string>('TR');
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'email' | 'whatsapp'>('email');
+
+  // Tab'a göre filtre
+  const filteredItems = items.filter(t => {
+    if (activeTab === 'whatsapp') return t.key.startsWith('wa_');
+    return !t.key.startsWith('wa_');
+  });
 
   const showFeedback = (type: 'success' | 'error', text: string) => {
     setFeedback({ type, text });
@@ -177,8 +184,40 @@ export default function EmailTemplateClient({ templates }: Props) {
         </div>
       </div>
 
+      {/* Tab Butonları */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setActiveTab('email')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+            activeTab === 'email'
+              ? 'bg-rose-50 text-rose-700 border-rose-200 shadow-sm'
+              : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Mail size={16} /> E-posta Şablonları
+        </button>
+        <button
+          onClick={() => setActiveTab('whatsapp')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+            activeTab === 'whatsapp'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
+              : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <MessageCircle size={16} /> WhatsApp Şablonları
+        </button>
+      </div>
+
+      {activeTab === 'whatsapp' && (
+        <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-4">
+          <p className="text-xs text-emerald-700">
+            <strong>İpucu:</strong> WhatsApp şablonları düz metin formatındadır (HTML değil). Emoji kullanabilirsiniz. Randevu işlem butonlarındaki &quot;WhatsApp&quot; butonuyla bu şablonlar gönderilir.
+          </p>
+        </div>
+      )}
+
       {/* Şablon Listesi */}
-      {items.map(template => {
+      {filteredItems.map(template => {
         let isTmplMulti = false;
         try {
           const s = JSON.parse(template.subject);

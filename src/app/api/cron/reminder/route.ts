@@ -49,11 +49,13 @@ export async function GET(request: Request) {
         service: {
           include: { translations: true },
         },
+        staff: true,
         customer: true,
       },
     });
 
-    let sentCount = 0;
+    let customerSentCount = 0;
+    let staffSentCount = 0;
 
     for (const appt of appointments) {
       // Randevu zamanını hesapla
@@ -75,7 +77,7 @@ export async function GET(request: Request) {
           || { name: 'Randevu' };
         const serviceName = serviceTranslation.name;
 
-        // Müşteri diline göre tarih biçimlendirme
+        // Tarih biçimlendirme
         const localeMap: Record<string, string> = {
           TR: 'tr-TR',
           EN: 'en-US',
@@ -86,35 +88,62 @@ export async function GET(request: Request) {
         const formattedDate = appt.date.toLocaleDateString(formatLocale, {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
         });
+        const formattedDateTR = appt.date.toLocaleDateString('tr-TR', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        });
 
+        const emailVars = {
+          customerName,
+          serviceName,
+          date: formattedDate,
+          time: appt.startTime,
+          customerEmail: customerEmail || '',
+        };
+
+        // 1. Müşteriye hatırlatma e-postası
         if (customerEmail) {
           try {
-            await sendTemplateEmail('booking_reminder', customerEmail, {
+            await sendTemplateEmail('booking_reminder', customerEmail, emailVars, customerLang);
+            customerSentCount++;
+          } catch (emailErr) {
+            console.error(`Müşteri hatırlatma e-posta hatası (${appt.id}):`, emailErr);
+          }
+        }
+
+        // 2. Personele hatırlatma e-postası
+        if (appt.staff?.email) {
+          try {
+            await sendTemplateEmail('staff_reminder', appt.staff.email, {
+              staffName: appt.staff.name,
               customerName,
               serviceName,
-              date: formattedDate,
+              date: formattedDateTR,
               time: appt.startTime,
-              customerEmail,
-            }, customerLang);
-
-            // Hatırlatma gönderildi olarak işaretle
-            await prisma.appointment.update({
-              where: { id: appt.id },
-              data: { reminderSent: true },
-            });
-
-            sentCount++;
+            }, 'TR');
+            staffSentCount++;
           } catch (emailErr) {
-            console.error(`Hatırlatma e-posta hatası (${appt.id}):`, emailErr);
+            console.error(`Personel hatırlatma e-posta hatası (${appt.id}, Staff: ${appt.staff.name}):`, emailErr);
           }
+        }
+
+        // Hatırlatma gönderildi olarak işaretle
+        try {
+          await prisma.appointment.update({
+            where: { id: appt.id },
+            data: { reminderSent: true },
+          });
+        } catch (updateErr) {
+          console.error(`Hatırlatma flag güncelleme hatası (${appt.id}):`, updateErr);
         }
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `${sentCount} hatırlatma e-postası gönderildi.`,
+      message: `${customerSentCount} müşteri + ${staffSentCount} personel hatırlatma e-postası gönderildi.`,
       checkedCount: appointments.length,
+      customerSentCount,
+      staffSentCount,
     });
   } catch (error: any) {
     console.error('Hatırlatma cron hatası:', error);

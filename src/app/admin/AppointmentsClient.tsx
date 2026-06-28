@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from 'react';
-import { Clock, Eye, X, CheckCircle, AlertCircle, XCircle, RotateCcw, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Clock, Eye, X, CheckCircle, AlertCircle, XCircle, RotateCcw, Trash2, MessageCircle } from 'lucide-react';
 import { updateAppointmentStatus, updateAppointmentNotes, rescheduleAppointment, deleteAppointment } from '@/app/actions/appointment';
+import { getEmailTemplates } from '@/app/actions/email-template';
 
 interface AppointmentItem {
   id: string;
@@ -36,6 +37,24 @@ const statusMap: Record<string, { label: string; color: string; icon: React.Reac
   RESCHEDULED: { label: 'Yeniden Plan.', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: <RotateCcw size={12} /> },
 };
 
+// WhatsApp şablon değişkenlerini değiştiren yardımcı
+function replaceWaVars(template: string, vars: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(vars)) {
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+  }
+  return result;
+}
+
+// WhatsApp wa.me linki oluştur
+function buildWhatsAppLink(phone: string, message: string): string {
+  // Telefon numarasını temizle (sadece rakamlar)
+  const cleanPhone = phone.replace(/[^\d]/g, '');
+  // Türkiye numarası 0 ile başlıyorsa 90'a çevir
+  const intlPhone = cleanPhone.startsWith('0') ? '90' + cleanPhone.slice(1) : cleanPhone;
+  return `https://wa.me/${intlPhone}?text=${encodeURIComponent(message)}`;
+}
+
 export default function AppointmentsClient({ appointments }: AppointmentsClientProps) {
   const [items, setItems] = useState<AppointmentItem[]>(appointments);
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -48,6 +67,75 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // WhatsApp Popup State
+  const [isWaPopupOpen, setIsWaPopupOpen] = useState(false);
+  const [waAppt, setWaAppt] = useState<AppointmentItem | null>(null);
+  const [waTemplates, setWaTemplates] = useState<{ key: string; name: string; body: string }[]>([]);
+  const [selectedWaTemplate, setSelectedWaTemplate] = useState<string>('');
+  const [waPreview, setWaPreview] = useState('');
+  const [waTemplatesLoaded, setWaTemplatesLoaded] = useState(false);
+
+  // WhatsApp şablonlarını bir kere yükle
+  useEffect(() => {
+    if (waTemplatesLoaded) return;
+    getEmailTemplates().then(res => {
+      if (res.success && res.data) {
+        const waList = res.data
+          .filter((t: any) => t.key.startsWith('wa_') && t.isActive)
+          .map((t: any) => ({ key: t.key, name: t.name, body: t.body }));
+        setWaTemplates(waList);
+        setWaTemplatesLoaded(true);
+      }
+    });
+  }, [waTemplatesLoaded]);
+
+  const openWaPopup = (appt: AppointmentItem) => {
+    setWaAppt(appt);
+    setSelectedWaTemplate('');
+    setWaPreview('');
+    setIsWaPopupOpen(true);
+    if (!waTemplatesLoaded) setWaTemplatesLoaded(false); // trigger reload
+  };
+
+  const handleWaTemplateSelect = (templateKey: string) => {
+    setSelectedWaTemplate(templateKey);
+    const tmpl = waTemplates.find(t => t.key === templateKey);
+    if (!tmpl || !waAppt) { setWaPreview(''); return; }
+
+    // Tarih formatlama
+    const dateObj = new Date(waAppt.date);
+    const formattedDate = dateObj.toLocaleDateString('tr-TR', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+
+    const vars = {
+      customerName: waAppt.customerName,
+      serviceName: waAppt.serviceName,
+      date: formattedDate,
+      time: waAppt.startTime,
+      staffName: waAppt.staffName || '',
+      customerEmail: waAppt.customerEmail || '',
+    };
+
+    // Body'yi parse et (JSON çok dilli olabilir veya düz text)
+    let bodyText = tmpl.body;
+    try {
+      const parsed = JSON.parse(tmpl.body);
+      bodyText = parsed['TR'] || parsed['EN'] || Object.values(parsed)[0] || tmpl.body;
+    } catch (_) {
+      // Düz text, olduğu gibi kullan
+    }
+
+    setWaPreview(replaceWaVars(bodyText as string, vars));
+  };
+
+  const sendWhatsApp = () => {
+    if (!waAppt?.customerPhone || !waPreview) return;
+    const link = buildWhatsAppLink(waAppt.customerPhone, waPreview);
+    window.open(link, '_blank');
+    setIsWaPopupOpen(false);
+  };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Bu randevuyu ve randevuya bağlı tüm kayıtları (durum geçmişi, komisyonlar vb.) kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) {
@@ -264,6 +352,14 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
                         <CheckCircle size={13} /> Tamamla
                       </button>
                     )}
+                    {appt.customerPhone && (
+                      <button
+                        onClick={() => openWaPopup(appt)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-[10px] font-bold transition-all border border-emerald-200"
+                      >
+                        <MessageCircle size={13} /> WhatsApp
+                      </button>
+                    )}
                     <button
                       onClick={() => openDetail(appt)}
                       className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-xl text-[10px] font-bold transition-all border border-gray-200 ml-auto"
@@ -347,6 +443,15 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
                               title="Tamamlandı"
                             >
                               <CheckCircle size={15} /> Tamamla
+                            </button>
+                          )}
+                          {appt.customerPhone && (
+                            <button
+                              onClick={() => openWaPopup(appt)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all border border-emerald-200"
+                              title="WhatsApp Mesajı Gönder"
+                            >
+                              <MessageCircle size={15} /> WhatsApp
                             </button>
                           )}
                           <button
@@ -537,6 +642,88 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
                   {loading ? 'Kaydediliyor...' : 'Notu Kaydet'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Şablon Seçim Popup */}
+      {isWaPopupOpen && waAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsWaPopupOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-emerald-50">
+              <div className="flex items-center gap-2">
+                <MessageCircle size={18} className="text-emerald-600" />
+                <h3 className="text-sm font-bold text-gray-900">WhatsApp Mesajı Gönder</h3>
+              </div>
+              <button onClick={() => setIsWaPopupOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+            </div>
+
+            <div className="p-4 space-y-4 overflow-y-auto flex-1">
+              {/* Müşteri Bilgisi */}
+              <div className="bg-gray-50 rounded-xl p-3 space-y-1">
+                <p className="text-xs text-gray-500"><strong>Müşteri:</strong> {waAppt.customerName}</p>
+                <p className="text-xs text-gray-500"><strong>Telefon:</strong> {waAppt.customerPhone}</p>
+                <p className="text-xs text-gray-500"><strong>Hizmet:</strong> {waAppt.serviceName} • {new Date(waAppt.date).toLocaleDateString('tr-TR')} {waAppt.startTime}</p>
+              </div>
+
+              {/* Şablon Seçimi */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-2">Şablon Seçin</label>
+                <div className="space-y-1.5">
+                  {waTemplates.length === 0 && (
+                    <p className="text-xs text-gray-400 italic">WhatsApp şablonları yükleniyor veya henüz oluşturulmadı...</p>
+                  )}
+                  {waTemplates.map(tmpl => (
+                    <label
+                      key={tmpl.key}
+                      className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        selectedWaTemplate === tmpl.key
+                          ? 'border-emerald-400 bg-emerald-50'
+                          : 'border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="waTemplate"
+                        value={tmpl.key}
+                        checked={selectedWaTemplate === tmpl.key}
+                        onChange={() => handleWaTemplateSelect(tmpl.key)}
+                        className="accent-emerald-600"
+                      />
+                      <span className="text-xs font-medium text-gray-700">{tmpl.name.replace('WhatsApp: ', '')}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mesaj Önizleme */}
+              {waPreview && (
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-2">Mesaj Önizleme</label>
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 whitespace-pre-wrap text-xs text-gray-700 max-h-48 overflow-y-auto">
+                    {waPreview}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-100 flex gap-2">
+              <button
+                onClick={() => setIsWaPopupOpen(false)}
+                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-200 transition-all"
+              >
+                İptal
+              </button>
+              <button
+                onClick={sendWhatsApp}
+                disabled={!waPreview || !waAppt.customerPhone}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                <MessageCircle size={14} /> WhatsApp'ta Aç
+              </button>
             </div>
           </div>
         </div>

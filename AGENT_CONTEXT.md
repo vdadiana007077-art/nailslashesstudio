@@ -51,3 +51,24 @@ npx prisma migrate dev --name add_performance_indexes
 - **Süre:** Tablolarınızın boyutuna göre birkaç saniye ile birkaç dakika arasında.
 
 > ⚠️ Bu adım atlanırsa schema.prisma'daki index tanımları veritabanına yansımaz ve sorgu performans kazancı elde edilemez.
+
+## Son Güncelleme: 2026-06-28 - Mail & WhatsApp Bildirim Sistemi
+
+### E-posta Bildirimleri
+- **Randevu oluşturuldu** → Müşteriye `booking_received` maili (4 dil)
+- **Randevu onaylandı** → Müşteriye `booking_confirmation` maili (4 dil)
+- **4 saat önce** → Müşteriye `booking_reminder` hatırlatma maili (cron)
+- **4 saat önce** → Personele `staff_reminder` hatırlatma maili (cron)
+- **Randevu iptal** → Müşteriye `booking_cancellation` maili (4 dil)
+- **Cron Route:** `api/cron/reminder?secret=CRON_SECRET` (30dk aralıkla çağrılmalı)
+
+### WhatsApp Entegrasyonu
+- **Yöntem:** wa.me linki ile doğrudan WhatsApp'a yönlendirme (API yok)
+- **Admin Panel:** Randevu satırlarında WhatsApp butonu → Şablon seçim popup → wa.me
+- **Şablon Yönetimi:** Admin > Mail & WhatsApp Şablonları (tab ile ayrılmış)
+- **Şablonlar:** wa_booking_received, wa_booking_confirmation, wa_booking_reminder, wa_booking_cancellation, wa_staff_reminder
+- **Format:** Plain text + emoji (HTML değil)
+
+### Veritabanı Değişiklikleri
+- Staff modeline `email String?` alanı eklendi (bildirim e-postası)
+- createStaff/updateStaff email'i staff tablosuna da yazıyor

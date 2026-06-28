@@ -32,7 +32,7 @@ export default async function EmailTemplatesPage() {
   }));
 
   return (
-    <AdminShell title="📧 Mail Şablonları">
+    <AdminShell title="📧 Mail & WhatsApp Şablonları">
       <div className="max-w-7xl mx-auto">
           <EmailTemplateClient templates={serialized} />
       </div>

@@ -93,6 +93,7 @@ export async function createStaff(data: {
       const staff = await tx.staff.create({
         data: {
           name: data.name,
+          email: data.email,
           image: data.image || null,
           specialty: data.specialty || null,
           locationId: data.locationId || null,
@@ -220,6 +221,7 @@ export async function updateStaff(
         where: { id },
         data: {
           name: data.name,
+          email: data.email || null,
           image: data.image || null,
           specialty: data.specialty || null,
           locationId: data.locationId || null,
