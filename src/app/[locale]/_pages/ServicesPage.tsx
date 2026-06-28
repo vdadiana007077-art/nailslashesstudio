@@ -1,38 +1,49 @@
 import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
 import ServicesClient from '../services/ServicesClient';
+import { unstable_cache } from 'next/cache';
+
+const getCachedServicesData = (locale: Language) => unstable_cache(
+  async () => {
+    const [locations, categories, staff, pageContent] = await Promise.all([
+      prisma.location.findMany({
+        where: { isDeleted: false, isActive: true },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, address: true },
+      }),
+      prisma.serviceCategory.findMany({
+        where: { isDeleted: false, isActive: true },
+        include: {
+          translations: { where: { language: locale } },
+          services: {
+            where: { isDeleted: false, isActive: true },
+            include: { translations: { where: { language: locale } } },
+            orderBy: { price: 'asc' },
+          },
+        },
+        orderBy: { order: 'asc' },
+      }),
+      prisma.staff.findMany({
+        where: { isDeleted: false, isActive: true },
+        select: { id: true, locationId: true, services: { select: { serviceId: true } } },
+      }),
+      prisma.pageTranslation.findFirst({
+        where: { language: locale, page: { pageGroup: 'SERVICES', isActive: true, isDeleted: false } }
+      }),
+    ]);
+
+    return { locations, categories, staff, pageContent };
+  },
+  [`services-page-${locale}`],
+  { revalidate: 3600, tags: ['services', 'pages'] }
+);
 
 export default async function ServicesPageContent({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
   const localeStr = resolvedParams.locale;
 
-  const locations = await prisma.location.findMany({
-    where: { isDeleted: false, isActive: true },
-    orderBy: { name: 'asc' },
-  });
-
-  const categories = await prisma.serviceCategory.findMany({
-    where: { isDeleted: false, isActive: true },
-    include: {
-      translations: { where: { language: locale } },
-      services: {
-        where: { isDeleted: false, isActive: true },
-        include: { translations: { where: { language: locale } } },
-        orderBy: { price: 'asc' },
-      },
-    },
-    orderBy: { order: 'asc' },
-  });
-
-  const staff = await prisma.staff.findMany({
-    where: { isDeleted: false, isActive: true },
-    include: { services: { select: { serviceId: true } } },
-  });
-
-  const pageContent = await prisma.pageTranslation.findFirst({
-    where: { language: locale, page: { pageGroup: 'SERVICES', isActive: true, isDeleted: false } }
-  });
+  const { locations, categories, staff, pageContent } = await getCachedServicesData(locale)();
 
   const heroTitle = pageContent?.h1Title || (locale === 'TR' ? 'Hizmetlerimiz' : 'Our Services');
   const introText = pageContent?.introText || (locale === 'TR' 

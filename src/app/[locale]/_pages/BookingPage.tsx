@@ -7,34 +7,42 @@ export default async function BookingPageContent({ params }: { params: Promise<{
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
 
-  const customer = await getCurrentCustomer();
+  // Tüm bağımsız sorguları paralel çek
+  const [customer, rawLocations, rawCategories, rawServices, rawStaff] = await Promise.all([
+    getCurrentCustomer(),
+    prisma.location.findMany({
+      where: { isDeleted: false, isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, address: true, phone: true },
+    }),
+    prisma.serviceCategory.findMany({
+      where: { isDeleted: false, isActive: true },
+      include: { translations: { where: { language: locale } } },
+      orderBy: { order: 'asc' },
+    }),
+    prisma.service.findMany({
+      where: { isDeleted: false, isActive: true },
+      include: {
+        translations: { where: { language: locale } },
+        category: { include: { translations: { where: { language: locale } } } },
+        locations: { select: { locationId: true } },
+      },
+      orderBy: { price: 'asc' },
+    }),
+    prisma.staff.findMany({
+      where: { isDeleted: false, isActive: true },
+      include: { services: { select: { serviceId: true, price: true } } },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
+
   const initialCustomer = customer ? { name: customer.name || '', email: customer.email || '', phone: customer.phone || '' } : null;
-
-  const rawLocations = await prisma.location.findMany({ where: { isDeleted: false, isActive: true }, orderBy: { name: 'asc' } });
   const locations = rawLocations.map(l => ({ id: l.id, name: l.name, address: l.address, phone: l.phone || '' }));
-
-  // Kategoriler
-  const rawCategories = await prisma.serviceCategory.findMany({
-    where: { isDeleted: false, isActive: true },
-    include: { translations: { where: { language: locale } } },
-    orderBy: { order: 'asc' },
-  });
   const categories = rawCategories.map(c => ({
     id: c.id,
     name: c.translations[0]?.name || 'Kategori',
     image: c.image || '',
   }));
-
-  // Hizmetler + LocationService bilgisi
-  const rawServices = await prisma.service.findMany({
-    where: { isDeleted: false, isActive: true },
-    include: {
-      translations: { where: { language: locale } },
-      category: { include: { translations: { where: { language: locale } } } },
-      locations: { select: { locationId: true } },
-    },
-    orderBy: { price: 'asc' },
-  });
   const services = rawServices.map(s => ({
     id: s.id,
     name: s.translations[0]?.name || 'İsimsiz Hizmet',
@@ -44,12 +52,6 @@ export default async function BookingPageContent({ params }: { params: Promise<{
     categoryName: s.category.translations[0]?.name || 'Diğer',
     locationIds: s.locations.map(ls => ls.locationId),
   }));
-
-  const rawStaff = await prisma.staff.findMany({
-    where: { isDeleted: false, isActive: true },
-    include: { services: { select: { serviceId: true, price: true } } },
-    orderBy: { name: 'asc' },
-  });
   const staffList = rawStaff.map(st => ({
     id: st.id, name: st.name, image: st.image || '', specialty: st.specialty || '',
     locationId: st.locationId || '', services: st.services.map(s => ({ serviceId: s.serviceId, price: s.price !== null ? Number(s.price) : null })),
@@ -71,4 +73,3 @@ export default async function BookingPageContent({ params }: { params: Promise<{
     </main>
   );
 }
-

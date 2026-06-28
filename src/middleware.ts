@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
-import { routing } from './i18n/routing';
+import { routing } from './i18n/routing-config';
 
 const intlMiddleware = createMiddleware(routing);
+
+// In-memory redirect cache (Edge Runtime uyumlu)
+const redirectCache = new Map<string, { newUrl: string; statusCode: number } | null>();
+const REDIRECT_CACHE_TTL = 300_000; // 5 dakika
+let lastCacheClear = Date.now();
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -21,13 +26,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Statik dosyaları ve api rotalarını atla
+  // Statik dosyaları ve api rotalarını atla (erken return)
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
+    pathname.startsWith('/staff') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();
+  }
+
+  // Cache'i periyodik olarak temizle
+  if (Date.now() - lastCacheClear > REDIRECT_CACHE_TTL) {
+    redirectCache.clear();
+    lastCacheClear = Date.now();
   }
 
   // Dinamik 301/302 yönlendirme kurallarını Supabase REST API üzerinden sorgula
@@ -43,6 +55,18 @@ export async function middleware(request: NextRequest) {
         cleanPath = '/' + segments.slice(2).join('/');
       }
 
+      // Cache kontrolü
+      const cacheKey = `${pathname}|${cleanPath}`;
+      if (redirectCache.has(cacheKey)) {
+        const cached = redirectCache.get(cacheKey);
+        if (cached) {
+          const redirectUrl = new URL(cached.newUrl, request.url);
+          return NextResponse.redirect(redirectUrl, cached.statusCode);
+        }
+        // null = redirect yok, devam et
+        return intlMiddleware(request);
+      }
+
       // Hem orijinal yolu hem de dil ön takısız temiz yolu sorgula
       const queryUrl = `${supabaseUrl}/rest/v1/Redirect?or=(oldUrl.eq.${encodeURIComponent(pathname)},oldUrl.eq.${encodeURIComponent(cleanPath)})&isActive=eq.true&select=newUrl,statusCode`;
 
@@ -52,15 +76,20 @@ export async function middleware(request: NextRequest) {
           'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
-        next: { revalidate: 3600 } // Performans için 3600 saniye (1 saat) boyunca ara belleğe al
+        next: { revalidate: 3600 } // 1 saat cache
       });
 
       if (res.ok) {
         const redirects = await res.json();
         if (redirects && redirects.length > 0) {
           const rule = redirects[0];
+          // Cache'e kaydet
+          redirectCache.set(cacheKey, { newUrl: rule.newUrl, statusCode: rule.statusCode || 301 });
           const redirectUrl = new URL(rule.newUrl, request.url);
           return NextResponse.redirect(redirectUrl, rule.statusCode || 301);
+        } else {
+          // Redirect bulunamadı, null olarak cache'le
+          redirectCache.set(cacheKey, null);
         }
       }
     }
@@ -74,5 +103,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Sadece çok dilli yolları ve ana sayfayı işle
-  matcher: ['/', '/(tr|en|ru|de)/:path*', '/((?!_next|_vercel|.*\\..*).*)']
+  matcher: ['/', '/(tr|en|ru|de)/:path*', '/((?!_next|_vercel|.*\\..*).*)',]
 };

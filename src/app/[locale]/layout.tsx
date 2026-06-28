@@ -7,6 +7,7 @@ const fontSerif = Cormorant_Garamond({
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-serif',
   display: 'swap',
+  preload: true,
 });
 
 const fontSans = Plus_Jakarta_Sans({
@@ -14,6 +15,7 @@ const fontSans = Plus_Jakarta_Sans({
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-sans',
   display: 'swap',
+  preload: true,
 });
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
@@ -22,9 +24,8 @@ import Footer from '@/components/layout/Footer';
 import { prisma } from '@/lib/prisma';
 import { Language } from '@prisma/client';
 import { unstable_cache } from 'next/cache';
-import CookieConsentBanner from '@/components/layout/CookieConsentBanner';
-import SupportWidget from '@/components/widget/SupportWidget';
 import "../globals.css";
+import LazyWidgets from '@/components/layout/LazyWidgets';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -45,6 +46,47 @@ export const metadata = {
     title: 'N&L Studio',
   },
 };
+
+// Cache fonksiyonlarını modül seviyesinde tanımla (her render'da yeniden oluşmasını engelle)
+const getCachedMenus = (languageEnum: Language) => unstable_cache(
+  async () => {
+    return prisma.menuItem.findMany({
+      where: { 
+        isActive: true,
+        translations: {
+          some: {
+            language: languageEnum
+          }
+        }
+      },
+      include: {
+        translations: {
+          where: {
+            language: languageEnum
+          }
+        }
+      },
+      orderBy: { order: 'asc' }
+    });
+  },
+  [`layout-menus-${languageEnum}`],
+  { revalidate: 3600, tags: ['menus'] }
+);
+
+const getCachedSettings = (languageEnum: Language) => unstable_cache(
+  async () => {
+    return prisma.setting.findMany({
+      where: {
+        OR: [
+          { language: languageEnum },
+          { language: null }
+        ]
+      }
+    });
+  },
+  [`layout-settings-${languageEnum}`],
+  { revalidate: 3600, tags: ['settings'] }
+);
 
 export default async function LocaleLayout({
   children,
@@ -71,32 +113,11 @@ export default async function LocaleLayout({
   let menuItems: Array<{ id: string; menuType: any; title: string; url: string; order: number; isActive: boolean }> = [];
   let settings: Array<{ id: string; key: string; value: string; language: Language | null }> = [];
   try {
-    const getCachedMenus = unstable_cache(
-      async () => {
-        return prisma.menuItem.findMany({
-          where: { 
-            isActive: true,
-            translations: {
-              some: {
-                language: languageEnum
-              }
-            }
-          },
-          include: {
-            translations: {
-              where: {
-                language: languageEnum
-              }
-            }
-          },
-          orderBy: { order: 'asc' }
-        });
-      },
-      [`layout-menus-${languageEnum}`],
-      { revalidate: 3600, tags: ['menus'] }
-    );
-
-    const rawMenuItems = await getCachedMenus();
+    // Paralel veri çekme - menüler ve ayarlar aynı anda
+    const [rawMenuItems, settingsData] = await Promise.all([
+      getCachedMenus(languageEnum)(),
+      getCachedSettings(languageEnum)(),
+    ]);
 
     menuItems = rawMenuItems.map(item => {
       const trans = item.translations[0];
@@ -110,22 +131,7 @@ export default async function LocaleLayout({
       };
     });
 
-    const getCachedSettings = unstable_cache(
-      async () => {
-        return prisma.setting.findMany({
-          where: {
-            OR: [
-              { language: languageEnum },
-              { language: null }
-            ]
-          }
-        });
-      },
-      [`layout-settings-${languageEnum}`],
-      { revalidate: 3600, tags: ['settings'] }
-    );
-
-    settings = await getCachedSettings();
+    settings = settingsData;
   } catch (error) {
     console.error("Layout veri çekme hatası:", error);
   }
@@ -215,8 +221,7 @@ export default async function LocaleLayout({
           <Navbar menus={finalHeader} />
           {children}
           <Footer menus={finalFooter} legalMenus={finalLegal} contact={footerContact} />
-          <CookieConsentBanner />
-          <SupportWidget />
+          <LazyWidgets />
         </NextIntlClientProvider>
       </body>
     </html>

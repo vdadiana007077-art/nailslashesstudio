@@ -1,5 +1,5 @@
 import {getRequestConfig} from 'next-intl/server';
-import {routing} from './routing';
+import {routing} from './routing-config';
 
 // Cache database translations — prisma dinamik import ile yükleniyor
 // böylece Edge Runtime bundle'ına dahil edilmiyor

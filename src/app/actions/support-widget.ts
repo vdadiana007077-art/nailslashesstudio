@@ -18,27 +18,23 @@ export async function getWidgetSettings() {
     'widget_pulse_animation',
     'widget_sparkle',
     'widget_tooltip',
-    'telegram_url'
+    'telegram_url',
+    'widget_greeting'
   ];
 
+  // Tek sorgu ile tüm ayarları ve selamlamaları çek
   const dbSettings = await prisma.setting.findMany({
     where: { key: { in: settingsKeys } }
   });
 
   const settingsMap: Record<string, string> = {};
-  for (const s of dbSettings) {
-    settingsMap[s.key] = s.value;
-  }
-
-  // Fetch greetings for all languages
-  const greetingsDb = await prisma.setting.findMany({
-    where: { key: 'widget_greeting' }
-  });
-
   const greetings: Record<string, string> = {};
-  for (const g of greetingsDb) {
-    if (g.language) {
-      greetings[g.language] = g.value;
+  
+  for (const s of dbSettings) {
+    if (s.key === 'widget_greeting' && s.language) {
+      greetings[s.language] = s.value;
+    } else {
+      settingsMap[s.key] = s.value;
     }
   }
 
@@ -76,14 +72,22 @@ export async function saveWidgetSettings(data: any) {
     { key: 'widget_tooltip', value: data.showTooltip ? 'true' : 'false' }
   ];
 
-  for (const s of settingsToSave) {
-    const existing = await prisma.setting.findFirst({ where: { key: s.key } });
-    if (existing) {
-      await prisma.setting.update({ where: { id: existing.id }, data: { value: s.value } });
-    } else {
-      await prisma.setting.create({ data: { key: s.key, value: s.value } });
-    }
-  }
+  // Batch upsert ile N+1 kaldırıldı
+  await Promise.all(settingsToSave.map(s =>
+    prisma.setting.upsert({
+      where: { key_language: { key: s.key, language: null as any } },
+      create: { key: s.key, value: s.value },
+      update: { value: s.value },
+    }).catch(async () => {
+      // Fallback: unique constraint yoksa findFirst + update/create
+      const existing = await prisma.setting.findFirst({ where: { key: s.key, language: null } });
+      if (existing) {
+        await prisma.setting.update({ where: { id: existing.id }, data: { value: s.value } });
+      } else {
+        await prisma.setting.create({ data: { key: s.key, value: s.value } });
+      }
+    })
+  ));
 
   if (data.greetings) {
     for (const [lang, val] of Object.entries(data.greetings)) {
@@ -172,12 +176,12 @@ export async function deleteWidgetQuestion(id: string) {
 }
 
 export async function reorderWidgetQuestions(orderedIds: string[]) {
-  for (let i = 0; i < orderedIds.length; i++) {
-    await prisma.supportQuestion.update({
-      where: { id: orderedIds[i] },
+  await Promise.all(orderedIds.map((id, i) =>
+    prisma.supportQuestion.update({
+      where: { id },
       data: { order: i + 1 }
-    });
-  }
+    })
+  ));
   revalidatePath('/', 'layout');
   return { success: true };
 }

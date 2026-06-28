@@ -4,16 +4,54 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { Language } from '@prisma/client';
 import { Sparkles, Calendar as CalendarIcon, ArrowRight, Star } from 'lucide-react';
-import ServiceExplorer from '@/components/layout/ServiceExplorer';
 import { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
+import dynamic from 'next/dynamic';
+
+const ServiceExplorer = dynamic(() => import('@/components/layout/ServiceExplorer'), {
+  ssr: true,
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-400">Yükleniyor...</div>,
+});
+
+// Cache'li homepage veri çekme
+const getCachedHomeData = (locale: Language) => unstable_cache(
+  async () => {
+    const [pageContent, rawCategories, bookingSlugs, servicesSlugs] = await Promise.all([
+      prisma.pageTranslation.findFirst({
+        where: { slug: '', language: locale }
+      }),
+      prisma.serviceCategory.findMany({
+        where: { isActive: true, isDeleted: false },
+        orderBy: { order: 'asc' },
+        include: {
+          translations: { where: { language: locale } },
+          services: {
+            where: { isActive: true, isDeleted: false },
+            include: { translations: { where: { language: locale } } },
+          },
+        },
+      }),
+      prisma.pageTranslation.findFirst({
+        where: { language: locale, page: { pageGroup: 'BOOKING', isActive: true, isDeleted: false } },
+        select: { slug: true }
+      }),
+      prisma.pageTranslation.findFirst({
+        where: { language: locale, page: { pageGroup: 'SERVICES', isActive: true, isDeleted: false } },
+        select: { slug: true }
+      }),
+    ]);
+
+    return { pageContent, rawCategories, bookingSlugs, servicesSlugs };
+  },
+  [`home-page-data-${locale}`],
+  { revalidate: 3600, tags: ['home', 'services', 'pages'] }
+);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
 
-  const page = await prisma.pageTranslation.findFirst({
-    where: { slug: '', language: locale }
-  });
+  const { pageContent: page } = await getCachedHomeData(locale)();
 
   const title = page?.seoTitle || 'Nails & Lashes Studio - Lüks Manikür ve İpek Kirpik Merkezi';
   const desc = page?.seoDesc || 'Antalya\'nın en prestijli güzellik merkezi Nails & Lashes Studio.';
@@ -48,37 +86,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const t = await getTranslations('Index');
 
-  const pageContent = await prisma.pageTranslation.findFirst({
-    where: { slug: '', language: locale }
-  });
+  // Tek cache'li sorgu ile tüm verileri çek
+  const { pageContent, rawCategories, bookingSlugs, servicesSlugs } = await getCachedHomeData(locale)();
 
   const heroImage = pageContent?.headerImage || '/images/luxury_salon_hero.png';
   const heroTitle = pageContent?.h1Title || `${t('heroTitle1')} ${t('heroTitle2')}`;
   const introText = pageContent?.introText || t('subtitle');
 
-  const rawCategories = await prisma.serviceCategory.findMany({
-    where: { isActive: true, isDeleted: false },
-    orderBy: { order: 'asc' },
-    include: {
-      translations: { where: { language: locale } },
-      services: {
-        where: { isActive: true, isDeleted: false },
-        include: { translations: { where: { language: locale } } },
-      },
-    },
-  });
-
-  // Dinamik slug çözümleme: booking ve services slug'larını PageTranslation'dan çek
-  const [bookingSlugs, servicesSlugs] = await Promise.all([
-    prisma.pageTranslation.findFirst({
-      where: { language: locale, page: { pageGroup: 'BOOKING', isActive: true, isDeleted: false } },
-      select: { slug: true }
-    }),
-    prisma.pageTranslation.findFirst({
-      where: { language: locale, page: { pageGroup: 'SERVICES', isActive: true, isDeleted: false } },
-      select: { slug: true }
-    }),
-  ]);
   const localePrefix = resolvedParams.locale === 'tr' ? '' : `/${resolvedParams.locale}`;
   const bookingHref = `${localePrefix}/${bookingSlugs?.slug || 'randevu-al'}`;
   const servicesHref = `${localePrefix}/${servicesSlugs?.slug || 'hizmetlerimiz'}`;
@@ -145,12 +159,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <span className="text-[10px] text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Premium</span>
             </div>
 
-            <Image width={800} height={800} 
+            <Image width={800} height={1000} 
               src={heroImage} 
               alt="Lüks Nails & Lashes Studio" 
               className="w-full aspect-[4/5] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
               priority={true}
               fetchPriority="high"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 40vw, 500px"
+              quality={85}
             />
           </div>
         </div>
@@ -265,10 +281,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 className={`group relative rounded-[2.5rem] overflow-hidden bg-[var(--color-light-200)] border border-[var(--color-primary-300)]/20 cursor-pointer ${img.offset ? 'md:-translate-y-6' : ''} transition-all duration-500 hover:shadow-[0_20px_40px_rgba(197,139,139,0.15)] aspect-[3/4]`}
               >
                 <div className="absolute inset-0 bg-[var(--color-text-main)]/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
-                <Image width={800} height={800} 
+                <Image width={400} height={533} 
                   src={img.src} 
                   alt={img.title} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
+                  quality={80}
                 />
                 
                 {/* Image Hover Info Tag */}

@@ -50,6 +50,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+export const revalidate = 3600;
+
 export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;

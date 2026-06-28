@@ -39,33 +39,50 @@ export async function createBooking(data: {
     const dayOfWeek = dateObj.getDay();
 
     // ═══════════════ 10 MADDELİK SERVER-SIDE KONTROL ZİNCİRİ ═══════════════
+    // Bağımsız sorguları paralel çek
+    const [location, service, locationService, holiday, shopHours] = await Promise.all([
+      // 1. Şube aktif mi?
+      prisma.location.findUnique({ where: { id: data.locationId } }),
+      // 2. Hizmet aktif mi?
+      prisma.service.findUnique({
+        where: { id: data.serviceId },
+        include: { translations: { where: { language: resolvedLanguage as any } } }
+      }),
+      // 3. Hizmet bu şubede aktif mi?
+      prisma.locationService.findUnique({
+        where: { locationId_serviceId: { locationId: data.locationId, serviceId: data.serviceId } }
+      }),
+      // 7. Şube tatili var mı?
+      prisma.holiday.findFirst({
+        where: { locationId: data.locationId, date: dateObj }
+      }),
+      // 8. Şube çalışma saati kontrolü
+      prisma.workingHours.findFirst({
+        where: { locationId: data.locationId, dayOfWeek }
+      }),
+    ]);
 
-    // 1. Şube aktif mi?
-    const location = await prisma.location.findUnique({ where: { id: data.locationId } });
     if (!location || !location.isActive || location.isDeleted) {
       return { success: false, error: 'Seçilen şube aktif değil.' };
     }
 
-    // 2. Hizmet aktif mi?
-    const service = await prisma.service.findUnique({
-      where: { id: data.serviceId },
-      include: { translations: { where: { language: resolvedLanguage as any } } }
-    });
     if (!service || service.isDeleted || !service.isActive) {
       return { success: false, error: 'Hizmet bulunamadı veya pasif.' };
     }
 
-    // 3. Hizmet bu şubede aktif mi? (LocationService kontrolü)
-    const locationService = await prisma.locationService.findUnique({
-      where: { locationId_serviceId: { locationId: data.locationId, serviceId: data.serviceId } }
-    });
     if (!locationService) {
       return { success: false, error: 'Bu hizmet seçilen şubede verilmemektedir.' };
     }
 
     // 4. Personel bu şubede çalışıyor mu? (Belirli personel seçildiyse)
     if (data.staffId !== 'ANY') {
-      const staff = await prisma.staff.findUnique({ where: { id: data.staffId } });
+      const [staff, staffLeave] = await Promise.all([
+        prisma.staff.findUnique({ where: { id: data.staffId } }),
+        prisma.staffLeave.findFirst({
+          where: { staffId: data.staffId, date: dateObj, isFullDay: true }
+        }),
+      ]);
+
       if (!staff || !staff.isActive || staff.isDeleted) {
         return { success: false, error: 'Seçilen personel aktif değil.' };
       }
@@ -74,36 +91,27 @@ export async function createBooking(data: {
       }
 
       // 5. Personel bu hizmeti verebiliyor mu? (StaffService kontrolü)
-      const staffService = await prisma.staffService.findUnique({
-        where: { staffId_serviceId: { staffId: data.staffId, serviceId: data.serviceId } }
-      });
-      // Fallback: StaffService ataması yoksa tüm hizmetleri verebilir
-      const anyStaffService = await prisma.staffService.count({ where: { staffId: data.staffId } });
+      const [staffService, anyStaffService] = await Promise.all([
+        prisma.staffService.findUnique({
+          where: { staffId_serviceId: { staffId: data.staffId, serviceId: data.serviceId } }
+        }),
+        prisma.staffService.count({ where: { staffId: data.staffId } }),
+      ]);
+
       if (anyStaffService > 0 && !staffService) {
         return { success: false, error: 'Seçilen personel bu hizmeti veremiyor.' };
       }
 
       // 6. Personel izinde mi?
-      const staffLeave = await prisma.staffLeave.findFirst({
-        where: { staffId: data.staffId, date: dateObj, isFullDay: true }
-      });
       if (staffLeave) {
         return { success: false, error: 'Seçilen personel bu tarihte izinlidir.' };
       }
     }
 
-    // 7. Şube tatili var mı?
-    const holiday = await prisma.holiday.findFirst({
-      where: { locationId: data.locationId, date: dateObj }
-    });
     if (holiday) {
       return { success: false, error: `Şube bu tarihte kapalıdır: ${holiday.description || 'Tatil günü'}` };
     }
 
-    // 8. Şube çalışma saati kontrolü
-    const shopHours = await prisma.workingHours.findFirst({
-      where: { locationId: data.locationId, dayOfWeek }
-    });
     if (shopHours && shopHours.isClosed) {
       return { success: false, error: 'Şube bu gün kapalıdır.' };
     }

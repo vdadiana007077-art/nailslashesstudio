@@ -47,71 +47,50 @@ export default async function AdminDashboard() {
   let transactions: any[] = [];
 
   try {
-    // 1. Gelecek randevular (Bugün dahil)
-    upcomingAppointments = await prisma.appointment.findMany({
-      where: {
-        date: {
-          gte: todayStart,
+    // Tüm sorguları paralel çek
+    const [upcomingAppts, todayCount, weekCount, statsAppts, transData] = await Promise.all([
+      // 1. Gelecek randevular (Bugün dahil)
+      prisma.appointment.findMany({
+        where: { date: { gte: todayStart } },
+        orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
+        include: {
+          service: { include: { translations: { where: { language: 'TR' } } } },
+          staff: { select: { name: true } },
+          location: { select: { name: true } },
+          statusHistory: { orderBy: { createdAt: 'desc' } }
         }
-      },
-      orderBy: [
-        { date: 'desc' },
-        { startTime: 'desc' }
-      ],
-      include: {
-        service: {
-          include: { translations: { where: { language: 'TR' } } }
+      }),
+      // 2. Bugünün randevu sayısı
+      prisma.appointment.count({
+        where: { date: { gte: todayStart, lte: todayEnd } }
+      }),
+      // 3. Bu haftanın randevu sayısı
+      prisma.appointment.count({
+        where: { date: { gte: startOfWeek, lte: endOfWeek } }
+      }),
+      // 4. İstatistik hesabı
+      prisma.appointment.findMany({
+        where: {
+          date: { gte: startOfMonth },
+          status: { in: ['CONFIRMED', 'COMPLETED'] }
         },
-        staff: true,
-        location: true,
-        statusHistory: {
-          orderBy: { createdAt: 'desc' }
+        include: {
+          service: { include: { translations: { where: { language: 'TR' } } } },
+          staff: { select: { name: true } }
         }
-      }
-    });
+      }),
+      // 5. Finansal işlemler
+      prisma.transaction.findMany({
+        where: { date: { gte: startOfMonth } },
+        select: { type: true, amount: true }
+      }),
+    ]);
 
-    // 2. Bugünün randevu sayısı
-    todayApptsCount = await prisma.appointment.count({
-      where: {
-        date: {
-          gte: todayStart,
-          lte: todayEnd
-        }
-      }
-    });
-
-    // 3. Bu haftanın randevu sayısı
-    weekApptsCount = await prisma.appointment.count({
-      where: {
-        date: {
-          gte: startOfWeek,
-          lte: endOfWeek
-        }
-      }
-    });
-
-    // 4. İstatistik hesabı için sadece BU AYIN onaylı ve tamamlanmış randevularını çek
-    allAppointmentsForStats = await prisma.appointment.findMany({
-      where: {
-        date: { gte: startOfMonth },
-        status: {
-          in: ['CONFIRMED', 'COMPLETED']
-        }
-      },
-      include: {
-        service: {
-          include: { translations: { where: { language: 'TR' } } }
-        },
-        staff: true
-      }
-    });
-
-    // 5. Finansal kâr için sadece BU AYIN muhasebe işlemlerini çek
-    transactions = await prisma.transaction.findMany({
-      where: {
-        date: { gte: startOfMonth }
-      }
-    });
+    upcomingAppointments = upcomingAppts;
+    todayApptsCount = todayCount;
+    weekApptsCount = weekCount;
+    allAppointmentsForStats = statsAppts;
+    transactions = transData;
   } catch (error) {
     console.error("Dashboard veri çekme hatası:", error);
   }

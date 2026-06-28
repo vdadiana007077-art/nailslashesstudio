@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { Language } from '@prisma/client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Calendar } from 'lucide-react';
 
 type Props = {
@@ -30,6 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   };
 }
+
+export const revalidate = 3600;
 
 export default async function BlogCategoryPage({ params }: Props) {
   const resolvedParams = await params;
@@ -134,10 +137,14 @@ export default async function BlogCategoryPage({ params }: Props) {
                   <div>
                     {/* Görsel */}
                     <div className="h-56 relative bg-gray-100 overflow-hidden">
-                      <img
+                      <Image
                         src={post.image || '/images/luxury_salon_hero.png'}
                         alt={trans.title}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        quality={75}
                       />
                     </div>
 

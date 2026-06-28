@@ -12,25 +12,26 @@ export default async function GalleryPageContent({ params }: { params: Promise<{
   let dbItems: any[] = [];
 
   try {
-    const rawCategories = await prisma.galleryCategory.findMany({
-      where: { isActive: true, isDeleted: false },
-      include: {
-        translations: { where: { language: languageEnum } },
-        _count: { select: { items: { where: { isActive: true, isDeleted: false } } } }
-      },
-      orderBy: { order: 'asc' }
-    });
-    dbCategories = rawCategories.filter(c => c._count.items > 0 || true); // tümünü göster
-
-    const rawItems = await prisma.galleryItem.findMany({
-      where: { isActive: true, isDeleted: false },
-      include: {
-        translations: { where: { language: languageEnum } },
-        category: { include: { translations: { where: { language: languageEnum } } } }
-      },
-      orderBy: { order: 'asc' }
-    });
-    dbItems = rawItems;
+    const [rawCategoriesData, rawItemsData] = await Promise.all([
+      prisma.galleryCategory.findMany({
+        where: { isActive: true, isDeleted: false },
+        include: {
+          translations: { where: { language: languageEnum } },
+          _count: { select: { items: { where: { isActive: true, isDeleted: false } } } }
+        },
+        orderBy: { order: 'asc' }
+      }),
+      prisma.galleryItem.findMany({
+        where: { isActive: true, isDeleted: false },
+        include: {
+          translations: { where: { language: languageEnum } },
+          category: { include: { translations: { where: { language: languageEnum } } } }
+        },
+        orderBy: { order: 'asc' }
+      }),
+    ]);
+    dbCategories = rawCategoriesData.filter(c => c._count.items > 0 || true); // tümünü göster
+    dbItems = rawItemsData;
   } catch (error) {
     console.error('Galeri veri çekme hatası:', error);
   }

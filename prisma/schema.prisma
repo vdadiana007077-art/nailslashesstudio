@@ -278,6 +278,9 @@ model Service {
   packages     PackageService[]
   menuItems    MenuItem[]
   locations    LocationService[]
+
+  @@index([categoryId])
+  @@index([isActive, isDeleted])
 }
 
 model ServiceTranslation {
@@ -448,6 +451,14 @@ model Appointment {
   transaction     Transaction?
   payment         Payment?
   staffCommission StaffCommission?
+
+  // Performans İndexleri
+  @@index([date, status])
+  @@index([staffId])
+  @@index([customerId])
+  @@index([locationId])
+  @@index([createdAt])
+  @@index([serviceId])
 }
 
 model AppointmentStatusHistory {
@@ -457,6 +468,8 @@ model AppointmentStatusHistory {
   status        ApptStatus
   notes         String?
   createdAt     DateTime    @default(now())
+
+  @@index([appointmentId])
 }
 
 model Page {
@@ -613,6 +626,10 @@ model Transaction {
   location      Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+
+  @@index([date, type])
+  @@index([staffId])
+  @@index([locationId])
 }
 
 model AuditLog {
@@ -645,6 +662,9 @@ model BlogPost {
   relatedPosts    RelatedBlogPost[] @relation("PostToRelated")
   referencedBy    RelatedBlogPost[] @relation("RelatedToPost")
   menuItems       MenuItem[]
+
+  @@index([publishedAt])
+  @@index([isActive, isDeleted])
 }
 
 model BlogPostTranslation {
@@ -750,6 +770,10 @@ model Faq {
   service    Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   blogPostId String?
   blogPost   BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: SetNull)
+
+  @@index([pageId, language])
+  @@index([serviceId, language])
+  @@index([blogPostId, language])
 }
 
 // ↪️ YÖNLENDİRME (301/302 REDIRECTS) MODELİ
@@ -775,6 +799,9 @@ model Lead {
   locationId String?
   location   Location?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
   createdAt  DateTime   @default(now())
+
+  @@index([status, createdAt])
+  @@index([locationId])
 }
 
 // 📧 E-BÜLTEN ABONELİK (NEWSLETTER SUBSCRIBERS) MODELİ
@@ -886,6 +913,9 @@ model Payment {
   notes         String?       @db.Text
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 // ⏳ BEKLEME LİSTESİ (WAITLIST) MODELİ
@@ -947,6 +977,9 @@ model StaffCommission {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([staffId, status])
+  @@index([createdAt])
 }
 
 // 💵 PERSONEL KASA VE HAKEDİŞ MODELLERİ (ERP)
@@ -967,6 +1000,9 @@ model StaffTransaction {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([staffId, date])
+  @@index([date])
 }
 
 model StaffPayout {
@@ -985,6 +1021,8 @@ model StaffPayout {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([staffId, date])
 }
 
 // 📦 HİZMET PAKETLERİ (PACKAGES) MODÜLLERİ

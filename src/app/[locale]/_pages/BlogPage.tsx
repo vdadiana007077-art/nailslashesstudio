@@ -8,31 +8,32 @@ export default async function BlogPageContent({ params }: { params: Promise<{ lo
   const locale = resolvedParams.locale.toUpperCase() as Language;
   const t = await getTranslations({ locale: resolvedParams.locale, namespace: "Blog" });
 
-  const pageContent = await prisma.pageTranslation.findFirst({
-    where: { language: locale, page: { pageGroup: 'BLOG', isActive: true, isDeleted: false } }
-  });
+  // Paralel sorgular
+  const [pageContent, posts, categories] = await Promise.all([
+    prisma.pageTranslation.findFirst({
+      where: { language: locale, page: { pageGroup: 'BLOG', isActive: true, isDeleted: false } }
+    }),
+    prisma.blogPost.findMany({
+      where: { isActive: true, isDeleted: false },
+      include: {
+        translations: { where: { language: locale } },
+        categories: {
+          include: {
+            category: { include: { translations: { where: { language: locale } } } }
+          }
+        }
+      },
+      orderBy: { publishedAt: 'desc' },
+    }),
+    prisma.blogCategory.findMany({
+      where: { isActive: true },
+      include: { translations: { where: { language: locale } } },
+      orderBy: { order: 'asc' },
+    }),
+  ]);
 
   const heroTitle = pageContent?.h1Title || t('blogCorner');
   const introText = pageContent?.introText || t('blogCornerDesc');
-
-  const posts = await prisma.blogPost.findMany({
-    where: { isActive: true, isDeleted: false },
-    include: {
-      translations: { where: { language: locale } },
-      categories: {
-        include: {
-          category: { include: { translations: { where: { language: locale } } } }
-        }
-      }
-    },
-    orderBy: { publishedAt: 'desc' },
-  });
-
-  const categories = await prisma.blogCategory.findMany({
-    where: { isActive: true },
-    include: { translations: { where: { language: locale } } },
-    orderBy: { order: 'asc' },
-  });
 
   const formattedCategories = categories.map(cat => ({
     id: cat.id,

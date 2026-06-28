@@ -6,20 +6,25 @@ export default async function PortfolioPageContent({ params }: { params: Promise
   const resolvedParams = await params;
   const locale = resolvedParams.locale.toUpperCase() as Language;
 
-  const pageContent = await prisma.pageTranslation.findFirst({
-    where: { language: locale, page: { pageGroup: 'PORTFOLIO', isActive: true, isDeleted: false } }
-  });
+  const [pageContent, items, bookingSlugs] = await Promise.all([
+    prisma.pageTranslation.findFirst({
+      where: { language: locale, page: { pageGroup: 'PORTFOLIO', isActive: true, isDeleted: false } }
+    }),
+    prisma.portfolioItem.findMany({
+      where: { isActive: true },
+      include: { translations: { where: { language: locale } } },
+      orderBy: { order: 'asc' },
+    }),
+    prisma.pageTranslation.findFirst({
+      where: { language: locale, page: { pageGroup: 'BOOKING', isActive: true, isDeleted: false } },
+      select: { slug: true }
+    }),
+  ]);
 
   const heroTitle = pageContent?.h1Title || (locale === 'TR' ? 'Güzellik Değişimleri' : 'Beauty Transformations');
   const introText = pageContent?.introText || (locale === 'TR'
     ? 'Stüdyomuzda gerçekleştirdiğimiz işlemlerin göz alıcı sonuçlarını etkileşimli slider üzerinden öncesi ve sonrası halleriyle karşılaştırın.'
     : 'Compare the dazzling results of the procedures we perform in our studio.');
-
-  const items = await prisma.portfolioItem.findMany({
-    where: { isActive: true },
-    include: { translations: { where: { language: locale } } },
-    orderBy: { order: 'asc' },
-  });
 
   const formattedItems = items.map(item => ({
     id: item.id, beforeImage: item.beforeImage, afterImage: item.afterImage,
@@ -28,10 +33,6 @@ export default async function PortfolioPageContent({ params }: { params: Promise
     description: item.translations[0]?.description || '',
   }));
 
-  const bookingSlugs = await prisma.pageTranslation.findFirst({
-    where: { language: locale, page: { pageGroup: 'BOOKING', isActive: true, isDeleted: false } },
-    select: { slug: true }
-  });
   const localePrefix = resolvedParams.locale === 'tr' ? '' : `/${resolvedParams.locale}`;
   const bookingHref = `${localePrefix}/${bookingSlugs?.slug || 'randevu-al'}`;
 
