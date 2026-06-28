@@ -343,6 +343,21 @@ export async function getStaffFinanceSummary(staffId: string) {
       }
     });
 
+    const commissions = await prisma.staffCommission.findMany({
+      where: { staffId }
+    });
+
+    let totalCommission = 0;
+    let pendingCommission = 0;
+
+    commissions.forEach(c => {
+      const amount = Number(c.commissionAmount);
+      totalCommission += amount;
+      if (c.status === 'PENDING') {
+        pendingCommission += amount;
+      }
+    });
+
     const pendingDrop = cashCollected - totalDropped; // Sadece nakit teslim edilir
 
     return {
@@ -353,7 +368,9 @@ export async function getStaffFinanceSummary(staffId: string) {
         cardCollected,
         totalDropped,
         pendingDrop: pendingDrop > 0 ? pendingDrop : 0,
-        balanceAfter
+        balanceAfter,
+        totalCommission,
+        pendingCommission
       }
     };
   } catch (error: any) {
