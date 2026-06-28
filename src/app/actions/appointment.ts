@@ -118,7 +118,7 @@ export async function updateAppointmentStatus(
           
           const emailRes = await sendTemplateEmail('booking_confirmation', customerEmail, emailVars, customerLang);
           if (!emailRes.success) {
-            emailWarning = 'Onay e-postası gönderilemedi. SMTP ayarlarını veya e-posta şablonunu kontrol edin.';
+            emailWarning = `Onay e-postası gönderilemedi: ${(emailRes as any).error || 'SMTP ayarlarını kontrol edin.'}`;
           } else {
             console.log('Onay e-postası başarıyla gönderildi.');
           }
@@ -155,7 +155,7 @@ export async function updateAppointmentStatus(
 
     await logAction('Randevu Durumu Güncellendi', `Randevu ID: ${appointmentId}, Yeni Durum: ${newStatus}`);
 
-    revalidatePath('/[locale]/admin', 'page');
+    revalidatePath('/admin');
     return { success: true, warning: emailWarning };
   } catch (error: any) {
     console.error('Randevu durum güncelleme hatası:', error);
@@ -171,7 +171,7 @@ export async function updateAppointmentNotes(appointmentId: string, notes: strin
       data: { notes },
     });
 
-    revalidatePath('/[locale]/admin', 'page');
+    revalidatePath('/admin');
     return { success: true };
   } catch (error: any) {
     console.error('Randevu not güncelleme hatası:', error);
@@ -226,7 +226,7 @@ export async function rescheduleAppointment(
 
     await logAction('Randevu Yeniden Planlandı', `Randevu ID: ${appointmentId}, Yeni: ${newDateStr} ${newStartTime}`);
 
-    revalidatePath('/[locale]/admin', 'page');
+    revalidatePath('/admin');
     return { success: true };
   } catch (error: any) {
     console.error('Randevu yeniden planlama hatası:', error);
@@ -338,7 +338,7 @@ export async function deleteAppointment(appointmentId: string) {
 
     await logAction('Randevu Kalıcı Olarak Silindi', `Randevu ID: ${appointmentId}, Müşteri: ${appointment.customerName}`);
 
-    revalidatePath('/[locale]/admin', 'page');
+    revalidatePath('/admin');
     return { success: true };
   } catch (error: any) {
     console.error('Randevu silme hatası:', error);

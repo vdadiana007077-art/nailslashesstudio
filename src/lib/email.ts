@@ -117,9 +117,9 @@ export const sendBookingEmail = async (
     }
 
     return { success: true };
-  } catch (error) {
-    console.error("E-posta gönderme hatası:", error);
-    return { success: false };
+  } catch (error: any) {
+    console.error("E-posta gönderme hatası:", error?.message || error);
+    return { success: false, error: error?.message || 'Bilinmeyen SMTP hatası' };
   }
 };
 
@@ -174,8 +174,8 @@ export const sendTemplateEmail = async (
     });
 
     return { success: true };
-  } catch (error) {
-    console.error(`E-posta gönderme hatası (${templateKey}):`, error);
-    return { success: false };
+  } catch (error: any) {
+    console.error(`E-posta gönderme hatası (${templateKey}):`, error?.message || error);
+    return { success: false, error: error?.message || 'Bilinmeyen SMTP hatası' };
   }
 };

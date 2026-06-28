@@ -6,6 +6,7 @@ import { sendBookingEmail } from '@/lib/email';
 import { getAvailableTimeSlots } from './availability';
 import { getCurrentCustomer } from './customerAuth';
 import { logAction } from './audit';
+import { revalidatePath } from 'next/cache';
 
 export async function createBooking(data: {
   serviceId: string;
@@ -307,6 +308,9 @@ export async function createBooking(data: {
         console.error("E-posta gönderim hatası (randevu başarıyla kaydedildi):", err);
       }
     }
+
+    // 7. Admin sayfasını güncelle
+    revalidatePath('/admin');
 
     return { success: true, appointmentId: appointment.id };
   } catch (error) {
