@@ -2,13 +2,24 @@ import nodemailer from 'nodemailer';
 import { prisma } from '@/lib/prisma';
 import { seedEmailTemplates } from '@/app/actions/email-template';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Lazy transporter — build sırasında env değerleri inline edilmez
+let _transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+function getTransporter() {
+  if (!_transporter) {
+    _transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env['EMAIL_USER'],
+        pass: process.env['EMAIL_PASS'],
+      },
+    });
+  }
+  return _transporter;
+}
+
+function getEmailUser(): string {
+  return process.env['EMAIL_USER'] || '';
+}
 
 // Şablon değişkenlerini değiştiren yardımcı fonksiyon
 function replaceVariables(
