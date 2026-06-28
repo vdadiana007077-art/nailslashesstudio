@@ -104,8 +104,8 @@ export const sendBookingEmail = async (
       const finalSubject = replaceVariables(subject, vars);
       const finalHtml = replaceVariables(html, vars);
 
-      await transporter.sendMail({
-         from: `"Nails & Lashes Studio" <${process.env.EMAIL_USER}>`,
+      await getTransporter().sendMail({
+         from: `"Nails & Lashes Studio" <${getEmailUser()}>`,
          to: to,
          subject: finalSubject,
          html: finalHtml,
@@ -119,9 +119,9 @@ export const sendBookingEmail = async (
       const subject = replaceVariables(adminTemplate.subject, vars);
       const html = replaceVariables(adminTemplate.body, vars);
 
-      await transporter.sendMail({
-        from: `"Sistem Bildirimi" <${process.env.EMAIL_USER}>`,
-        to: process.env.EMAIL_USER!,
+      await getTransporter().sendMail({
+        from: `"Sistem Bildirimi" <${getEmailUser()}>`,
+        to: getEmailUser(),
         subject,
         html,
       });
@@ -177,8 +177,8 @@ export const sendTemplateEmail = async (
     const finalSubject = replaceVariables(subject, vars);
     const finalHtml = replaceVariables(html, vars);
 
-    await transporter.sendMail({
-      from: `"Nails & Lashes Studio" <${process.env.EMAIL_USER}>`,
+    await getTransporter().sendMail({
+      from: `"Nails & Lashes Studio" <${getEmailUser()}>`,
       to,
       subject: finalSubject,
       html: finalHtml,

@@ -5,14 +5,20 @@ import { NotificationType, NotificationStatus, MessageType, MessageStatus } from
 import nodemailer from 'nodemailer';
 import { revalidatePath } from 'next/cache';
 
-// Gmail SMTP Transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Gmail SMTP Transporter (lazy)
+let _notifTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+function getNotifTransporter() {
+  if (!_notifTransporter) {
+    _notifTransporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env['EMAIL_USER'],
+        pass: process.env['EMAIL_PASS'],
+      },
+    });
+  }
+  return _notifTransporter;
+}
 
 // Bildirim Kuyruğuna Ekleme
 export async function createNotification(
@@ -64,8 +70,8 @@ export async function sendPendingNotifications() {
 
       if (notif.type === NotificationType.EMAIL) {
         try {
-          await transporter.sendMail({
-            from: `"Nails & Lashes Studio" <${process.env.EMAIL_USER}>`,
+          await getNotifTransporter().sendMail({
+            from: `"Nails & Lashes Studio" <${process.env['EMAIL_USER']}>`,
             to: notif.recipient,
             subject: 'Nails & Lashes Studio Bildirimi',
             html: `<div style="font-family: sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">${notif.content}</div>`,
