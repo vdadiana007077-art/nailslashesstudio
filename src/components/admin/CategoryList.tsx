@@ -1,9 +1,11 @@
 "use client";
 
-import { Check, X, Edit, Sparkles, Loader2 } from 'lucide-react';
+import { Check, X, Edit, Sparkles, Loader2, Trash2, Power } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { autoFillCategorySEO } from '@/app/actions/category-auto-fill';
+import { toggleCategoryActive, deleteCategory } from '@/app/actions/admin';
 
 type CategoryTranslation = {
   id: string;
@@ -32,6 +34,8 @@ type Category = {
 export default function CategoryList({ categories }: { categories: Category[] }) {
   const [isFilling, setIsFilling] = useState(false);
 
+  const router = useRouter();
+
   const handleAutoFill = async () => {
     setIsFilling(true);
     const res = await autoFillCategorySEO();
@@ -41,6 +45,20 @@ export default function CategoryList({ categories }: { categories: Category[] })
       window.location.reload();
     } else {
       alert('Hata: ' + res.error);
+    }
+  };
+
+  const handleToggleActive = async (id: string, currentState: boolean) => {
+    const res = await toggleCategoryActive(id, currentState);
+    if (!res.success) alert(res.error);
+    else router.refresh();
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`"${name}" kategorisini silmek istediğinize emin misiniz?`)) {
+      const res = await deleteCategory(id);
+      if (!res.success) alert(res.error);
+      else router.refresh();
     }
   };
 
@@ -73,8 +91,7 @@ export default function CategoryList({ categories }: { categories: Category[] })
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-              <th className="p-4 pl-6 w-10 font-medium">Durum</th>
-              <th className="p-4 font-medium">Kategori Adı (TR)</th>
+              <th className="p-4 pl-6 font-medium">Kategori Adı (TR)</th>
               <th className="p-4 font-medium">URL (Slug)</th>
               <th className="p-4 font-medium">Sıra</th>
               <th className="p-4 font-medium text-right pr-6">İşlemler</th>
@@ -86,17 +103,6 @@ export default function CategoryList({ categories }: { categories: Category[] })
               return (
                 <tr key={cat.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors text-sm">
                   <td className="p-4 pl-6">
-                    {cat.isActive ? (
-                      <span className="inline-flex p-1 bg-green-50 text-green-600 rounded-full border border-green-100" title="Aktif">
-                        <Check size={14} />
-                      </span>
-                    ) : (
-                      <span className="inline-flex p-1 bg-gray-50 text-gray-400 rounded-full border border-gray-100" title="Pasif">
-                        <X size={14} />
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4">
                     <p className="font-bold text-gray-800 leading-snug">{tr.name}</p>
                     <p className="text-xs text-gray-400 mt-0.5 line-clamp-1" title={tr.description}>
                       {tr.description || 'Açıklama girilmemiş.'}
@@ -108,14 +114,35 @@ export default function CategoryList({ categories }: { categories: Category[] })
                   <td className="p-4 font-bold text-gray-500">
                     #{cat.order}
                   </td>
-                  <td className="p-4 text-right pr-6">
+                  <td className="p-4 text-right pr-6 flex justify-end gap-3 items-center h-full min-h-[64px]">
+                    <button 
+                      onClick={() => handleToggleActive(cat.id, cat.isActive)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors border shadow-sm"
+                      style={{
+                        backgroundColor: cat.isActive ? '#f0fdf4' : '#f9fafb',
+                        color: cat.isActive ? '#166534' : '#6b7280',
+                        borderColor: cat.isActive ? '#bbf7d0' : '#e5e7eb'
+                      }}
+                      title={cat.isActive ? "Pasife Al" : "Aktif Et"}
+                    >
+                      <Power size={14} />
+                      {cat.isActive ? 'Aktif' : 'Pasif'}
+                    </button>
                     <Link
                       href={`/admin/categories/${cat.id}`}
-                      className="inline-flex p-2 bg-gray-50 hover:bg-[var(--color-primary-100)] text-gray-600 hover:text-[var(--color-primary-700)] rounded-xl cursor-pointer transition-colors"
-                      title="Düzenle"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-white text-[var(--color-primary-600)] border border-gray-200 hover:border-[var(--color-primary-300)] rounded-lg transition-colors shadow-sm"
                     >
-                      <Edit size={16} />
+                      <Edit size={14} />
+                      Düzenle
                     </Link>
+                    <button
+                      onClick={() => handleDelete(cat.id, tr.name)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-white text-red-600 border border-red-100 hover:bg-red-50 hover:border-red-200 rounded-lg transition-colors shadow-sm"
+                      title="Sil"
+                    >
+                      <Trash2 size={14} />
+                      Sil
+                    </button>
                   </td>
                 </tr>
               );

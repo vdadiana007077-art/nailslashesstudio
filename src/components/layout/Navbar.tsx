@@ -124,7 +124,7 @@ export default function Navbar({ menus }: { menus: MenuItemProp[] }) {
     return `/${targetLang}`;
   }
 
-  if (rawPathname.includes('/admin')) {
+  if (rawPathname.includes('/admin') || rawPathname.includes('/staff')) {
     return null;
   }
 

@@ -2,8 +2,9 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role, LoginType } from '@prisma/client';
 import { logAction } from './audit';
+import { hashPassword } from '@/lib/auth-helpers';
 
 export async function getStaffList(locationId?: string) {
   try {
@@ -31,6 +32,9 @@ export async function getStaffList(locationId?: string) {
         leaves: {
           orderBy: { date: 'asc' },
         },
+        user: {
+          select: { email: true, phone: true }
+        }
       },
       orderBy: { name: 'asc' },
     });
@@ -44,19 +48,48 @@ export async function getStaffList(locationId?: string) {
 
 export async function createStaff(data: {
   name: string;
+  email: string;
+  phone?: string;
+  password?: string;
   image?: string;
   specialty?: string;
   locationId?: string;
   commissionRate?: number;
-  serviceIds: string[];
+  workModel?: 'DAILY_ONLY' | 'COMMISSION_ONLY' | 'DAILY_AND_COMMISSION';
+  dailyRate?: number;
+  generalCommissionRate?: number;
+  services: { serviceId: string; price: number | null; commissionRate: number | null }[];
 }) {
-  if (!data.name) {
-    return { success: false, error: 'Personel adı zorunludur!' };
+  if (!data.name || !data.email || !data.password) {
+    return { success: false, error: 'Personel adı, e-posta ve şifre zorunludur!' };
   }
 
   try {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email }
+    });
+
+    if (existingUser) {
+      return { success: false, error: 'Bu e-posta adresiyle kayıtlı bir kullanıcı zaten mevcut!' };
+    }
+
+    const hashedPassword = hashPassword(data.password);
+
     const newStaff = await prisma.$transaction(async (tx) => {
-      // 1. Personel kaydını oluştur
+      // 1. User kaydını oluştur
+      const user = await tx.user.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone || null,
+          password: hashedPassword,
+          role: Role.STAFF,
+          loginType: LoginType.MANUAL,
+          marketingConsent: false
+        }
+      });
+
+      // 2. Personel kaydını oluştur ve bağla
       const staff = await tx.staff.create({
         data: {
           name: data.name,
@@ -64,15 +97,21 @@ export async function createStaff(data: {
           specialty: data.specialty || null,
           locationId: data.locationId || null,
           commissionRate: data.commissionRate != null ? new Prisma.Decimal(data.commissionRate) : null,
+          workModel: data.workModel || 'COMMISSION_ONLY',
+          dailyRate: data.dailyRate != null ? new Prisma.Decimal(data.dailyRate) : null,
+          generalCommissionRate: data.generalCommissionRate != null ? new Prisma.Decimal(data.generalCommissionRate) : null,
+          userId: user.id
         },
       });
 
       // 2. Yetkin olduğu hizmetleri bağla
-      if (data.serviceIds && data.serviceIds.length > 0) {
+      if (data.services && data.services.length > 0) {
         await tx.staffService.createMany({
-          data: data.serviceIds.map((serviceId) => ({
+          data: data.services.map((s) => ({
             staffId: staff.id,
-            serviceId,
+            serviceId: s.serviceId,
+            price: s.price != null ? new Prisma.Decimal(s.price) : null,
+            commissionRate: s.commissionRate != null ? new Prisma.Decimal(s.commissionRate) : null,
           })),
         });
       }
@@ -99,7 +138,7 @@ export async function createStaff(data: {
       return staff;
     });
 
-    revalidatePath('/[locale]/admin/staff', 'page');
+    revalidatePath('/', 'layout');
     await logAction('Personel Eklendi', `İsim: ${data.name}, Uzmanlık: ${data.specialty || 'Belirtilmemiş'}`);
     return { success: true, data: JSON.parse(JSON.stringify(newStaff)) };
   } catch (error: any) {
@@ -112,12 +151,18 @@ export async function updateStaff(
   id: string,
   data: {
     name: string;
+    email?: string;
+    phone?: string;
+    password?: string;
     image?: string;
     specialty?: string;
     locationId?: string;
     commissionRate?: number;
+    workModel?: 'DAILY_ONLY' | 'COMMISSION_ONLY' | 'DAILY_AND_COMMISSION';
+    dailyRate?: number;
+    generalCommissionRate?: number;
     isActive: boolean;
-    serviceIds: string[];
+    services: { serviceId: string; price: number | null; commissionRate: number | null }[];
   }
 ) {
   if (!data.name) {
@@ -125,8 +170,52 @@ export async function updateStaff(
   }
 
   try {
+    // E-posta değiştiriliyorsa çakışma var mı kontrol et
+    if (data.email) {
+      const existingUser = await prisma.user.findFirst({
+        where: { email: data.email, NOT: { staff: { id } } }
+      });
+      if (existingUser) {
+        return { success: false, error: 'Bu e-posta adresi başka bir kullanıcı tarafından kullanılıyor!' };
+      }
+    }
+
     const updatedStaff = await prisma.$transaction(async (tx) => {
-      // 1. Personel bilgilerini güncelle
+      // 1. Mevcut personeli bul
+      const currentStaff = await tx.staff.findUnique({ where: { id } });
+      let userId = currentStaff?.userId;
+
+      // 2. User hesabını güncelle veya yoksa oluştur
+      if (userId) {
+        if (data.email || data.phone || data.password) {
+          const updateData: any = {};
+          if (data.email) updateData.email = data.email;
+          if (data.phone !== undefined) updateData.phone = data.phone;
+          if (data.password) updateData.password = hashPassword(data.password);
+          updateData.name = data.name;
+
+          await tx.user.update({
+            where: { id: userId },
+            data: updateData
+          });
+        }
+      } else if (data.email && data.password) {
+        // Eski personelin hesabı yok, ona hesap açıyoruz
+        const newUser = await tx.user.create({
+          data: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone || null,
+            password: hashPassword(data.password),
+            role: Role.STAFF,
+            loginType: LoginType.MANUAL,
+            marketingConsent: false
+          }
+        });
+        userId = newUser.id;
+      }
+
+      // 3. Personel bilgilerini güncelle
       const staff = await tx.staff.update({
         where: { id },
         data: {
@@ -135,7 +224,11 @@ export async function updateStaff(
           specialty: data.specialty || null,
           locationId: data.locationId || null,
           commissionRate: data.commissionRate != null ? new Prisma.Decimal(data.commissionRate) : null,
+          workModel: data.workModel || 'COMMISSION_ONLY',
+          dailyRate: data.dailyRate != null ? new Prisma.Decimal(data.dailyRate) : null,
+          generalCommissionRate: data.generalCommissionRate != null ? new Prisma.Decimal(data.generalCommissionRate) : null,
           isActive: data.isActive,
+          userId: userId
         },
       });
 
@@ -145,11 +238,13 @@ export async function updateStaff(
       });
 
       // 3. Yeni hizmet yetkinliklerini bağla
-      if (data.serviceIds && data.serviceIds.length > 0) {
+      if (data.services && data.services.length > 0) {
         await tx.staffService.createMany({
-          data: data.serviceIds.map((serviceId) => ({
+          data: data.services.map((s) => ({
             staffId: id,
-            serviceId,
+            serviceId: s.serviceId,
+            price: s.price != null ? new Prisma.Decimal(s.price) : null,
+            commissionRate: s.commissionRate != null ? new Prisma.Decimal(s.commissionRate) : null,
           })),
         });
       }
@@ -157,7 +252,7 @@ export async function updateStaff(
       return staff;
     });
 
-    revalidatePath('/[locale]/admin/staff', 'page');
+    revalidatePath('/', 'layout');
     await logAction('Personel Güncellendi', `Personel ID: ${id}, İsim: ${data.name}, Durum: ${data.isActive ? 'Aktif' : 'Pasif'}`);
     return { success: true, data: JSON.parse(JSON.stringify(updatedStaff)) };
   } catch (error: any) {
@@ -178,7 +273,7 @@ export async function deleteStaff(id: string) {
       },
     });
 
-    revalidatePath('/[locale]/admin/staff', 'page');
+    revalidatePath('/', 'layout');
     await logAction('Personel Silindi (Soft-Delete)', `Personel ID: ${id}`);
     return { success: true };
   } catch (error: any) {
@@ -229,7 +324,7 @@ export async function updateStaffWorkingHours(
       })
     );
 
-    revalidatePath('/[locale]/admin/staff', 'page');
+    revalidatePath('/', 'layout');
     await logAction('Personel Çalışma Saatleri Güncellendi', `Personel ID: ${staffId}`);
     return { success: true };
   } catch (error: any) {
@@ -258,7 +353,7 @@ export async function addStaffLeave(
       },
     });
 
-    revalidatePath('/[locale]/admin/staff', 'page');
+    revalidatePath('/', 'layout');
     await logAction('Personel İzin Eklendi', `Personel ID: ${staffId}, İzin Günü: ${new Date(data.date).toLocaleDateString()}`);
     return { success: true, data: JSON.parse(JSON.stringify(leave)) };
   } catch (error: any) {
@@ -274,7 +369,7 @@ export async function deleteStaffLeave(leaveId: string) {
       where: { id: leaveId },
     });
 
-    revalidatePath('/[locale]/admin/staff', 'page');
+    revalidatePath('/', 'layout');
     await logAction('Personel İzni Silindi', `İzin ID: ${leaveId}`);
     return { success: true };
   } catch (error: any) {

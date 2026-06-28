@@ -57,12 +57,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const introText = pageContent?.introText || t('subtitle');
 
   const rawCategories = await prisma.serviceCategory.findMany({
-    where: { isActive: true },
+    where: { isActive: true, isDeleted: false },
     orderBy: { order: 'asc' },
     include: {
       translations: { where: { language: locale } },
       services: {
-        where: { isActive: true },
+        where: { isActive: true, isDeleted: false },
         include: { translations: { where: { language: locale } } },
       },
     },

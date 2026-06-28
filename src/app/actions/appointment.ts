@@ -307,6 +307,11 @@ export async function deleteAppointment(appointmentId: string) {
       });
     }
 
+    // 5. Varsa personel kasa hareketi (StaffTransaction) kaydını sil
+    await prisma.staffTransaction.deleteMany({
+      where: { appointmentId }
+    });
+
     // Randevuyu sil
     await prisma.appointment.delete({
       where: { id: appointmentId }

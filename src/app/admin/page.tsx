@@ -34,6 +34,11 @@ export default async function AdminDashboard() {
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
+  // Bu Ayın Başı
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
   // Veritabanı sorgularını yapalım
   let upcomingAppointments: any[] = [];
   let todayApptsCount = 0;
@@ -85,9 +90,10 @@ export default async function AdminDashboard() {
       }
     });
 
-    // 4. İstatistik hesabı için tüm onaylı ve tamamlanmış randevuları çek
+    // 4. İstatistik hesabı için sadece BU AYIN onaylı ve tamamlanmış randevularını çek
     allAppointmentsForStats = await prisma.appointment.findMany({
       where: {
+        date: { gte: startOfMonth },
         status: {
           in: ['CONFIRMED', 'COMPLETED']
         }
@@ -100,8 +106,12 @@ export default async function AdminDashboard() {
       }
     });
 
-    // 5. Finansal kâr için tüm muhasebe işlemlerini çek
-    transactions = await prisma.transaction.findMany();
+    // 5. Finansal kâr için sadece BU AYIN muhasebe işlemlerini çek
+    transactions = await prisma.transaction.findMany({
+      where: {
+        date: { gte: startOfMonth }
+      }
+    });
   } catch (error) {
     console.error("Dashboard veri çekme hatası:", error);
   }
@@ -145,6 +155,7 @@ export default async function AdminDashboard() {
   // Randevuları client bileşenine hazırla
   const appointmentItems = upcomingAppointments.map((appt: any) => ({
     id: appt.id,
+    reservationNumber: appt.reservationNumber || null,
     customerName: appt.customerName || 'Bilinmeyen',
     customerEmail: appt.customerEmail || '',
     customerPhone: appt.customerPhone || null,
@@ -233,7 +244,7 @@ export default async function AdminDashboard() {
                 <p className={`text-lg md:text-xl font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                   ₺{totalProfit.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Toplam Kasa Durumu</p>
+                <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Bu Ayki Kasa Durumu</p>
               </div>
             </div>
           </div>

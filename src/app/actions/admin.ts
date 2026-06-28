@@ -216,99 +216,80 @@ export async function createService(formData: FormData) {
 
     revalidatePath('/[locale]/admin/services', 'page');
     revalidatePath('/[locale]', 'page');
-    return { success: true, data: newService };
+    return { success: true };
   } catch (error: any) {
     console.error('Hizmet ekleme hatası:', error);
     return { success: false, error: 'Hizmet eklenirken bir hata oluştu.' };
   }
 }
 
-export async function updateCategory(
-  id: string,
-  translationId: string | null,
-  formData: FormData
-) {
+export async function updateCategory(id: string, formData: FormData) {
   try {
     await checkAdmin();
 
     const isActive = formData.get('isActive') === 'true';
     const order = parseInt(formData.get('order') as string || '0');
     const image = formData.get('image') as string || null;
+    const translationsRaw = formData.get('translations') as string;
 
-    const language = formData.get('language') as Language;
-    const name = formData.get('name') as string;
-    const slug = (formData.get('slug') as string || '').toLowerCase().trim();
-    const description = formData.get('description') as string || null;
-
-    const seoTitle = formData.get('seoTitle') as string || null;
-    const seoDesc = formData.get('seoDesc') as string || null;
-    const canonical = formData.get('canonical') as string || null;
-    const ogTitle = formData.get('ogTitle') as string || null;
-    const ogDesc = formData.get('ogDesc') as string || null;
-    const ogImage = formData.get('ogImage') as string || null;
-    const index = formData.get('index') !== 'false';
-    const sitemap = formData.get('sitemap') !== 'false';
-
-    if (!name || !slug || !language) {
-      return { success: false, error: 'Kategori adı, slug ve dil alanları zorunludur!' };
+    if (!translationsRaw) return { success: false, error: 'Dil verileri eksik!' };
+    
+    const translationsArray = JSON.parse(translationsRaw);
+    
+    const trData = translationsArray.find((t: any) => t.language === 'TR');
+    if (!trData || !trData.name || !trData.slug) {
+      return { success: false, error: 'TÜRKÇE dili için kategori adı ve slug zorunludur!' };
     }
 
-    // Slug kontrolü (kendisi hariç)
-    const existingSlug = await prisma.serviceCategoryTranslation.findFirst({
-      where: {
-        slug,
-        language,
-        NOT: translationId ? { id: translationId } : undefined
+    await prisma.$transaction(async (tx) => {
+      // 1. Ana kategoriyi güncelle
+      await tx.serviceCategory.update({
+        where: { id },
+        data: { order, isActive, image }
+      });
+
+      // 2. Her bir dil çevirisi için Upsert (Var olanı güncelle, yoksa oluştur)
+      for (const t of translationsArray) {
+        // name yoksa TR'den kopyala
+        const name = t.name || trData.name;
+        const slug = (t.slug || trData.slug).toLowerCase().trim();
+
+        if (t.id) {
+          await tx.serviceCategoryTranslation.update({
+            where: { id: t.id },
+            data: {
+              name, slug,
+              description: t.description || null,
+              seoTitle: t.seoTitle || null,
+              seoDesc: t.seoDesc || null,
+              canonical: t.canonical || null,
+              ogTitle: t.ogTitle || null,
+              ogDesc: t.ogDesc || null,
+              ogImage: t.ogImage || null,
+              index: t.index ?? true,
+              sitemap: t.sitemap ?? true
+            }
+          });
+        } else {
+          await tx.serviceCategoryTranslation.create({
+            data: {
+              categoryId: id,
+              language: t.language,
+              name, slug,
+              description: t.description || null,
+              seoTitle: t.seoTitle || null,
+              seoDesc: t.seoDesc || null,
+              canonical: t.canonical || null,
+              ogTitle: t.ogTitle || null,
+              ogDesc: t.ogDesc || null,
+              ogImage: t.ogImage || null,
+              index: t.index ?? true,
+              sitemap: t.sitemap ?? true
+            }
+          });
+        }
       }
     });
-
-    if (existingSlug) {
-      return { success: false, error: 'Bu dilde bu slug başka bir kategoride kullanılıyor!' };
-    }
-
-    // Ana kategoriyi güncelle
-    await prisma.serviceCategory.update({
-      where: { id },
-      data: { order, isActive, image }
-    });
-
-    // Çeviriyi güncelle veya oluştur
-    if (translationId) {
-      await prisma.serviceCategoryTranslation.update({
-        where: { id: translationId },
-        data: {
-          name,
-          slug,
-          description,
-          seoTitle,
-          seoDesc,
-          canonical,
-          ogTitle,
-          ogDesc,
-          ogImage,
-          index,
-          sitemap
-        }
-      });
-    } else {
-      await prisma.serviceCategoryTranslation.create({
-        data: {
-          categoryId: id,
-          language,
-          name,
-          slug,
-          description,
-          seoTitle,
-          seoDesc,
-          canonical,
-          ogTitle,
-          ogDesc,
-          ogImage,
-          index,
-          sitemap
-        }
-      });
-    }
 
     revalidatePath('/[locale]/admin/categories', 'page');
     revalidatePath('/[locale]', 'page');
@@ -319,33 +300,45 @@ export async function updateCategory(
   }
 }
 
-export async function createCategory(data: {
-  name: string;
-  slug: string;
-  seoTitle?: string;
-  seoDesc?: string;
-  description?: string;
-}) {
+export async function createCategory(formData: FormData) {
   try {
     await checkAdmin();
     
+    const isActive = formData.get('isActive') === 'true';
+    const order = parseInt(formData.get('order') as string || '0');
+    const image = formData.get('image') as string || null;
+    const translationsRaw = formData.get('translations') as string;
+    
+    if (!translationsRaw) return { success: false, error: 'Dil verileri eksik!' };
+    
+    const translationsArray = JSON.parse(translationsRaw);
+    
+    // TR verisi zorunlu
+    const trData = translationsArray.find((t: any) => t.language === 'TR');
+    if (!trData || !trData.name || !trData.slug) {
+      return { success: false, error: 'TÜRKÇE dili için kategori adı ve slug zorunludur!' };
+    }
+
     await prisma.serviceCategory.create({
       data: {
-        isActive: true,
+        isActive,
+        order,
+        image,
         translations: {
-          create: [
-            { 
-              language: 'TR', 
-              name: data.name, 
-              slug: data.slug,
-              seoTitle: data.seoTitle,
-              seoDesc: data.seoDesc,
-              description: data.description
-            },
-            { language: 'EN', name: data.name, slug: data.slug }, 
-            { language: 'DE', name: data.name, slug: data.slug },
-            { language: 'RU', name: data.name, slug: data.slug },
-          ]
+          create: translationsArray.map((t: any) => ({
+            language: t.language,
+            name: t.name || trData.name,
+            slug: t.slug || trData.slug,
+            description: t.description || null,
+            seoTitle: t.seoTitle || null,
+            seoDesc: t.seoDesc || null,
+            canonical: t.canonical || null,
+            ogTitle: t.ogTitle || null,
+            ogDesc: t.ogDesc || null,
+            ogImage: t.ogImage || null,
+            index: t.index ?? true,
+            sitemap: t.sitemap ?? true,
+          }))
         }
       }
     });
@@ -357,6 +350,72 @@ export async function createCategory(data: {
   } catch (error) {
     console.error("Kategori eklenemedi:", error);
     return { success: false, error: "Kategori eklenirken bir hata oluştu." };
+  }
+}
+
+export async function toggleCategoryActive(id: string, currentState: boolean) {
+  try {
+    await checkAdmin();
+    await prisma.serviceCategory.update({
+      where: { id },
+      data: { isActive: !currentState }
+    });
+    revalidatePath('/', 'layout');
+    revalidatePath('/tr', 'layout');
+    revalidatePath('/en', 'layout');
+    revalidatePath('/ru', 'layout');
+    revalidatePath('/de', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error("Kategori durumu güncellenemedi:", error);
+    return { success: false, error: "Durum güncellenirken bir hata oluştu." };
+  }
+}
+
+export async function deleteCategory(id: string) {
+  try {
+    await checkAdmin();
+    await prisma.serviceCategory.delete({
+      where: { id }
+    });
+    revalidatePath('/', 'layout');
+    revalidatePath('/tr', 'layout');
+    revalidatePath('/en', 'layout');
+    revalidatePath('/ru', 'layout');
+    revalidatePath('/de', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error("Kategori silinemedi:", error);
+    return { success: false, error: "Kategori silinirken bir hata oluştu." };
+  }
+}
+
+export async function toggleServiceActive(id: string, currentState: boolean) {
+  try {
+    await checkAdmin();
+    await prisma.service.update({
+      where: { id },
+      data: { isActive: !currentState }
+    });
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error("Hizmet durumu güncellenemedi:", error);
+    return { success: false, error: "Durum güncellenirken bir hata oluştu." };
+  }
+}
+
+export async function deleteService(id: string) {
+  try {
+    await checkAdmin();
+    await prisma.service.delete({
+      where: { id }
+    });
+    revalidatePath('/', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error("Hizmet silinemedi:", error);
+    return { success: false, error: "Hizmet silinirken bir hata oluştu." };
   }
 }
 

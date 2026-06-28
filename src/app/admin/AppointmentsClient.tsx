@@ -6,6 +6,7 @@ import { updateAppointmentStatus, updateAppointmentNotes, rescheduleAppointment,
 
 interface AppointmentItem {
   id: string;
+  reservationNumber: string | null;
   customerName: string;
   customerEmail: string;
   customerPhone: string | null;
@@ -38,6 +39,7 @@ const statusMap: Record<string, { label: string; color: string; icon: React.Reac
 export default function AppointmentsClient({ appointments }: AppointmentsClientProps) {
   const [items, setItems] = useState<AppointmentItem[]>(appointments);
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedAppt, setSelectedAppt] = useState<AppointmentItem | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
@@ -73,7 +75,13 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const filtered = items.filter(a => filterStatus === 'ALL' || a.status === filterStatus);
+  const filtered = items.filter(a => {
+    const matchStatus = filterStatus === 'ALL' || a.status === filterStatus;
+    const matchSearch = searchQuery === '' || 
+      (a.reservationNumber && a.reservationNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      a.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchStatus && matchSearch;
+  });
 
   const openDetail = (appt: AppointmentItem) => {
     setSelectedAppt(appt);
@@ -186,6 +194,16 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
         ))}
       </div>
 
+      <div className="mb-4">
+        <input 
+          type="text" 
+          placeholder="İsim veya Rezervasyon No (Örn: NL202600001) ile ara..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full md:w-1/2 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+        />
+      </div>
+
       {/* Randevu Listesi */}
       {filtered.length === 0 ? (
         <div className="p-12 text-center text-gray-400 text-sm">Randevu bulunamadı.</div>
@@ -207,7 +225,10 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
                     </span>
                   </div>
                   {/* Müşteri + Hizmet */}
-                  <p className="font-semibold text-gray-800 text-sm">{appt.customerName}</p>
+                  <p className="font-semibold text-gray-800 text-sm">
+                    {appt.customerName}
+                    {appt.reservationNumber && <span className="ml-2 text-[10px] text-gray-400 font-normal">#{appt.reservationNumber}</span>}
+                  </p>
                   <div className="flex items-center justify-between mt-1.5">
                     <span className="px-2 py-0.5 bg-[var(--color-rose-50)] text-[var(--color-rose-600)] rounded-full text-[10px] font-semibold truncate max-w-[60%]">
                       {appt.serviceName}
@@ -278,6 +299,9 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
                         <div>
                           <p className="font-semibold text-gray-800">{appt.customerName}</p>
                           <p className="text-[10px] text-gray-400">{appt.customerEmail}</p>
+                          {appt.reservationNumber && (
+                            <p className="text-[10px] text-rose-600 font-medium mt-0.5">#{appt.reservationNumber}</p>
+                          )}
                         </div>
                       </td>
                       <td className="p-3">
@@ -368,6 +392,7 @@ export default function AppointmentsClient({ appointments }: AppointmentsClientP
               {/* Bilgiler */}
               <div className="grid grid-cols-2 gap-3">
                 {[
+                  { label: 'Rez. No', value: selectedAppt.reservationNumber || '-' },
                   { label: 'Hizmet', value: selectedAppt.serviceName },
                   { label: 'Uzman', value: selectedAppt.staffName || 'Atanmadı' },
                   { label: 'Tarih', value: new Date(selectedAppt.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) },

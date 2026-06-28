@@ -20,8 +20,14 @@ export default async function AccountingPage() {
   let completedAppointments: any[] = [];
   let locations: any[] = [];
 
+  // Bu Ayın Başı
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
   try {
     transactions = await prisma.transaction.findMany({
+      where: { date: { gte: startOfMonth } },
       include: {
         category: true,
         staff: true,
@@ -44,9 +50,12 @@ export default async function AccountingPage() {
       orderBy: { name: 'asc' }
     });
 
-    // 3. Tamamlanan randevuları çek (Ciro ve komisyon hesaplama için)
+    // 3. Tamamlanan randevuları çek (Sadece BU AY için ciro ve komisyon hesaplama)
     completedAppointments = await prisma.appointment.findMany({
-      where: { status: 'COMPLETED' },
+      where: { 
+        status: 'COMPLETED',
+        date: { gte: startOfMonth }
+      },
       include: {
         service: true,
         staff: true,
@@ -101,15 +110,9 @@ export default async function AccountingPage() {
   completedAppointments.forEach((appt) => {
     if (!appt.staffId) return;
 
-    // Eğer haritada personel yoksa ekle (örneğin pasif yapılmış ama eski ciro kaydı varsa)
+    // Sadece aktif olan personellerin hakedişi gösterilecek. Eğer personelin kaydı aktif listede yoksa yoksay (silinmiş/pasif personel).
     if (!staffPayoutsMap[appt.staffId]) {
-      staffPayoutsMap[appt.staffId] = {
-        staffId: appt.staffId,
-        name: appt.staff?.name || 'Bilinmeyen Çalışan',
-        appointmentCount: 0,
-        totalRevenue: 0,
-        commissionEarned: 0
-      };
+      return;
     }
 
     const payout = staffPayoutsMap[appt.staffId];

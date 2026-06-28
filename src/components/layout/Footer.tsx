@@ -23,7 +23,7 @@ export default function Footer({ menus, legalMenus, contact }: { menus: MenuItem
   const t = useTranslations('Index');
   const pathname = usePathname();
 
-  if (pathname.includes('/admin')) {
+  if (pathname.includes('/admin') || pathname.includes('/staff')) {
     return null;
   }
 

@@ -98,7 +98,11 @@ export default function AuthModal({ isOpen, onClose, locale, onSuccess }: AuthMo
       if (onSuccess) onSuccess();
       setTimeout(() => {
         onClose();
-        window.location.reload();
+        if (res.data?.role === 'STAFF') {
+          window.location.href = `/${locale}/staff`;
+        } else {
+          window.location.reload();
+        }
       }, 1500);
     } else {
       setError(res.error || t('msgDefaultError'));

@@ -93,7 +93,7 @@ export default function SupportWidget() {
     }
   };
 
-  if (!data) return null;
+  if (!data || pathname?.includes('/admin') || pathname?.includes('/staff')) return null;
 
   const renderActionUrl = (q: Question) => {
     return getSupportActionUrl(q.actionType, locale, q.actionUrl, data.whatsappNumber || '');

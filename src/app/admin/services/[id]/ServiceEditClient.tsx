@@ -44,60 +44,67 @@ export default function ServiceEditClient({
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const [mediaPickerTarget, setMediaPickerTarget] = useState<'image' | 'ogImage'>('image');
 
-  const getTranslation = (lang: string) => service?.translations?.find((t: any) => t.language === lang);
-  const currentTrans = getTranslation(activeLang);
-
-  const [name, setName] = useState(currentTrans?.name || '');
-  const [slug, setSlug] = useState(currentTrans?.slug || '');
-  const [description, setDescription] = useState(currentTrans?.description || '');
-  const [longDescription, setLongDescription] = useState(currentTrans?.longDescription || '');
-  const [seoTitle, setSeoTitle] = useState(currentTrans?.seoTitle || '');
-  const [seoDesc, setSeoDesc] = useState(currentTrans?.seoDesc || '');
-  const [canonical, setCanonical] = useState(currentTrans?.canonical || '');
-  const [ogTitle, setOgTitle] = useState(currentTrans?.ogTitle || '');
-  const [ogDesc, setOgDesc] = useState(currentTrans?.ogDesc || '');
-  const [ogImage, setOgImage] = useState(currentTrans?.ogImage || '');
-  const [indexEnabled, setIndexEnabled] = useState(currentTrans?.index ?? true);
-  const [sitemapEnabled, setSitemapEnabled] = useState(currentTrans?.sitemap ?? true);
-
-  const handleLangChange = (lang: 'TR' | 'EN' | 'DE' | 'RU') => {
-    setActiveLang(lang);
-    const t = getTranslation(lang);
-    setName(t?.name || '');
-    setSlug(t?.slug || '');
-    setDescription(t?.description || '');
-    setLongDescription(t?.longDescription || '');
-    setSeoTitle(t?.seoTitle || '');
-    setSeoDesc(t?.seoDesc || '');
-    setCanonical(t?.canonical || '');
-    setOgTitle(t?.ogTitle || '');
-    setOgDesc(t?.ogDesc || '');
-    setOgImage(t?.ogImage || '');
-    setIndexEnabled(t?.index ?? true);
-    setSitemapEnabled(t?.sitemap ?? true);
+  const getInitialTrans = (lang: string) => {
+    const t = service?.translations?.find((t: any) => t.language === lang);
+    return {
+      language: lang,
+      id: t?.id || null,
+      name: t?.name || '',
+      slug: t?.slug || '',
+      description: t?.description || '',
+      longDescription: t?.longDescription || '',
+      seoTitle: t?.seoTitle || '',
+      seoDesc: t?.seoDesc || '',
+      canonical: t?.canonical || '',
+      ogTitle: t?.ogTitle || '',
+      ogDesc: t?.ogDesc || '',
+      ogImage: t?.ogImage || '',
+      index: t?.index ?? true,
+      sitemap: t?.sitemap ?? true,
+    };
   };
+
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    TR: getInitialTrans('TR'),
+    EN: getInitialTrans('EN'),
+    DE: getInitialTrans('DE'),
+    RU: getInitialTrans('RU'),
+  });
+
+  const updateTrans = (field: string, value: any) => {
+    setTranslations(prev => ({
+      ...prev,
+      [activeLang]: { ...prev[activeLang], [field]: value }
+    }));
+  };
+
+  const currentTrans = translations[activeLang];
 
   const autoSlug = (text: string) => text.toLowerCase()
     .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
     .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
 
+  const handleNameChange = (val: string) => {
+    updateTrans('name', val);
+    if (isNew || !currentTrans.id) {
+      updateTrans('slug', autoSlug(val));
+    }
+  };
+
   const handleSave = async () => {
-    if (!name || !slug) { alert('Hizmet adı ve slug alanları zorunludur.'); return; }
+    if (!translations['TR'].name || !translations['TR'].slug) { alert('TÜRKÇE dili için Hizmet Adı ve Slug alanları zorunludur.'); return; }
     if (!categoryId) { alert('Lütfen bir kategori seçin.'); return; }
     setLoading(true); setSaved(false);
 
-    if (isNew) {
-      const formData = new FormData();
-      formData.append('categoryId', categoryId);
-      formData.append('price', price);
-      formData.append('duration', duration.toString());
-      formData.append('image', image);
-      formData.append('isActive', isActive.toString());
-      formData.append('language', activeLang);
-      formData.append('name', name);
-      formData.append('slug', slug);
-      formData.append('description', description);
+    const formData = new FormData();
+    formData.append('categoryId', categoryId);
+    formData.append('price', price.toString());
+    formData.append('duration', duration.toString());
+    formData.append('image', image);
+    formData.append('isActive', isActive.toString());
+    formData.append('translations', JSON.stringify(Object.values(translations)));
 
+    if (isNew) {
       const result = await createService(formData);
       setLoading(false);
       if (result.success) {
@@ -105,30 +112,11 @@ export default function ServiceEditClient({
         router.push('/admin/services');
       } else { alert(result.error || 'Hata oluştu.'); }
     } else {
-      const formData = new FormData();
-      formData.append('isActive', isActive.toString());
-      formData.append('price', price);
-      formData.append('duration', duration.toString());
-      formData.append('image', image);
-      formData.append('language', activeLang);
-      formData.append('name', name);
-      formData.append('slug', slug);
-      formData.append('description', description);
-      formData.append('longDescription', longDescription);
-      formData.append('seoTitle', seoTitle);
-      formData.append('seoDesc', seoDesc);
-      formData.append('canonical', canonical);
-      formData.append('ogTitle', ogTitle);
-      formData.append('ogDesc', ogDesc);
-      formData.append('ogImage', ogImage);
-      formData.append('index', indexEnabled.toString());
-      formData.append('sitemap', sitemapEnabled.toString());
-
       formData.append('faqIds', JSON.stringify(selectedFaqIds));
       formData.append('blogIds', JSON.stringify(selectedBlogIds));
       formData.append('staffIds', JSON.stringify(selectedStaffIds));
 
-      const result = await updateService(service.id, currentTrans?.id || null, formData);
+      const result = await updateService(service.id, currentTrans.id, formData);
       setLoading(false);
       if (result.success) {
         setSaved(true); setTimeout(() => setSaved(false), 2500);
@@ -145,7 +133,7 @@ export default function ServiceEditClient({
     if (mediaPickerTarget === 'image') {
       setImage(url);
     } else {
-      setOgImage(url);
+      updateTrans('ogImage', url);
     }
   };
 
@@ -284,9 +272,8 @@ export default function ServiceEditClient({
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="flex border-b border-gray-100">
                 {(['TR', 'EN', 'DE', 'RU'] as const).map(lang => (
-                  <button key={lang} type="button" onClick={() => handleLangChange(lang)}
-                    disabled={isNew && lang !== 'TR'}
-                    className={`flex-1 py-3 text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer relative disabled:opacity-30 ${
+                  <button key={lang} type="button" onClick={() => setActiveLang(lang)}
+                    className={`flex-1 py-3 text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer relative ${
                       activeLang === lang ? 'text-[#0891b2] bg-[#0891b2]/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                     }`}>
                     {lang === 'TR' ? 'TÜRKÇE' : lang === 'EN' ? 'ENGLISH' : lang === 'DE' ? 'DEUTSCH' : 'РУССКИЙ'}
@@ -295,23 +282,18 @@ export default function ServiceEditClient({
                 ))}
               </div>
               <div className="p-6 space-y-5">
-                {isNew && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-semibold">
-                    Yeni hizmetler Türkçe (TR) olarak oluşturulur ve otomatik olarak diğer dillere kopyalanır. Oluşturduktan sonra diğer dilleri ve ilişkileri düzenleyebilirsiniz.
-                  </div>
-                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Hizmet Adı ({activeLang})</label>
-                    <input type="text" value={name} onChange={(e) => { setName(e.target.value); if (isNew || !currentTrans) setSlug(autoSlug(e.target.value)); }}
+                    <input type="text" value={currentTrans.name} onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="Hizmet Adı"
                       className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 focus:bg-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">URL Slug</label>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">URL Slug ({activeLang})</label>
                     <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
                       <span className="text-[10px] text-gray-400 font-mono">/{activeLang.toLowerCase()}/hizmetler/</span>
-                      <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="hizmet-slug"
+                      <input type="text" value={currentTrans.slug} onChange={(e) => updateTrans('slug', e.target.value)} placeholder="hizmet-slug"
                         className="flex-1 bg-transparent text-sm focus:outline-none font-mono text-gray-700 font-semibold" />
                     </div>
                   </div>
@@ -319,14 +301,14 @@ export default function ServiceEditClient({
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Kısa Açıklama ({activeLang})</label>
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Hizmet kısa açıklaması..."
+                  <textarea value={currentTrans.description} onChange={(e) => updateTrans('description', e.target.value)} placeholder="Hizmet kısa açıklaması..."
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 h-24 resize-none" />
                 </div>
 
                 {!isNew && (
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Uzun Açıklama / Detaylar ({activeLang})</label>
-                    <textarea value={longDescription} onChange={(e) => setLongDescription(e.target.value)} placeholder="Hizmetin tüm detayları, nasıl uygulandığı vb..."
+                    <textarea value={currentTrans.longDescription} onChange={(e) => updateTrans('longDescription', e.target.value)} placeholder="Hizmetin tüm detayları, nasıl uygulandığı vb..."
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#0891b2]/20 h-40 resize-y" />
                   </div>
                 )}
@@ -343,30 +325,30 @@ export default function ServiceEditClient({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">SEO Başlığı</label>
-                      <input type="text" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="Google başlığı"
+                      <input type="text" value={currentTrans.seoTitle} onChange={(e) => updateTrans('seoTitle', e.target.value)} placeholder="Google başlığı"
                         className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-300/30" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">Canonical URL</label>
-                      <input type="url" value={canonical} onChange={(e) => setCanonical(e.target.value)} placeholder="https://..."
+                      <input type="url" value={currentTrans.canonical} onChange={(e) => updateTrans('canonical', e.target.value)} placeholder="https://..."
                         className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">Meta Description</label>
-                    <textarea value={seoDesc} onChange={(e) => setSeoDesc(e.target.value)} placeholder="Max 160 karakter"
+                    <textarea value={currentTrans.seoDesc} onChange={(e) => updateTrans('seoDesc', e.target.value)} placeholder="Max 160 karakter"
                       className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none h-20 resize-none" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-cyan-700/30">
                     <div>
                       <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">OG Başlık</label>
-                      <input type="text" value={ogTitle} onChange={(e) => setOgTitle(e.target.value)}
+                      <input type="text" value={currentTrans.ogTitle} onChange={(e) => updateTrans('ogTitle', e.target.value)}
                         className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">OG Görsel URL</label>
                       <div className="flex gap-1">
-                        <input type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)}
+                        <input type="text" value={currentTrans.ogImage} onChange={(e) => updateTrans('ogImage', e.target.value)}
                           className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
                         <button type="button" onClick={() => openMediaPicker('ogImage')}
                           className="shrink-0 p-2 border border-[#0891b2]/30 rounded-xl hover:bg-cyan-800/20 text-cyan-200 transition-all cursor-pointer">
@@ -377,14 +359,14 @@ export default function ServiceEditClient({
                   </div>
                   <div className="grid grid-cols-2 gap-4 bg-[#0891b2]/20 p-3 rounded-xl">
                     <div className="flex items-center gap-2 select-none">
-                      <input type="checkbox" id="indexCheckbox" checked={indexEnabled} onChange={(e) => setIndexEnabled(e.target.checked)}
+                      <input type="checkbox" id="indexCheckbox" checked={currentTrans.index} onChange={(e) => updateTrans('index', e.target.checked)}
                         className="rounded border-cyan-500 text-cyan-600 focus:ring-cyan-400" />
                       <label htmlFor="indexCheckbox" className="text-xs text-cyan-100 font-bold cursor-pointer">
                         Google'da İndekslensin
                       </label>
                     </div>
                     <div className="flex items-center gap-2 select-none">
-                      <input type="checkbox" id="sitemapCheckbox" checked={sitemapEnabled} onChange={(e) => setSitemapEnabled(e.target.checked)}
+                      <input type="checkbox" id="sitemapCheckbox" checked={currentTrans.sitemap} onChange={(e) => updateTrans('sitemap', e.target.checked)}
                         className="rounded border-cyan-500 text-cyan-600 focus:ring-cyan-400" />
                       <label htmlFor="sitemapCheckbox" className="text-xs text-cyan-100 font-bold cursor-pointer">
                         Sitemap'e Eklensin
@@ -402,7 +384,7 @@ export default function ServiceEditClient({
         isOpen={isMediaPickerOpen}
         onClose={() => setIsMediaPickerOpen(false)}
         onSelect={handleMediaSelect}
-        currentValue={mediaPickerTarget === 'image' ? image : ogImage}
+        currentValue={mediaPickerTarget === 'image' ? image : currentTrans.ogImage}
       />
     </>
   );

@@ -13,13 +13,23 @@ export default function AddCategoryForm() {
     setLoading(true);
     
     const formData = new FormData(e.currentTarget);
-    const result = await createCategory({
+    
+    // createCategory, FormData bekliyor. Gerekli alanları ekleyelim.
+    formData.append('isActive', 'true');
+    formData.append('order', '0');
+    
+    // Translations formatı: createCategory çok dilli çeviri dizisi bekler
+    const translations = [{
+      language: 'TR',
       name: formData.get('name') as string,
       slug: formData.get('slug') as string,
-      seoTitle: formData.get('seoTitle') as string,
-      seoDesc: formData.get('seoDesc') as string,
-      description: formData.get('description') as string,
-    });
+      description: formData.get('description') as string || null,
+      seoTitle: formData.get('seoTitle') as string || null,
+      seoDesc: formData.get('seoDesc') as string || null,
+    }];
+    formData.append('translations', JSON.stringify(translations));
+    
+    const result = await createCategory(formData);
 
     if (result.success) {
       setIsOpen(false);

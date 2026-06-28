@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Clock, Calendar, X, UserPlus, Award, MapPin, DollarSign, ToggleLeft, ToggleRight, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, Calendar, X, UserPlus, Award, MapPin, DollarSign, ToggleLeft, ToggleRight, Loader2, Wallet } from 'lucide-react';
 import { 
   createStaff, 
   updateStaff, 
@@ -11,6 +11,7 @@ import {
   addStaffLeave, 
   deleteStaffLeave 
 } from '@/app/actions/staff';
+import StaffFinanceModal from './components/StaffFinanceModal';
 
 type LocationOption = {
   id: string;
@@ -50,10 +51,14 @@ type StaffMember = {
   isActive: boolean;
   locationId?: string | null;
   locationName: string;
-  commissionRate: number;
-  serviceIds: string[];
+  workModel: 'DAILY_ONLY' | 'COMMISSION_ONLY' | 'DAILY_AND_COMMISSION';
+  dailyRate: number;
+  generalCommissionRate: number;
+  commissionRate: number; // Eski oran, yedek amaçlı
+  services: { serviceId: string; price: number | null; commissionRate: number | null }[];
   workingHours: WorkingHoursItem[];
   leaves: LeaveItem[];
+  user?: { email: string | null; phone: string | null } | null;
 };
 
 type StaffClientProps = {
@@ -69,16 +74,22 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Modallerin durumları
-  const [activeModal, setActiveModal] = useState<'create' | 'edit' | 'workingHours' | 'leaves' | null>(null);
+  const [activeModal, setActiveModal] = useState<'create' | 'edit' | 'workingHours' | 'leaves' | 'finance' | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
 
   // Form Değişkenleri (Create / Edit)
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [image, setImage] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [locationId, setLocationId] = useState('');
-  const [commissionRate, setCommissionRate] = useState(0);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [commissionRate, setCommissionRate] = useState(0); // Legacy
+  const [workModel, setWorkModel] = useState<'DAILY_ONLY' | 'COMMISSION_ONLY' | 'DAILY_AND_COMMISSION'>('COMMISSION_ONLY');
+  const [dailyRate, setDailyRate] = useState(0);
+  const [generalCommissionRate, setGeneralCommissionRate] = useState(0);
+  const [selectedServices, setSelectedServices] = useState<{ serviceId: string; price: number | null; commissionRate: number | null }[]>([]);
   const [isActive, setIsActive] = useState(true);
 
   // Çalışma Saatleri Değişkenleri
@@ -92,11 +103,17 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
 
   const openCreateModal = () => {
     setName('');
+    setEmail('');
+    setPhone('');
+    setPassword('');
     setImage('');
     setSpecialty('');
     setLocationId(locations[0]?.id || '');
     setCommissionRate(0);
-    setSelectedServiceIds([]);
+    setWorkModel('COMMISSION_ONLY');
+    setDailyRate(0);
+    setGeneralCommissionRate(0);
+    setSelectedServices([]);
     setIsActive(true);
     setActiveModal('create');
   };
@@ -104,11 +121,17 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
   const openEditModal = (staff: StaffMember) => {
     setSelectedStaff(staff);
     setName(staff.name);
+    setEmail(staff.user?.email || '');
+    setPhone(staff.user?.phone || '');
+    setPassword(''); // Şifre boş gelir, değiştirilmek istenirse doldurulur
     setImage(staff.image || '');
     setSpecialty(staff.specialty || '');
     setLocationId(staff.locationId || '');
     setCommissionRate(staff.commissionRate);
-    setSelectedServiceIds(staff.serviceIds);
+    setWorkModel(staff.workModel);
+    setDailyRate(staff.dailyRate);
+    setGeneralCommissionRate(staff.generalCommissionRate);
+    setSelectedServices(staff.services);
     setIsActive(staff.isActive);
     setActiveModal('edit');
   };
@@ -143,38 +166,62 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
     setActiveModal('leaves');
   };
 
+  const openFinanceModal = (staff: StaffMember) => {
+    setSelectedStaff(staff);
+    setActiveModal('finance');
+  };
+
   // Personel Kaydet (Create)
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) return alert("Lütfen personel adını giriniz.");
+    if (activeModal === 'create' && !email.trim()) return alert("Lütfen personelin giriş yapabilmesi için e-posta giriniz.");
+    if (activeModal === 'create' && !password.trim()) return alert("Lütfen personelin giriş yapabilmesi için bir şifre belirleyiniz.");
+
     setIsSubmitting(true);
+    try {
+      if (activeModal === 'create') {
+        const result = await createStaff({
+          name,
+          email,
+          phone,
+          password,
+          image: image || undefined,
+          specialty: specialty || undefined,
+          locationId: locationId || undefined,
+          commissionRate,
+          workModel,
+          dailyRate,
+          generalCommissionRate,
+          services: selectedServices
+        });
 
-    const result = await createStaff({
-      name,
-      image: image || undefined,
-      specialty: specialty || undefined,
-      locationId: locationId || undefined,
-      commissionRate,
-      serviceIds: selectedServiceIds
-    });
+        setIsSubmitting(false);
 
-    setIsSubmitting(false);
-
-    if (result.success && result.data) {
-      // Listeyi güncelle (yeni çalışana boş çalışma saatleri ve izinler ekleyelim)
-      const newStaff: StaffMember = {
-        ...result.data,
-        locationName: locations.find(l => l.id === locationId)?.name || 'Şube Atanmamış',
-        commissionRate: Number(result.data.commissionRate || 0),
-        serviceIds: selectedServiceIds,
-        workingHours: [],
-        leaves: []
-      };
-      setStaffList(prev => [...prev, newStaff].sort((a, b) => a.name.localeCompare(b.name)));
-      setActiveModal(null);
-      // Sayfayı revalidate etmesi için reload edelim ki tam verileri prisma ilişkileriyle çeksin
-      window.location.reload();
-    } else {
-      alert(result.error || 'Personel eklenirken hata oluştu.');
+        if (result.success && result.data) {
+          // Listeyi güncelle (yeni çalışana boş çalışma saatleri ve izinler ekleyelim)
+          const newStaff: StaffMember = {
+            ...result.data,
+            locationName: locations.find(l => l.id === locationId)?.name || 'Şube Atanmamış',
+            commissionRate: Number(result.data.commissionRate || 0),
+            workModel: result.data.workModel || 'COMMISSION_ONLY',
+            dailyRate: Number(result.data.dailyRate || 0),
+            generalCommissionRate: Number(result.data.generalCommissionRate || 0),
+            services: selectedServices,
+            workingHours: [],
+            leaves: []
+          };
+          setStaffList(prev => [...prev, newStaff].sort((a, b) => a.name.localeCompare(b.name)));
+          setActiveModal(null);
+          // Sayfayı revalidate etmesi için reload edelim ki tam verileri prisma ilişkileriyle çeksin
+          window.location.reload();
+        } else {
+          alert(result.error || 'Personel eklenirken hata oluştu.');
+        }
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      alert('Bir hata oluştu.');
     }
   };
 
@@ -186,12 +233,18 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
 
     const result = await updateStaff(selectedStaff.id, {
       name,
+      email,
+      phone,
+      password: password || undefined,
       image: image || undefined,
       specialty: specialty || undefined,
       locationId: locationId || undefined,
       commissionRate,
+      workModel,
+      dailyRate,
+      generalCommissionRate,
       isActive,
-      serviceIds: selectedServiceIds
+      services: selectedServices
     });
 
     setIsSubmitting(false);
@@ -207,8 +260,11 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
             locationId,
             locationName: locations.find(l => l.id === locationId)?.name || 'Şube Atanmamış',
             commissionRate,
+            workModel,
+            dailyRate,
+            generalCommissionRate,
             isActive,
-            serviceIds: selectedServiceIds
+            services: selectedServices
           };
         }
         return st;
@@ -325,11 +381,32 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
   };
 
   const handleServiceToggle = (serviceId: string) => {
-    setSelectedServiceIds(prev => 
-      prev.includes(serviceId)
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
-    );
+    setSelectedServices(prev => {
+      const exists = prev.find(s => s.serviceId === serviceId);
+      if (exists) {
+        return prev.filter(s => s.serviceId !== serviceId);
+      } else {
+        return [...prev, { serviceId, price: null, commissionRate: null }];
+      }
+    });
+  };
+
+  const handleServicePriceChange = (serviceId: string, value: string) => {
+    setSelectedServices(prev => prev.map(s => {
+      if (s.serviceId === serviceId) {
+        return { ...s, price: value === '' ? null : Number(value) };
+      }
+      return s;
+    }));
+  };
+
+  const handleServiceCommissionChange = (serviceId: string, value: string) => {
+    setSelectedServices(prev => prev.map(s => {
+      if (s.serviceId === serviceId) {
+        return { ...s, commissionRate: value === '' ? null : Number(value) };
+      }
+      return s;
+    }));
   };
 
   return (
@@ -395,7 +472,7 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
                   </td>
                   <td className="py-4 px-4">
                     <span className="px-2.5 py-1 bg-gray-100 text-gray-700 font-medium rounded-full text-xs">
-                      {staff.serviceIds.length} Hizmet
+                      {staff.services.length} Hizmet
                     </span>
                   </td>
                   <td className="py-4 px-4">
@@ -409,6 +486,13 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
                     </span>
                   </td>
                   <td className="py-4 px-4 text-right flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => openFinanceModal(staff)}
+                      title="Finans Yönetimi"
+                      className="p-2 text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all"
+                    >
+                      <Wallet size={16} />
+                    </button>
                     <button
                       onClick={() => openWorkingHoursModal(staff)}
                       title="Çalışma Saatleri"
@@ -459,6 +543,39 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
             </div>
 
             <form onSubmit={activeModal === 'create' ? handleCreateSubmit : handleEditSubmit} className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">E-Posta (Giriş İçin)</label>
+                  <input
+                    type="email" required={activeModal === 'create'}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] transition-all"
+                    placeholder="personel@mail.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Telefon</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] transition-all"
+                    placeholder="05XX XXX XX XX"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Şifre {activeModal === 'edit' && '(Opsiyonel)'}</label>
+                  <input
+                    type="password" required={activeModal === 'create'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] transition-all"
+                    placeholder={activeModal === 'create' ? "Şifre belirleyin" : "Değiştirmek için girin"}
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Ad Soyad</label>
@@ -497,13 +614,42 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Komisyon Oranı (%)</label>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Çalışma Modeli</label>
+                  <select
+                    value={workModel}
+                    onChange={(e) => setWorkModel(e.target.value as any)}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] transition-all bg-white"
+                  >
+                    <option value="COMMISSION_ONLY">Sadece Komisyon</option>
+                    <option value="DAILY_ONLY">Sadece Günlük Ücret (Maaşlı)</option>
+                    <option value="DAILY_AND_COMMISSION">Günlük Ücret + Komisyon (Hibrit)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Günlük Ücret (₺) - Maaşlı/Hibrit</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      value={dailyRate}
+                      onChange={(e) => setDailyRate(Number(e.target.value))}
+                      className="w-full p-2.5 pl-8 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] transition-all"
+                      placeholder="0"
+                    />
+                    <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Genel Komisyon Oranı (%)</label>
                   <div className="relative">
                     <input
                       type="number"
                       min="0" max="100"
-                      value={commissionRate}
-                      onChange={(e) => setCommissionRate(Number(e.target.value))}
+                      value={generalCommissionRate}
+                      onChange={(e) => setGeneralCommissionRate(Number(e.target.value))}
                       className="w-full p-2.5 pl-8 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-[var(--color-rose-400)] transition-all"
                       placeholder="0"
                     />
@@ -536,21 +682,63 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
                 </div>
               )}
 
-              {/* HİZMET YETKİNLİKLERİ ÇOKLU SEÇİM */}
+              {/* HİZMET YETKİNLİKLERİ ÇOKLU SEÇİM VE FİYAT */}
               <div className="mb-6">
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Yetkin Olduğu Hizmetler</label>
-                <div className="border border-gray-200 rounded-xl p-4 max-h-48 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {services.map(s => (
-                    <label key={s.id} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-gray-50 rounded-lg transition-colors text-sm">
-                      <input
-                        type="checkbox"
-                        checked={selectedServiceIds.includes(s.id)}
-                        onChange={() => handleServiceToggle(s.id)}
-                        className="rounded border-gray-300 text-[var(--color-rose-600)] focus:ring-[var(--color-rose-500)]"
-                      />
-                      <span className="text-gray-700 truncate">{s.name} ({s.duration} dk)</span>
-                    </label>
-                  ))}
+                <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Yetkin Olduğu Hizmetler ve Özel Fiyatları</label>
+                <div className="border border-gray-200 rounded-xl p-4 max-h-64 overflow-y-auto grid grid-cols-1 gap-3">
+                  {services.map(s => {
+                    const selected = selectedServices.find(sel => sel.serviceId === s.id);
+                    return (
+                      <div key={s.id} className={`flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg transition-colors border ${selected ? 'bg-rose-50/50 border-rose-200' : 'bg-gray-50 border-gray-100 hover:bg-gray-100'}`}>
+                        <label className="flex items-center gap-3 cursor-pointer flex-1">
+                          <input
+                            type="checkbox"
+                            checked={!!selected}
+                            onChange={() => handleServiceToggle(s.id)}
+                            className="w-4 h-4 rounded border-gray-300 text-[var(--color-rose-600)] focus:ring-[var(--color-rose-500)]"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-gray-800 font-medium text-sm">{s.name}</span>
+                            <span className="text-gray-500 text-xs">Süre: {s.duration} dk | Standart Fiyat: {s.price} ₺</span>
+                          </div>
+                        </label>
+                        {selected && (
+                          <div className="mt-2 md:mt-0 ml-7 md:ml-4 flex flex-col md:flex-row gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Özel Fiyat (₺):</span>
+                              <div className="relative w-28">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  placeholder={s.price}
+                                  value={selected.price === null ? '' : selected.price}
+                                  onChange={(e) => handleServicePriceChange(s.id, e.target.value)}
+                                  className="w-full p-2 pl-7 text-sm rounded-lg border border-rose-200 outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                                />
+                                <DollarSign size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Özel Komisyon (%):</span>
+                              <div className="relative w-28">
+                                <input
+                                  type="number"
+                                  min="0" max="100"
+                                  step="0.01"
+                                  placeholder="Genel Oran"
+                                  value={selected.commissionRate === null ? '' : selected.commissionRate}
+                                  onChange={(e) => handleServiceCommissionChange(s.id, e.target.value)}
+                                  className="w-full p-2 pl-7 text-sm rounded-lg border border-rose-200 outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                                />
+                                <Award size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -824,6 +1012,14 @@ export default function StaffClient({ initialStaff, locations, services }: Staff
             </div>
           </div>
         </div>
+      )}
+
+      {/* FINANCE MODAL */}
+      {activeModal === 'finance' && selectedStaff && (
+        <StaffFinanceModal 
+          staff={{ id: selectedStaff.id, name: selectedStaff.name }} 
+          onClose={() => setActiveModal(null)} 
+        />
       )}
     </div>
   );

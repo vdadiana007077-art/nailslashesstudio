@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { saveCookieConsent } from '@/app/actions/customerAuth';
 import { ShieldCheck, Settings, CheckSquare, Square } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function CookieConsentBanner() {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
   const [showSettings, setShowSettings] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
@@ -21,7 +23,7 @@ export default function CookieConsentBanner() {
     }
   }, []);
 
-  if (!isVisible) return null;
+  if (!isVisible || pathname?.includes('/admin') || pathname?.includes('/staff')) return null;
 
   const hideBanner = () => {
     setIsVisible(false);

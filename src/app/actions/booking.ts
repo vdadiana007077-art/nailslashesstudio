@@ -199,10 +199,40 @@ export async function createBooking(data: {
     const endMins = totalMinutes % 60;
     const endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
 
+    let finalPrice = service.price;
+    if (assignedStaffId) {
+      const ss = await prisma.staffService.findUnique({
+        where: { staffId_serviceId: { staffId: assignedStaffId, serviceId: data.serviceId } }
+      });
+      if (ss && ss.price !== null) {
+        finalPrice = ss.price;
+      }
+    }
+
     // Aktif müşteri oturumunu al
     const customer = await getCurrentCustomer();
 
-    // 5. Veritabanına Randevuyu Ekle
+    // 5. Yeni Rezervasyon Numarasını Üret
+    const currentYear = dateObj.getFullYear();
+    const lastAppt = await prisma.appointment.findFirst({
+      where: {
+        reservationNumber: { startsWith: `NL${currentYear}` }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    let nextNumber = 1;
+    if (lastAppt && lastAppt.reservationNumber) {
+      const lastStr = lastAppt.reservationNumber.replace(`NL${currentYear}`, '');
+      const lastNum = parseInt(lastStr, 10);
+      if (!isNaN(lastNum)) {
+        nextNumber = lastNum + 1;
+      }
+    }
+    const paddedNumber = String(nextNumber).padStart(5, '0');
+    const reservationNumber = `NL${currentYear}${paddedNumber}`;
+
+    // 6. Veritabanına Randevuyu Ekle
     const appointment = await prisma.appointment.create({
       data: {
         serviceId: service.id,
@@ -216,10 +246,11 @@ export async function createBooking(data: {
         customerEmail: data.email,
         customerPhone: data.phone,
         notes: data.notes || null,
-        priceAtBooking: service.price,
+        priceAtBooking: finalPrice,
         durationAtBooking: service.duration,
         staffPreference: data.staffId === 'ANY' ? StaffPreference.ANY : StaffPreference.SELECTED,
         source: ApptSource.WEBSITE,
+        reservationNumber: reservationNumber,
       }
     });
 

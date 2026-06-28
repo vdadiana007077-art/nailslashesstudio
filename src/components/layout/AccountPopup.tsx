@@ -169,7 +169,7 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-end transition-opacity duration-300"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999999] flex justify-end transition-opacity duration-300"
       onClick={onClose}
     >
       <div 
@@ -235,7 +235,23 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
                 </div>
               )}
 
-              {/* Randevu Geçmişi */}
+              {/* Randevu Geçmişi veya Personel Uyarı */}
+              {customer.role === 'STAFF' ? (
+                <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <User size={24} />
+                  </div>
+                  <h5 className="text-sm font-bold text-blue-900">Personel Hesabı</h5>
+                  <p className="text-xs text-blue-700 font-medium">Bu hesap bir personel (uzman) hesabıdır. Randevularınızı ve çalışma takviminizi görebilmek için personel paneline geçiş yapın.</p>
+                  <Link 
+                    href={`/${locale}/staff`}
+                    onClick={onClose}
+                    className="mt-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md inline-block"
+                  >
+                    Panele Git
+                  </Link>
+                </div>
+              ) : (
               <div>
                 <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
                   <Calendar size={14} className="text-[var(--color-rose-600)]" />
@@ -387,6 +403,7 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
                   </div>
                 )}
               </div>
+              )}
 
               {/* Bülten Aboneliği & Pazarlama */}
               <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
@@ -463,22 +480,34 @@ export default function AccountPopup({ isOpen, onClose, locale }: AccountPopupPr
             </div>
 
             {/* Logout Action Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex flex-col gap-3 shrink-0">
+            <div className="p-6 pb-32 border-t border-gray-100 bg-gray-50/50 flex flex-col gap-3 shrink-0">
               <div className="flex gap-3">
-                <Link 
-                  href={`/${locale}/hesabim`}
-                  onClick={onClose}
-                  className="px-5 py-3 bg-gray-900 hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
-                >
-                  Hesabıma Git
-                </Link>
-                <Link 
-                  href={`/${locale}/booking`}
-                  onClick={onClose}
-                  className="px-5 py-3 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
-                >
-                  Yeni Randevu
-                </Link>
+                {customer.role === 'STAFF' ? (
+                  <Link 
+                    href={`/${locale}/staff`}
+                    onClick={onClose}
+                    className="px-5 py-3 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
+                  >
+                    Personel Paneli
+                  </Link>
+                ) : (
+                  <>
+                    <Link 
+                      href={`/${locale}/hesabim`}
+                      onClick={onClose}
+                      className="px-5 py-3 bg-gray-900 hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
+                    >
+                      Hesabıma Git
+                    </Link>
+                    <Link 
+                      href={`/${locale}/booking`}
+                      onClick={onClose}
+                      className="px-5 py-3 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md text-center flex-1"
+                    >
+                      Yeni Randevu
+                    </Link>
+                  </>
+                )}
               </div>
               
               <button

@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { getCurrentCustomer } from '@/app/actions/customerAuth';
 import HesabimClient from './HesabimClient';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Hesabım | Nails & Lashes Studio',
   description: 'Randevularınızı yönetin, kişisel bilgilerinizi görüntüleyin.',

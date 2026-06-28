@@ -47,12 +47,12 @@ export default async function BookingPageContent({ params }: { params: Promise<{
 
   const rawStaff = await prisma.staff.findMany({
     where: { isDeleted: false, isActive: true },
-    include: { services: { select: { serviceId: true } } },
+    include: { services: { select: { serviceId: true, price: true } } },
     orderBy: { name: 'asc' },
   });
   const staffList = rawStaff.map(st => ({
     id: st.id, name: st.name, image: st.image || '', specialty: st.specialty || '',
-    locationId: st.locationId || '', serviceIds: st.services.map(s => s.serviceId),
+    locationId: st.locationId || '', services: st.services.map(s => ({ serviceId: s.serviceId, price: s.price !== null ? Number(s.price) : null })),
   }));
 
   return (

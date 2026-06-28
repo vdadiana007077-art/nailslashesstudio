@@ -21,77 +21,74 @@ export default function CategoryEditClient({ category, isNew }: CategoryEditClie
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const getTranslation = (lang: string) => category?.translations?.find((t: any) => t.language === lang);
-  const currentTrans = getTranslation(activeLang);
-
-  const [name, setName] = useState(currentTrans?.name || '');
-  const [slug, setSlug] = useState(currentTrans?.slug || '');
-  const [description, setDescription] = useState(currentTrans?.description || '');
-  const [seoTitle, setSeoTitle] = useState(currentTrans?.seoTitle || '');
-  const [seoDesc, setSeoDesc] = useState(currentTrans?.seoDesc || '');
-  const [canonical, setCanonical] = useState(currentTrans?.canonical || '');
-  const [ogTitle, setOgTitle] = useState(currentTrans?.ogTitle || '');
-  const [ogDesc, setOgDesc] = useState(currentTrans?.ogDesc || '');
-  const [ogImage, setOgImage] = useState(currentTrans?.ogImage || '');
-  const [indexEnabled, setIndexEnabled] = useState(currentTrans?.index ?? true);
-  const [sitemapEnabled, setSitemapEnabled] = useState(currentTrans?.sitemap ?? true);
-
-  const handleLangChange = (lang: 'TR' | 'EN' | 'DE' | 'RU') => {
-    setActiveLang(lang);
-    const t = getTranslation(lang);
-    setName(t?.name || '');
-    setSlug(t?.slug || '');
-    setDescription(t?.description || '');
-    setSeoTitle(t?.seoTitle || '');
-    setSeoDesc(t?.seoDesc || '');
-    setCanonical(t?.canonical || '');
-    setOgTitle(t?.ogTitle || '');
-    setOgDesc(t?.ogDesc || '');
-    setOgImage(t?.ogImage || '');
-    setIndexEnabled(t?.index ?? true);
-    setSitemapEnabled(t?.sitemap ?? true);
+  const getInitialTrans = (lang: string) => {
+    const t = category?.translations?.find((t: any) => t.language === lang);
+    return {
+      language: lang,
+      id: t?.id || null,
+      name: t?.name || '',
+      slug: t?.slug || '',
+      description: t?.description || '',
+      seoTitle: t?.seoTitle || '',
+      seoDesc: t?.seoDesc || '',
+      canonical: t?.canonical || '',
+      ogTitle: t?.ogTitle || '',
+      ogDesc: t?.ogDesc || '',
+      ogImage: t?.ogImage || '',
+      index: t?.index ?? true,
+      sitemap: t?.sitemap ?? true,
+    };
   };
+
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    TR: getInitialTrans('TR'),
+    EN: getInitialTrans('EN'),
+    DE: getInitialTrans('DE'),
+    RU: getInitialTrans('RU'),
+  });
+
+  const updateTrans = (field: string, value: any) => {
+    setTranslations(prev => ({
+      ...prev,
+      [activeLang]: { ...prev[activeLang], [field]: value }
+    }));
+  };
+
+  const currentTrans = translations[activeLang];
 
   const autoSlug = (text: string) => text.toLowerCase()
     .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
     .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
 
+  const handleNameChange = (val: string) => {
+    updateTrans('name', val);
+    if (isNew || !currentTrans.id) {
+      updateTrans('slug', autoSlug(val));
+    }
+  };
+
   const handleSave = async () => {
-    if (!name || !slug) { alert('Kategori adı ve slug alanları zorunludur.'); return; }
+    if (!translations['TR'].name || !translations['TR'].slug) { 
+      alert('TÜRKÇE dili için Kategori Adı ve Slug alanları zorunludur.'); 
+      return; 
+    }
     setLoading(true); setSaved(false);
 
+    const formData = new FormData();
+    formData.append('isActive', isActive.toString());
+    formData.append('order', order.toString());
+    formData.append('image', image);
+    formData.append('translations', JSON.stringify(Object.values(translations)));
+
     if (isNew) {
-      const result = await createCategory({
-        name,
-        slug,
-        seoTitle: seoTitle || undefined,
-        seoDesc: seoDesc || undefined,
-        description: description || undefined
-      });
+      const result = await createCategory(formData);
       setLoading(false);
       if (result.success) {
         setSaved(true); setTimeout(() => setSaved(false), 2500);
         router.push('/admin/categories');
       } else { alert(result.error || 'Hata oluştu.'); }
     } else {
-      const formData = new FormData();
-      formData.append('isActive', isActive.toString());
-      formData.append('order', order.toString());
-      formData.append('image', image);
-      formData.append('language', activeLang);
-      formData.append('name', name);
-      formData.append('slug', slug);
-      formData.append('description', description);
-      formData.append('seoTitle', seoTitle);
-      formData.append('seoDesc', seoDesc);
-      formData.append('canonical', canonical);
-      formData.append('ogTitle', ogTitle);
-      formData.append('ogDesc', ogDesc);
-      formData.append('ogImage', ogImage);
-      formData.append('index', indexEnabled.toString());
-      formData.append('sitemap', sitemapEnabled.toString());
-
-      const result = await updateCategory(category.id, currentTrans?.id || null, formData);
+      const result = await updateCategory(category.id, formData);
       setLoading(false);
       if (result.success) {
         setSaved(true); setTimeout(() => setSaved(false), 2500);
@@ -130,40 +127,36 @@ export default function CategoryEditClient({ category, isNew }: CategoryEditClie
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Görsel URL</label>
                   <input type="text" value={image} onChange={(e) => setImage(e.target.value)} placeholder="/images/kategori.jpg"
-                    disabled={isNew}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 disabled:opacity-50" />
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Görünüm Sırası</label>
                   <input type="number" value={order} onChange={(e) => setOrder(parseInt(e.target.value) || 0)}
-                    disabled={isNew}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 disabled:opacity-50" />
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20" />
                 </div>
               </div>
             </div>
 
-            {!isNew && (
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-700">Yayın Durumu</span>
-                  <button type="button" onClick={() => setIsActive(!isActive)} className="cursor-pointer">
-                    {isActive ? <ToggleRight size={28} className="text-emerald-500" /> : <ToggleLeft size={28} className="text-gray-300" />}
-                  </button>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                  <span className="text-xs font-semibold text-gray-600">Index</span>
-                  <button type="button" onClick={() => setIndexEnabled(!indexEnabled)} className="cursor-pointer">
-                    {indexEnabled ? <ToggleRight size={24} className="text-[#0891b2]" /> : <ToggleLeft size={24} className="text-gray-300" />}
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-600">Sitemap</span>
-                  <button type="button" onClick={() => setSitemapEnabled(!sitemapEnabled)} className="cursor-pointer">
-                    {sitemapEnabled ? <ToggleRight size={24} className="text-[#0891b2]" /> : <ToggleLeft size={24} className="text-gray-300" />}
-                  </button>
-                </div>
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-700">Yayın Durumu</span>
+                <button type="button" onClick={() => setIsActive(!isActive)} className="cursor-pointer">
+                  {isActive ? <ToggleRight size={28} className="text-emerald-500" /> : <ToggleLeft size={28} className="text-gray-300" />}
+                </button>
               </div>
-            )}
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <span className="text-xs font-semibold text-gray-600">Index ({activeLang})</span>
+                <button type="button" onClick={() => updateTrans('index', !currentTrans.index)} className="cursor-pointer">
+                  {currentTrans.index ? <ToggleRight size={24} className="text-[#0891b2]" /> : <ToggleLeft size={24} className="text-gray-300" />}
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-gray-600">Sitemap ({activeLang})</span>
+                <button type="button" onClick={() => updateTrans('sitemap', !currentTrans.sitemap)} className="cursor-pointer">
+                  {currentTrans.sitemap ? <ToggleRight size={24} className="text-[#0891b2]" /> : <ToggleLeft size={24} className="text-gray-300" />}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* SAĞ PANEL */}
@@ -171,9 +164,8 @@ export default function CategoryEditClient({ category, isNew }: CategoryEditClie
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="flex border-b border-gray-100">
                 {(['TR', 'EN', 'DE', 'RU'] as const).map(lang => (
-                  <button key={lang} type="button" onClick={() => handleLangChange(lang)}
-                    disabled={isNew && lang !== 'TR'}
-                    className={`flex-1 py-3 text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer relative disabled:opacity-30 ${
+                  <button key={lang} type="button" onClick={() => setActiveLang(lang)}
+                    className={`flex-1 py-3 text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer relative ${
                       activeLang === lang ? 'text-[#0891b2] bg-[#0891b2]/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                     }`}>
                     {lang === 'TR' ? 'TÜRKÇE' : lang === 'EN' ? 'ENGLISH' : lang === 'DE' ? 'DEUTSCH' : 'РУССКИЙ'}
@@ -182,23 +174,18 @@ export default function CategoryEditClient({ category, isNew }: CategoryEditClie
                 ))}
               </div>
               <div className="p-6 space-y-5">
-                {isNew && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-semibold">
-                    Yeni kategoriler Türkçe (TR) olarak oluşturulur ve otomatik olarak diğer dillere kopyalanır. Oluşturduktan sonra diğer dilleri düzenleyebilirsiniz.
-                  </div>
-                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Kategori Adı ({activeLang})</label>
-                    <input type="text" value={name} onChange={(e) => { setName(e.target.value); if (isNew || !currentTrans) setSlug(autoSlug(e.target.value)); }}
+                    <input type="text" value={currentTrans.name} onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="Kategori Adı"
                       className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 focus:bg-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">URL Slug</label>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">URL Slug ({activeLang})</label>
                     <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
                       <span className="text-[10px] text-gray-400 font-mono">/{activeLang.toLowerCase()}/kategoriler/</span>
-                      <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="kategori-slug"
+                      <input type="text" value={currentTrans.slug} onChange={(e) => updateTrans('slug', e.target.value)} placeholder="kategori-slug"
                         className="flex-1 bg-transparent text-sm focus:outline-none font-mono text-gray-700 font-semibold" />
                     </div>
                   </div>
@@ -206,7 +193,7 @@ export default function CategoryEditClient({ category, isNew }: CategoryEditClie
 
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Açıklama ({activeLang})</label>
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Kategori detaylı açıklaması..."
+                  <textarea value={currentTrans.description} onChange={(e) => updateTrans('description', e.target.value)} placeholder="Kategori detaylı açıklaması..."
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#0891b2]/20 h-24 resize-none" />
                 </div>
               </div>
@@ -221,35 +208,32 @@ export default function CategoryEditClient({ category, isNew }: CategoryEditClie
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">SEO Başlığı</label>
-                    <input type="text" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="Google başlığı"
+                    <input type="text" value={currentTrans.seoTitle} onChange={(e) => updateTrans('seoTitle', e.target.value)} placeholder="Google başlığı"
                       className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-300/30" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">Canonical URL</label>
-                    <input type="url" value={canonical} onChange={(e) => setCanonical(e.target.value)} placeholder="https://..."
-                      disabled={isNew}
-                      className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none disabled:opacity-50" />
+                    <input type="url" value={currentTrans.canonical} onChange={(e) => updateTrans('canonical', e.target.value)} placeholder="https://..."
+                      className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">Meta Description</label>
-                  <textarea value={seoDesc} onChange={(e) => setSeoDesc(e.target.value)} placeholder="Max 160 karakter"
+                  <textarea value={currentTrans.seoDesc} onChange={(e) => updateTrans('seoDesc', e.target.value)} placeholder="Max 160 karakter"
                     className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none h-20 resize-none" />
                 </div>
-                {!isNew && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-cyan-700/30">
-                    <div>
-                      <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">OG Başlık</label>
-                      <input type="text" value={ogTitle} onChange={(e) => setOgTitle(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">OG Görsel URL</label>
-                      <input type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-cyan-700/30">
+                  <div>
+                    <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">OG Başlık</label>
+                    <input type="text" value={currentTrans.ogTitle} onChange={(e) => updateTrans('ogTitle', e.target.value)}
+                      className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-[10px] font-bold text-cyan-200/60 uppercase tracking-wider mb-2">OG Görsel URL</label>
+                    <input type="text" value={currentTrans.ogImage} onChange={(e) => updateTrans('ogImage', e.target.value)}
+                      className="w-full px-3 py-2.5 bg-[#0891b2]/30 border border-[#0891b2]/30 rounded-xl text-sm font-mono text-cyan-100 placeholder-cyan-400/40 focus:outline-none" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

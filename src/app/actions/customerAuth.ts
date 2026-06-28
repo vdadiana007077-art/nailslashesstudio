@@ -141,7 +141,7 @@ export async function loginCustomer(formData: FormData) {
 
     await logAction('Müşteri Giriş Yaptı', `ID: ${user.id}, İsim: ${user.name}`);
 
-    return { success: true, data: { id: user.id, name: user.name, email: user.email } };
+    return { success: true, data: { id: user.id, name: user.name, email: user.email, role: user.role } };
   } catch (error: any) {
     console.error('Müşteri giriş hatası:', error);
     return { success: false, error: 'Giriş yapılırken bir hata oluştu.' };
@@ -197,6 +197,7 @@ export async function getCurrentCustomer() {
       email: user.email,
       phone: user.phone,
       loginType: user.loginType,
+      role: user.role,
       hasPassword: !!user.password,
       marketingConsent: user.marketingConsent,
       appointments: user.appointments.map(appt => ({

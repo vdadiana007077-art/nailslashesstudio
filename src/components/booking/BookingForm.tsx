@@ -12,7 +12,7 @@ import { useTranslations } from 'next-intl';
 type Location = { id: string; name: string; address: string; phone: string; };
 type Category = { id: string; name: string; image: string; };
 type Service = { id: string; name: string; price: string; duration: number; categoryId: string; categoryName: string; locationIds: string[]; };
-type Staff = { id: string; name: string; image: string; specialty: string; locationId: string; serviceIds: string[]; };
+type Staff = { id: string; name: string; image: string; specialty: string; locationId: string; services: { serviceId: string; price: number | null }[]; };
 
 type BookingFormProps = {
   initialLocations: Location[];
@@ -86,9 +86,20 @@ export default function BookingForm({ initialLocations, initialCategories, initi
   const filteredStaff = initialStaff.filter(st => {
     if (!selectedLocation || !selectedService) return false;
     if (st.locationId !== selectedLocation.id) return false;
-    if (st.serviceIds.length === 0) return true;
-    return st.serviceIds.includes(selectedService.id);
+    if (st.services.length === 0) return true;
+    return st.services.some(s => s.serviceId === selectedService.id);
   });
+
+  const getFinalPrice = () => {
+    if (!selectedService) return '0';
+    if (selectedStaff && selectedStaff !== 'ANY') {
+      const staffService = selectedStaff.services.find(s => s.serviceId === selectedService.id);
+      if (staffService && staffService.price !== null) {
+        return staffService.price.toString();
+      }
+    }
+    return selectedService.price;
+  };
 
   // Tarih değiştiğinde müsait saat slotlarını çek
   useEffect(() => {
@@ -280,7 +291,7 @@ export default function BookingForm({ initialLocations, initialCategories, initi
                 }`}>
                 <div className="flex justify-between items-start mb-2 gap-4">
                   <h3 className="font-bold text-base text-gray-900">{service.name}</h3>
-                  <span className="font-bold text-[var(--color-rose-600)] flex-shrink-0">₺{service.price}</span>
+                  <span className="font-bold text-[var(--color-rose-600)] flex-shrink-0 text-sm">{service.price} ₺'den başlayan fiyatlarla</span>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500 mt-3">
                   <span className="flex items-center gap-1"><Clock size={14} /> {service.duration} {t('minutes')}</span>
@@ -473,7 +484,7 @@ export default function BookingForm({ initialLocations, initialCategories, initi
               </div>
               <div className="mt-6 pt-4 border-t border-[var(--color-rose-200)] flex justify-between items-center">
                 <span className="font-bold text-gray-800 text-base">{t('totalPrice')}</span>
-                <span className="text-2xl font-black text-[var(--color-rose-700)]">₺{selectedService?.price}</span>
+                <span className="text-2xl font-black text-[var(--color-rose-700)]">₺{getFinalPrice()}</span>
               </div>
             </div>
           </div>

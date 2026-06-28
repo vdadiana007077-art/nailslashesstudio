@@ -40,7 +40,9 @@ export default async function AdminStaffPage() {
       location: true,
       services: {
         select: {
-          serviceId: true
+          serviceId: true,
+          price: true,
+          commissionRate: true
         }
       },
       workingHours: {
@@ -48,6 +50,12 @@ export default async function AdminStaffPage() {
       },
       leaves: {
         orderBy: { date: 'asc' }
+      },
+      user: {
+        select: {
+          email: true,
+          phone: true
+        }
       }
     },
     orderBy: { name: 'asc' }
@@ -70,8 +78,15 @@ export default async function AdminStaffPage() {
     isActive: st.isActive,
     locationId: st.locationId,
     locationName: st.location?.branchName || st.location?.name || 'Şube Atanmamış',
+    workModel: st.workModel,
+    dailyRate: st.dailyRate ? Number(st.dailyRate) : 0,
+    generalCommissionRate: st.generalCommissionRate ? Number(st.generalCommissionRate) : 0,
     commissionRate: st.commissionRate ? Number(st.commissionRate) : 0,
-    serviceIds: st.services.map(s => s.serviceId),
+    services: st.services.map(s => ({
+      serviceId: s.serviceId,
+      price: s.price !== null ? Number(s.price) : null,
+      commissionRate: s.commissionRate !== null ? Number(s.commissionRate) : null
+    })),
     workingHours: st.workingHours.map(w => ({
       id: w.id,
       dayOfWeek: w.dayOfWeek,
@@ -87,7 +102,8 @@ export default async function AdminStaffPage() {
       isFullDay: le.isFullDay,
       startTime: le.startTime,
       endTime: le.endTime
-    }))
+    })),
+    user: st.user ? { email: st.user.email, phone: st.user.phone } : null
   }));
 
   return (
