@@ -32,3 +32,33 @@ export async function getStaffCalendarAppointments(startDate: Date, endDate: Dat
 
   return { success: true, data: appointments };
 }
+
+// Personelin geçmiş (tamamlanmış/ödenmiş) randevularını getir
+export async function getStaffHistory() {
+  const staff = await requireStaff();
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      staffId: staff.id,
+      status: {
+        in: [ApptStatus.COMPLETED, ApptStatus.PAID, ApptStatus.CANCELLED, ApptStatus.NO_SHOW]
+      }
+    },
+    include: {
+      customer: true,
+      service: {
+        include: {
+          translations: true
+        }
+      },
+      payment: true,
+    },
+    orderBy: [
+      { date: 'desc' },
+      { startTime: 'desc' }
+    ],
+    take: 100
+  });
+
+  return { success: true, data: appointments };
+}

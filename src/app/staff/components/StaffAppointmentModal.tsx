@@ -136,41 +136,38 @@ export default function StaffAppointmentModal({ appointment, staffId, onClose, o
           {/* Actions */}
           {!showPaymentForm && appointment.status !== ApptStatus.PAID && appointment.status !== ApptStatus.CANCELLED && appointment.status !== ApptStatus.NO_SHOW && (
             <div className="space-y-3">
-              <h3 className="text-sm font-bold text-gray-800 mb-2">Durum Güncelle</h3>
               
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={() => handleStatusChange(markArrived)}
-                  disabled={loading}
-                  className="bg-purple-50 text-purple-700 hover:bg-purple-100 font-medium py-3 px-4 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-                >
-                  <CheckCircle size={16}/> Geldi
-                </button>
-                <button 
-                  onClick={() => handleStatusChange(markStarted)}
-                  disabled={loading}
-                  className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium py-3 px-4 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-                >
-                  <Clock size={16}/> Başladı
-                </button>
-                <button 
-                  onClick={() => handleStatusChange(markCompleted)}
-                  disabled={loading}
-                  className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium py-3 px-4 rounded-xl text-sm transition-colors col-span-2 flex items-center justify-center gap-2"
-                >
-                  <CheckCircle size={16}/> Tamamlandı
-                </button>
-              </div>
+              {/* Tamamlandı butonu — sadece COMPLETED olmadıysa göster */}
+              {appointment.status !== ApptStatus.COMPLETED && (
+                <>
+                  <h3 className="text-sm font-bold text-gray-800 mb-2">Durum Güncelle</h3>
+                  <button 
+                    onClick={() => handleStatusChange(markCompleted)}
+                    disabled={loading}
+                    className="w-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium py-3 px-4 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle size={16}/> Tamamlandı
+                  </button>
+                </>
+              )}
 
+              {/* Ücret Tahsil Et — sadece COMPLETED ise aktif */}
               <div className="pt-4 mt-4 border-t border-gray-100">
                 <button 
                   onClick={() => setShowPaymentForm(true)}
-                  disabled={loading}
-                  className="w-full bg-[var(--color-rose-500)] text-white hover:bg-[var(--color-rose-600)] font-bold py-4 px-4 rounded-xl transition-colors shadow-lg shadow-rose-200 flex justify-between items-center"
+                  disabled={loading || (appointment.status !== ApptStatus.COMPLETED)}
+                  className={`w-full font-bold py-4 px-4 rounded-xl transition-all flex justify-between items-center ${
+                    appointment.status === ApptStatus.COMPLETED
+                      ? 'bg-[var(--color-rose-500)] text-white hover:bg-[var(--color-rose-600)] shadow-lg shadow-rose-200'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
                 >
                   <span className="flex items-center gap-2"><CreditCard size={20}/> Ücret Tahsil Et</span>
                   <ChevronRight size={20}/>
                 </button>
+                {appointment.status !== ApptStatus.COMPLETED && (
+                  <p className="text-center text-[10px] text-gray-400 mt-2">Önce randevuyu tamamlayın</p>
+                )}
               </div>
 
               <div className="flex gap-2 pt-4">

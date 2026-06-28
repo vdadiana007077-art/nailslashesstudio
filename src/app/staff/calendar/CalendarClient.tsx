@@ -47,6 +47,73 @@ export default function StaffCalendarClient({ initialAppointments, staffId }: { 
            d.getFullYear() === currentDate.getFullYear();
   });
 
+  // Haftalık: Pazartesi-Pazar arası randevular
+  const getWeekDays = () => {
+    const day = currentDate.getDay(); // 0=Pazar
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = new Date(currentDate);
+    monday.setDate(currentDate.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+
+    const days: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  };
+
+  const weekDays = getWeekDays();
+
+  const getAppointmentsForDay = (date: Date) => {
+    return appointments.filter(a => {
+      const d = new Date(a.date);
+      return d.getDate() === date.getDate() && 
+             d.getMonth() === date.getMonth() && 
+             d.getFullYear() === date.getFullYear();
+    }).sort((a: any, b: any) => a.startTime.localeCompare(b.startTime));
+  };
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() && 
+           date.getMonth() === today.getMonth() && 
+           date.getFullYear() === today.getFullYear();
+  };
+
+  const renderAppointmentCard = (appt: any) => (
+    <div 
+      key={appt.id} 
+      onClick={() => setSelectedAppt(appt)}
+      className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-transform"
+    >
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--color-rose-400)]"></div>
+      
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <h3 className="font-bold text-gray-800">{appt.customerName || appt.customer?.name}</h3>
+          <p className="text-xs text-gray-500 mt-0.5 truncate pr-2 max-w-[200px]">
+            {appt.service?.translations?.[0]?.name || 'Hizmet'}
+          </p>
+        </div>
+        <div className="text-right whitespace-nowrap">
+          <div className="mb-1">{getStatusBadge(appt.status)}</div>
+          <span className="font-bold text-[var(--color-rose-600)] text-sm">
+            {appt.priceAtBooking || appt.service?.price} ₺
+          </span>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mt-3 pt-3 border-t border-gray-50">
+        <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md text-gray-700">
+          <Clock size={12} className="text-[var(--color-rose-400)]" /> 
+          {appt.startTime.substring(0, 5)} - {appt.endTime.substring(0, 5)}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       {/* Header controls */}
@@ -73,7 +140,10 @@ export default function StaffCalendarClient({ initialAppointments, staffId }: { 
           </button>
           <h2 className="font-bold text-gray-800 text-base flex items-center gap-2">
             <CalendarIcon size={16} className="text-[var(--color-rose-500)]"/>
-            {currentDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {viewMode === 'daily' 
+              ? currentDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+              : `${weekDays[0].toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - ${weekDays[6].toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}`
+            }
           </h2>
           <button onClick={() => changeDate(viewMode === 'daily' ? 1 : 7)} className="p-2 hover:bg-gray-100 rounded-full text-gray-600 transition-colors">
             <ChevronRight size={20} />
@@ -83,45 +153,50 @@ export default function StaffCalendarClient({ initialAppointments, staffId }: { 
 
       {/* Calendar List */}
       <div className="space-y-3">
-        {dayAppointments.length === 0 ? (
-          <div className="bg-white rounded-2xl p-10 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-3">
-              <CalendarIcon size={32} />
+        {viewMode === 'daily' ? (
+          // GÜNLÜK GÖRÜNÜM
+          dayAppointments.length === 0 ? (
+            <div className="bg-white rounded-2xl p-10 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-3">
+                <CalendarIcon size={32} />
+              </div>
+              <p className="text-gray-500 font-medium">Bu tarihte randevu bulunmuyor.</p>
             </div>
-            <p className="text-gray-500 font-medium">Bu tarihte randevu bulunmuyor.</p>
-          </div>
+          ) : (
+            dayAppointments.map(appt => renderAppointmentCard(appt))
+          )
         ) : (
-          dayAppointments.map(appt => (
-            <div 
-              key={appt.id} 
-              onClick={() => setSelectedAppt(appt)}
-              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-transform"
-            >
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--color-rose-400)]"></div>
-              
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-bold text-gray-800">{appt.customerName || appt.customer?.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate pr-2 max-w-[200px]">
-                    {appt.service?.translations?.[0]?.name || 'Hizmet'}
-                  </p>
-                </div>
-                <div className="text-right whitespace-nowrap">
-                  <div className="mb-1">{getStatusBadge(appt.status)}</div>
-                  <span className="font-bold text-[var(--color-rose-600)] text-sm">
-                    {appt.priceAtBooking || appt.service?.price} ₺
+          // HAFTALIK GÖRÜNÜM
+          weekDays.map(day => {
+            const dayAppts = getAppointmentsForDay(day);
+            const dayName = day.toLocaleDateString('tr-TR', { weekday: 'long' });
+            const dayNum = day.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
+            return (
+              <div key={day.toISOString()}>
+                <div className={`flex items-center gap-2 px-2 py-1.5 mb-2 ${isToday(day) ? 'bg-rose-50 rounded-lg' : ''}`}>
+                  <span className={`text-xs font-bold uppercase ${isToday(day) ? 'text-[var(--color-rose-600)]' : 'text-gray-400'}`}>
+                    {dayName}
                   </span>
+                  <span className={`text-xs ${isToday(day) ? 'text-[var(--color-rose-500)] font-bold' : 'text-gray-400'}`}>
+                    {dayNum}
+                  </span>
+                  {dayAppts.length > 0 && (
+                    <span className="bg-[var(--color-rose-100)] text-[var(--color-rose-700)] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      {dayAppts.length}
+                    </span>
+                  )}
                 </div>
+                {dayAppts.length > 0 ? (
+                  <div className="space-y-2 mb-4">
+                    {dayAppts.map(appt => renderAppointmentCard(appt))}
+                  </div>
+                ) : (
+                  <div className="text-center py-3 text-xs text-gray-300 mb-2">—</div>
+                )}
               </div>
-              
-              <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mt-3 pt-3 border-t border-gray-50">
-                <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md text-gray-700">
-                  <Clock size={12} className="text-[var(--color-rose-400)]" /> 
-                  {appt.startTime.substring(0, 5)} - {appt.endTime.substring(0, 5)}
-                </span>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
