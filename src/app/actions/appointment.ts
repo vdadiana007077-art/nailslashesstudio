@@ -113,9 +113,7 @@ export async function updateAppointmentStatus(
 
       try {
         if (newStatus === ApptStatus.CONFIRMED) {
-          console.log(`Onay e-postası gönderiliyor: ${customerEmail} (Dil: ${customerLang})`);
-          console.log(`SMTP Kullanıcısı: ${process.env.EMAIL_USER}`);
-          
+          console.log(`Onay e-postası gönderiliyor: ${customerEmail} (Dil: ${customerLang})`);\n          
           const emailRes = await sendTemplateEmail('booking_confirmation', customerEmail, emailVars, customerLang);
           if (!emailRes.success) {
             emailWarning = `Onay e-postası gönderilemedi: ${(emailRes as any).error || 'SMTP ayarlarını kontrol edin.'}`;
