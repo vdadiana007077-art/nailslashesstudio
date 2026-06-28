@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { prisma } from '@/lib/prisma';
+import { seedEmailTemplates } from '@/app/actions/email-template';
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -55,13 +56,25 @@ export const sendBookingEmail = async (
 
   try {
     // Veritabanından birleşik şablonları çek
-    const customerTemplate = await prisma.emailTemplate.findUnique({
+    let customerTemplate = await prisma.emailTemplate.findUnique({
       where: { key: 'booking_received' },
     });
 
-    const adminTemplate = await prisma.emailTemplate.findUnique({
+    let adminTemplate = await prisma.emailTemplate.findUnique({
       where: { key: 'booking_admin_notification' },
     });
+
+    // Şablonlar yoksa otomatik seed yap
+    if (!customerTemplate) {
+      console.log('Şablonlar bulunamadı, otomatik seed yapılıyor...');
+      await seedEmailTemplates();
+      customerTemplate = await prisma.emailTemplate.findUnique({
+        where: { key: 'booking_received' },
+      });
+      adminTemplate = await prisma.emailTemplate.findUnique({
+        where: { key: 'booking_admin_notification' },
+      });
+    }
 
     // Müşteri e-postası
     if (customerTemplate && customerTemplate.isActive) {
@@ -118,13 +131,23 @@ export const sendTemplateEmail = async (
   customerLanguage: string = 'TR'
 ) => {
   try {
-    const template = await prisma.emailTemplate.findUnique({
+    let template = await prisma.emailTemplate.findUnique({
       where: { key: templateKey },
     });
 
     if (!template || !template.isActive) {
-      console.log(`E-posta şablonu "${templateKey}" bulunamadı veya pasif.`);
-      return { success: false };
+      // Şablon yoksa seed yap ve tekrar dene
+      if (!template) {
+        console.log(`Şablon "${templateKey}" bulunamadı, otomatik seed yapılıyor...`);
+        await seedEmailTemplates();
+        template = await prisma.emailTemplate.findUnique({
+          where: { key: templateKey },
+        });
+      }
+      if (!template || !template.isActive) {
+        console.log(`E-posta şablonu "${templateKey}" bulunamadı veya pasif.`);
+        return { success: false };
+      }
     }
 
     const lang = customerLanguage.toUpperCase();

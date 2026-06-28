@@ -24,6 +24,7 @@ const variablesList = [
   { key: '{{date}}', desc: 'Randevu tarihi' },
   { key: '{{time}}', desc: 'Randevu saati' },
   { key: '{{customerEmail}}', desc: 'Müşteri e-postası' },
+  { key: '{{staffName}}', desc: 'Personel adı' },
 ];
 
 export default function EmailTemplateClient({ templates }: Props) {
@@ -154,7 +155,8 @@ export default function EmailTemplateClient({ templates }: Props) {
       .replace(/\{\{serviceName\}\}/g, 'İpek Kirpik Klasik')
       .replace(/\{\{date\}\}/g, '8 Haziran 2026 Pazartesi')
       .replace(/\{\{time\}\}/g, '14:30')
-      .replace(/\{\{customerEmail\}\}/g, 'ayse@email.com');
+      .replace(/\{\{customerEmail\}\}/g, 'ayse@email.com')
+      .replace(/\{\{staffName\}\}/g, 'Zeynep');
   };
 
   return (
@@ -218,28 +220,38 @@ export default function EmailTemplateClient({ templates }: Props) {
 
       {/* Şablon Listesi */}
       {filteredItems.map(template => {
+        const isWaTemplate = template.key.startsWith('wa_');
         let isTmplMulti = false;
+        let isBodyMulti = false;
         try {
-          const s = JSON.parse(template.subject);
           const b = JSON.parse(template.body);
-          if (s && typeof s === 'object' && b && typeof b === 'object') {
-            isTmplMulti = true;
+          if (b && typeof b === 'object' && !Array.isArray(b)) {
+            isBodyMulti = true;
           }
         } catch (_) {}
+        try {
+          const s = JSON.parse(template.subject);
+          if (s && typeof s === 'object' && !Array.isArray(s) && isBodyMulti) {
+            isTmplMulti = true;
+          }
+        } catch (_) {
+          // Subject düz text ama body JSON ise de çok dilli say
+          if (isBodyMulti) isTmplMulti = true;
+        }
 
         return (
           <div key={template.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {/* Header */}
             <div className="p-5 flex items-center justify-between border-b border-gray-100">
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${template.isActive ? 'bg-[var(--color-rose-50)] text-[var(--color-rose-600)]' : 'bg-gray-100 text-gray-400'}`}>
-                  <Mail size={16} />
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${template.isActive ? (isWaTemplate ? 'bg-emerald-50 text-emerald-600' : 'bg-[var(--color-rose-50)] text-[var(--color-rose-600)]') : 'bg-gray-100 text-gray-400'}`}>
+                  {isWaTemplate ? <MessageCircle size={16} /> : <Mail size={16} />}
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 text-sm">
                     {template.name}
                     {isTmplMulti && (
-                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-100">
+                      <span className={`ml-2 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border ${isWaTemplate ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
                         Çok Dilli (TR, EN, RU, DE)
                       </span>
                     )}
@@ -432,7 +444,7 @@ export default function EmailTemplateClient({ templates }: Props) {
             {previewId === template.id && editingId !== template.id && (
               <div className="bg-white border-t border-gray-100">
                 <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase">E-posta Önizlemesi (Örnek Verilerle)</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">{isWaTemplate ? 'WhatsApp Önizlemesi (Örnek Verilerle)' : 'E-posta Önizlemesi (Örnek Verilerle)'}</p>
                   <button onClick={() => setPreviewId(null)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
                 </div>
 
@@ -470,10 +482,9 @@ export default function EmailTemplateClient({ templates }: Props) {
                   </p>
                 </div>
                 <div className="p-6 flex justify-center bg-gray-100/30">
-                  <div
-                    className="w-full max-w-[600px] overflow-x-auto"
-                    dangerouslySetInnerHTML={{ 
-                      __html: (() => {
+                  {isWaTemplate ? (
+                    <div className="w-full max-w-[600px] bg-emerald-50 border border-emerald-200 rounded-xl p-4 whitespace-pre-wrap text-sm text-gray-700">
+                      {(() => {
                         if (isTmplMulti) {
                           try {
                             const b = JSON.parse(template.body);
@@ -481,9 +492,24 @@ export default function EmailTemplateClient({ templates }: Props) {
                           } catch (_) {}
                         }
                         return renderPreview(template.body);
-                      })()
-                    }}
-                  />
+                      })()}
+                    </div>
+                  ) : (
+                    <div
+                      className="w-full max-w-[600px] overflow-x-auto"
+                      dangerouslySetInnerHTML={{ 
+                        __html: (() => {
+                          if (isTmplMulti) {
+                            try {
+                              const b = JSON.parse(template.body);
+                              return renderPreview(b[previewLang] || b['TR'] || template.body);
+                            } catch (_) {}
+                          }
+                          return renderPreview(template.body);
+                        })()
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             )}
